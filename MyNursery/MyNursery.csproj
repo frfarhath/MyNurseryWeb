@@ -1,0 +1,65 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Arear\**" />
+    <Content Remove="Arear\**" />
+    <EmbeddedResource Remove="Arear\**" />
+    <None Remove="Arear\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MyNursery.DataAccess\MyNursery.DataAccess.csproj" />
+    <ProjectReference Include="..\MyNursery.Models\MyNursery.Models.csproj" />
+    <ProjectReference Include="..\MyNursery.Utility\MyNursery.Utility.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Areas\CSAD\Controllers\" />
+    <Folder Include="Areas\CSAD\Data\" />
+    <Folder Include="Areas\CSAD\Models\" />
+    <Folder Include="Areas\CSAD\Views\" />
+    <Folder Include="Areas\NUAD\Data\" />
+    <Folder Include="Areas\NUAD\Models\" />
+    <Folder Include="Areas\NUOUS\Controllers\" />
+    <Folder Include="Areas\NUOUS\Data\" />
+    <Folder Include="Areas\NUOUS\Models\" />
+    <Folder Include="Areas\NUOUS\Views\" />
+    <Folder Include="Areas\NUSAD\Controllers\" />
+    <Folder Include="Areas\NUSAD\Data\" />
+    <Folder Include="Areas\NUSAD\Models\" />
+    <Folder Include="Areas\NUSAD\Views\" />
+    <Folder Include="Areas\NUUS\Controllers\" />
+    <Folder Include="Areas\NUUS\Data\" />
+    <Folder Include="Areas\NUUS\Models\" />
+    <Folder Include="Areas\NUUS\Views\" />
+    <Folder Include="Areas\Welcome\Controllers\" />
+    <Folder Include="Areas\Welcome\Data\" />
+    <Folder Include="Areas\Welcome\Models\" />
+    <Folder Include="Areas\Welcome\Views\" />
+    <Folder Include="Data\" />
+    <Folder Include="Helper\" />
+    <Folder Include="Models\" />
+    <Folder Include="wwwroot\css\" />
+    <Folder Include="wwwroot\images\" />
+    <Folder Include="wwwroot\js\" />
+    <Folder Include="wwwroot\lib\bootstrap\" />
+    <Folder Include="wwwroot\lib\bootstrap\dist\css\" />
+    <Folder Include="wwwroot\lib\bootstrap\dist\js\" />
+    <Folder Include="wwwroot\lib\jquery-validation-unobtrusive\" />
+    <Folder Include="wwwroot\lib\jquery-validation\" />
+    <Folder Include="wwwroot\lib\jquery-validation\dist\" />
+    <Folder Include="wwwroot\lib\jquery\" />
+    <Folder Include="wwwroot\lib\jquery\dist\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
+  </ItemGroup>
+
+</Project>
