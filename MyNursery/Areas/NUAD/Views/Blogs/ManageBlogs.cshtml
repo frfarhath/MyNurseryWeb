@@ -1,0 +1,130 @@
+﻿@model List<MyNursery.Models.BlogPost>
+@using System.Linq
+
+@{
+    ViewData["Title"] = "Manage Blogs";
+}
+
+<!-- [ breadcrumb ] start -->
+<div class="page-header">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="page-header-title">
+                    <h5 class="m-b-10">Manage Blogs</h5>
+                </div>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a asp-area="NUAD" asp-controller="Home" asp-action="Dashboard"><i class="feather icon-home"></i></a>
+                    </li>
+                    <li class="breadcrumb-item"><a href="#">Blogs</a></li>
+                    <li class="breadcrumb-item"><a href="#">Manage Blogs</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- [ breadcrumb ] end -->
+<!-- [ Main Content ] start -->
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">All Blog Posts</h5>
+                <span class="text-muted">Search, filter, and manage blog entries.</span>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search by title..." onkeyup="filterTable()" />
+                    </div>
+                    <div class="col-md-4">
+                        <select id="categoryFilter" class="form-control" onchange="filterTable()">
+                            <option value="">-- Filter by Category --</option>
+                            <option value="Education">Education</option>
+                            <option value="Events">Events</option>
+                            <option value="Tips">Tips</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover" id="blogsTable">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Publish Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var blog in Model)
+                            {
+                                <tr>
+                                    <td>@blog.Title</td>
+                                    <td>@blog.Category</td>
+                                    <td>@blog.PublishDate?.ToString("yyyy-MM-dd")</td>
+                                    <td>
+                                        <form asp-action="UpdateStatus" method="post" class="d-flex align-items-center">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="Id" value="@blog.Id" />
+                                            <select name="Status" class="form-control form-control-sm mr-2">
+                                                <option value="Published" @(blog.Status == "Published" ? "selected" : "")>Published</option>
+                                                <option value="Draft" @(blog.Status == "Draft" ? "selected" : "")>Draft</option>
+                                                <option value="Archived" @(blog.Status == "Archived" ? "selected" : "")>Archived</option>
+                                            </select>
+                                            <button type="submit" class="btn btn-sm btn-secondary">
+                                                <i class="feather icon-refresh-cw"></i> Update
+                                            </button>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <a asp-action="ViewBlog" asp-route-id="@blog.Id" class="btn btn-info btn-sm">
+                                            <i class="feather icon-eye"></i> View
+                                        </a>
+                                        <a asp-action="EditBlog" asp-route-id="@blog.Id" class="btn btn-warning btn-sm">
+                                            <i class="feather icon-edit"></i> Edit
+                                        </a>
+                                        <a asp-action="DeleteBlog" asp-route-id="@blog.Id" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure to delete this blog?')">
+                                            <i class="feather icon-trash-2"></i> Delete
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (!Model.Any())
+                {
+                    <div class="alert alert-info mt-4">
+                        No blog posts found.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+<!-- [ Main Content ] end -->
+@section Scripts {
+    <script>
+        function filterTable() {
+            const searchInput = document.getElementById("searchInput").value.toLowerCase();
+            const categoryFilter = document.getElementById("categoryFilter").value.toLowerCase();
+            const table = document.getElementById("blogsTable");
+            const rows = table.getElementsByTagName("tr");
+
+            for (let i = 1; i < rows.length; i++) {
+                const titleCell = rows[i].cells[0].textContent.toLowerCase();
+                const categoryCell = rows[i].cells[1].textContent.toLowerCase();
+
+                const matchesSearch = titleCell.includes(searchInput);
+                const matchesFilter = categoryFilter === "" || categoryCell === categoryFilter;
+
+                rows[i].style.display = matchesSearch && matchesFilter ? "" : "none";
+            }
+        }
+    </script>
+}

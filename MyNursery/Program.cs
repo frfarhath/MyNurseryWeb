@@ -1,13 +1,16 @@
-using MyNursery.DataAccess.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using MyNursery.Areas.NUAD.Data; // ✅ FIXED: Correct namespace for ApplicationDbContext
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// Add services to the container.
-// builder.Services.AddDbContext<ApplicationDbContext>(Options => Options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddControllersWithViews();
+// ✅ Register your actual DbContext from the NUAD area
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// builder.Services.AddControllersWithViews(); // ❌ Already added above
 
 var app = builder.Build();
 
@@ -28,7 +31,7 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{area=NuAD}/{controller=Home}/{action=Index}/{id?}");
+    pattern: "{area=NUAD}/{controller=Home}/{action=Index}/{id?}");
 
 // In Program.cs, before "var app = builder.Build();"
 
@@ -45,6 +48,5 @@ app.MapControllerRoute(
 //      pattern: "{area:NUAD}/{controller=Home}/{action=Index}/{id?}"
 //    );
 //});
-
 
 app.Run();
