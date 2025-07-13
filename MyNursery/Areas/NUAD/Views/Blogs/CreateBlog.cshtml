@@ -56,17 +56,17 @@
 
                     <div class="form-group">
                         <label>Cover Image</label>
-                        <input type="file" name="CoverImage" class="form-control-file" />
+                        <input type="file" name="CoverImage" class="form-control-file" onchange="validateImageSize(this)" />
                     </div>
 
                     <div class="form-group">
                         <label>Optional Image 1</label>
-                        <input type="file" name="OptionalImage1" class="form-control-file" />
+                        <input type="file" name="OptionalImage1" class="form-control-file" onchange="validateImageSize(this)" />
                     </div>
 
                     <div class="form-group">
                         <label>Optional Image 2</label>
-                        <input type="file" name="OptionalImage2" class="form-control-file" />
+                        <input type="file" name="OptionalImage2" class="form-control-file" onchange="validateImageSize(this)" />
                     </div>
 
                     <div class="form-group">
@@ -93,4 +93,21 @@
 <!-- [ Main Content ] end -->
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Max file size 1MB
+        const maxSize = 1 * 1024 * 1024;
+
+        function validateImageSize(input) {
+            if (input.files.length === 0) return;
+
+            for (let i = 0; i < input.files.length; i++) {
+                const file = input.files[i];
+                if (file.size > maxSize) {
+                    alert(`File "${file.name}" exceeds the maximum size of 1MB.`);
+                    input.value = ''; // Clear input
+                    break;
+                }
+            }
+        }
+    </script>
 }

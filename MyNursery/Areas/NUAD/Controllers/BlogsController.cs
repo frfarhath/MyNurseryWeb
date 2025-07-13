@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Hosting;
 using MyNursery.Areas.NUAD.Data;
 using MyNursery.Areas.NUAD.Models;
+using MyNursery.Utility; // ✅ Added for SD class usage
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -15,6 +16,7 @@ namespace MyNursery.Areas.NUAD.Controllers
     {
         private readonly ApplicationDbContext _db;
         private readonly IWebHostEnvironment _env;
+        private const long MaxFileSize = 1 * 1024 * 1024;
 
         public BlogsController(ApplicationDbContext db, IWebHostEnvironment env)
         {
@@ -22,49 +24,45 @@ namespace MyNursery.Areas.NUAD.Controllers
             _env = env;
         }
 
-        // GET: /NUAD/Blogs/CreateBlog
         [HttpGet]
         public IActionResult CreateBlog()
         {
             return View();
         }
 
-        // POST: /NUAD/Blogs/CreateBlog
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateBlog(
-            BlogPost blogPost,
-            IFormFile? CoverImage,
-            IFormFile? OptionalImage1,
-            IFormFile? OptionalImage2)
+        public async Task<IActionResult> CreateBlog(BlogPost blogPost, IFormFile? CoverImage, IFormFile? OptionalImage1, IFormFile? OptionalImage2)
         {
+            if (!IsValidFileSize(CoverImage))
+                ModelState.AddModelError("CoverImage", "Cover image size cannot exceed 1 MB.");
+            if (!IsValidFileSize(OptionalImage1))
+                ModelState.AddModelError("OptionalImage1", "Optional image 1 size cannot exceed 1 MB.");
+            if (!IsValidFileSize(OptionalImage2))
+                ModelState.AddModelError("OptionalImage2", "Optional image 2 size cannot exceed 1 MB.");
+
             if (!ModelState.IsValid)
             {
                 return View(blogPost);
             }
 
             blogPost.CreatedAt = DateTime.Now;
-
             blogPost.Status = blogPost.PublishDate.HasValue && blogPost.PublishDate.Value.Date <= DateTime.Now.Date
-                ? "Published"
-                : "Draft";
+                ? SD.Status_Published
+                : SD.Status_Draft;
 
             string wwwRootPath = _env.WebRootPath;
             string blogImagesPath = Path.Combine(wwwRootPath, "uploads", "blogs");
 
             if (!Directory.Exists(blogImagesPath))
-            {
                 Directory.CreateDirectory(blogImagesPath);
-            }
 
             if (CoverImage != null)
             {
                 string fileName = Guid.NewGuid().ToString() + Path.GetExtension(CoverImage.FileName);
                 string fullPath = Path.Combine(blogImagesPath, fileName);
-                using (var stream = new FileStream(fullPath, FileMode.Create))
-                {
-                    await CoverImage.CopyToAsync(stream);
-                }
+                using var stream = new FileStream(fullPath, FileMode.Create);
+                await CoverImage.CopyToAsync(stream);
                 blogPost.CoverImagePath = "/uploads/blogs/" + fileName;
             }
 
@@ -72,10 +70,8 @@ namespace MyNursery.Areas.NUAD.Controllers
             {
                 string fileName = Guid.NewGuid().ToString() + Path.GetExtension(OptionalImage1.FileName);
                 string fullPath = Path.Combine(blogImagesPath, fileName);
-                using (var stream = new FileStream(fullPath, FileMode.Create))
-                {
-                    await OptionalImage1.CopyToAsync(stream);
-                }
+                using var stream = new FileStream(fullPath, FileMode.Create);
+                await OptionalImage1.CopyToAsync(stream);
                 blogPost.OptionalImage1Path = "/uploads/blogs/" + fileName;
             }
 
@@ -83,33 +79,25 @@ namespace MyNursery.Areas.NUAD.Controllers
             {
                 string fileName = Guid.NewGuid().ToString() + Path.GetExtension(OptionalImage2.FileName);
                 string fullPath = Path.Combine(blogImagesPath, fileName);
-                using (var stream = new FileStream(fullPath, FileMode.Create))
-                {
-                    await OptionalImage2.CopyToAsync(stream);
-                }
+                using var stream = new FileStream(fullPath, FileMode.Create);
+                await OptionalImage2.CopyToAsync(stream);
                 blogPost.OptionalImage2Path = "/uploads/blogs/" + fileName;
             }
 
             _db.BlogPosts.Add(blogPost);
             await _db.SaveChangesAsync();
 
-            TempData["success"] = "Blog Created Successfully";
-
+            TempData[SD.Success_Msg] = "Blog Created Successfully";
             return RedirectToAction("ManageBlogs");
         }
 
-        // GET: /NUAD/Blogs/ManageBlogs
         [HttpGet]
         public IActionResult ManageBlogs()
         {
-            var blogs = _db.BlogPosts
-                .OrderByDescending(b => b.CreatedAt)
-                .ToList();
-
+            var blogs = _db.BlogPosts.OrderByDescending(b => b.CreatedAt).ToList();
             return View(blogs);
         }
 
-        // POST: /NUAD/Blogs/UpdateStatus
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateStatus(int Id, string Status)
@@ -117,11 +105,11 @@ namespace MyNursery.Areas.NUAD.Controllers
             var blog = await _db.BlogPosts.FindAsync(Id);
             if (blog == null)
             {
-                TempData["error"] = "Blog not found.";
+                TempData[SD.Error_Msg] = "Blog not found.";
                 return RedirectToAction("ManageBlogs");
             }
 
-            if (Status == "Published" && blog.Status != "Published")
+            if (Status == SD.Status_Published && blog.Status != SD.Status_Published)
             {
                 blog.PublishDate = DateTime.Now;
             }
@@ -129,11 +117,10 @@ namespace MyNursery.Areas.NUAD.Controllers
             blog.Status = Status;
             await _db.SaveChangesAsync();
 
-            TempData["success"] = "Status updated successfully.";
+            TempData[SD.Success_Msg] = "Status updated successfully.";
             return RedirectToAction("ManageBlogs");
         }
 
-        // GET: /NUAD/Blogs/GetBlogDetails/5
         [HttpGet]
         public async Task<IActionResult> GetBlogDetails(int id)
         {
@@ -155,7 +142,6 @@ namespace MyNursery.Areas.NUAD.Controllers
             });
         }
 
-        // POST: /NUAD/Blogs/DeleteBlog/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteBlog(int id)
@@ -174,9 +160,7 @@ namespace MyNursery.Areas.NUAD.Controllers
                 {
                     string fullPath = Path.Combine(wwwRootPath, relativePath.TrimStart('/').Replace("/", Path.DirectorySeparatorChar.ToString()));
                     if (System.IO.File.Exists(fullPath))
-                    {
                         System.IO.File.Delete(fullPath);
-                    }
                 }
             }
 
@@ -190,7 +174,6 @@ namespace MyNursery.Areas.NUAD.Controllers
             return Json(new { success = true, message = "Blog deleted successfully!" });
         }
 
-        // GET: /NUAD/Blogs/EditBlog/5
         [HttpGet]
         public async Task<IActionResult> EditBlog(int id)
         {
@@ -203,78 +186,75 @@ namespace MyNursery.Areas.NUAD.Controllers
             return View(blog);
         }
 
-        // POST: /NUAD/Blogs/EditBlog/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditBlog(
-            BlogPost blogPost,
-            IFormFile? CoverImage,
-            IFormFile? OptionalImage1,
-            IFormFile? OptionalImage2)
+        public async Task<IActionResult> EditBlog(BlogPost blogPost, IFormFile? CoverImage, IFormFile? OptionalImage1, IFormFile? OptionalImage2)
         {
-            var existingBlog = await _db.BlogPosts.FindAsync(blogPost.Id);
-            if (existingBlog == null)
-            {
-                return NotFound();
-            }
+            if (!IsValidFileSize(CoverImage))
+                ModelState.AddModelError("CoverImage", "Cover image size cannot exceed 1 MB.");
+            if (!IsValidFileSize(OptionalImage1))
+                ModelState.AddModelError("OptionalImage1", "Optional image 1 size cannot exceed 1 MB.");
+            if (!IsValidFileSize(OptionalImage2))
+                ModelState.AddModelError("OptionalImage2", "Optional image 2 size cannot exceed 1 MB.");
 
             if (!ModelState.IsValid)
             {
                 return View(blogPost);
             }
 
+            var existingBlog = await _db.BlogPosts.FindAsync(blogPost.Id);
+            if (existingBlog == null)
+            {
+                return NotFound();
+            }
+
             string wwwRootPath = _env.WebRootPath;
             string blogImagesPath = Path.Combine(wwwRootPath, "uploads", "blogs");
-
             if (!Directory.Exists(blogImagesPath))
             {
                 Directory.CreateDirectory(blogImagesPath);
             }
 
-            // Local helper to replace image and return the new path
             string? ReplaceImage(IFormFile? file, string? existingPath)
             {
                 if (file == null) return existingPath;
 
-                // Delete old file if exists
                 if (!string.IsNullOrEmpty(existingPath))
                 {
                     string oldFullPath = Path.Combine(wwwRootPath, existingPath.TrimStart('/').Replace("/", Path.DirectorySeparatorChar.ToString()));
                     if (System.IO.File.Exists(oldFullPath))
-                    {
                         System.IO.File.Delete(oldFullPath);
-                    }
                 }
 
                 string fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
                 string fullPath = Path.Combine(blogImagesPath, fileName);
-                using (var stream = new FileStream(fullPath, FileMode.Create))
-                {
-                    file.CopyTo(stream);
-                }
+                using var stream = new FileStream(fullPath, FileMode.Create);
+                file.CopyTo(stream);
 
                 return "/uploads/blogs/" + fileName;
             }
 
-            // Update basic fields
             existingBlog.Title = blogPost.Title;
             existingBlog.Category = blogPost.Category;
             existingBlog.Content = blogPost.Content;
             existingBlog.PublishDate = blogPost.PublishDate;
             existingBlog.Status = blogPost.PublishDate.HasValue && blogPost.PublishDate.Value.Date <= DateTime.Now.Date
-                ? "Published"
-                : "Draft";
+                ? SD.Status_Published
+                : SD.Status_Draft;
 
-            // Replace and assign image paths
             existingBlog.CoverImagePath = ReplaceImage(CoverImage, existingBlog.CoverImagePath);
             existingBlog.OptionalImage1Path = ReplaceImage(OptionalImage1, existingBlog.OptionalImage1Path);
             existingBlog.OptionalImage2Path = ReplaceImage(OptionalImage2, existingBlog.OptionalImage2Path);
 
             await _db.SaveChangesAsync();
 
-            TempData["success"] = "Blog updated successfully!";
+            TempData[SD.Success_Msg] = "Blog updated successfully!";
             return RedirectToAction("ManageBlogs");
         }
 
+        private bool IsValidFileSize(IFormFile? file)
+        {
+            return file == null || file.Length <= MaxFileSize;
+        }
     }
 }

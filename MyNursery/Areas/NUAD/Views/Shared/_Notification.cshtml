@@ -1,25 +1,27 @@
-﻿@{
-    string? message = null;
-    string alertType = "info";
+﻿@using MyNursery.Utility
 
-    var successMessage = TempData["success"] as string;
-    var errorMessage = TempData["error"] as string;
-    var warningMessage = TempData["warning"] as string;
+@{
+    string? message = null;
+    string alertType = SD.Info_Msg; // default to info
+
+    var successMessage = TempData[SD.Success_Msg] as string;
+    var errorMessage = TempData[SD.Error_Msg] as string;
+    var warningMessage = TempData[SD.Warning_Msg] as string;
 
     if (!string.IsNullOrEmpty(successMessage))
     {
         message = successMessage;
-        alertType = "success";
+        alertType = SD.Success_Msg;
     }
     else if (!string.IsNullOrEmpty(errorMessage))
     {
         message = errorMessage;
-        alertType = "danger";
+        alertType = SD.Error_Msg;
     }
     else if (!string.IsNullOrEmpty(warningMessage))
     {
         message = warningMessage;
-        alertType = "warning";
+        alertType = SD.Warning_Msg;
     }
 }
 
@@ -30,7 +32,6 @@
         <button type="button" class="close" data-dismiss="alert" aria-label="Close" style="font-size: 1.5rem; color: black;">
             <span aria-hidden="true">&times;</span>
         </button>
-
     </div>
 
     <script>
