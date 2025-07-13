@@ -1,7 +1,7 @@
 ﻿@model MyNursery.Areas.NUAD.Models.BlogPost
 
 @{
-    ViewData["Title"] = "Create Blog";
+    ViewData["Title"] = "Edit Blog";
 }
 
 <!-- [ breadcrumb ] start -->
@@ -10,14 +10,14 @@
         <div class="row align-items-center">
             <div class="col-md-12">
                 <div class="page-header-title">
-                    <h5 class="m-b-10">Create Blog</h5>
+                    <h5 class="m-b-10">Edit Blog</h5>
                 </div>
                 <ul class="breadcrumb">
                     <li class="breadcrumb-item">
                         <a asp-area="NUAD" asp-controller="Home" asp-action="Dashboard"><i class="feather icon-home"></i></a>
                     </li>
                     <li class="breadcrumb-item"><a href="#">Blogs</a></li>
-                    <li class="breadcrumb-item"><a href="#">Create Blog</a></li>
+                    <li class="breadcrumb-item"><a href="#">Edit Blog</a></li>
                 </ul>
             </div>
         </div>
@@ -29,14 +29,18 @@
     <div class="col-xl-10 mx-auto">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">Add New Blog Post</h5>
-                <span class="text-muted">Use this form to create a new blog entry.</span>
+                <h5 class="mb-0">Update Blog Post</h5>
+                <span class="text-muted">Modify the existing blog entry and save your changes.</span>
             </div>
             <div class="card-body">
+
                 <!-- Shared notification partial -->
                 @await Html.PartialAsync("_Notification")
 
-                <form asp-action="CreateBlog" asp-controller="Blogs" asp-area="NUAD" enctype="multipart/form-data" method="post">
+                <form asp-action="EditBlog" asp-controller="Blogs" asp-area="NUAD" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Id" />
+
                     <div class="form-group">
                         <label asp-for="Title"></label>
                         <input asp-for="Title" class="form-control" />
@@ -47,31 +51,49 @@
                         <label asp-for="Category"></label>
                         <select asp-for="Category" class="form-control">
                             <option value="">-- Select Category --</option>
-                            <option value="Education">Education</option>
-                            <option value="Events">Events</option>
-                            <option value="Tips">Tips</option>
+                            <option value="Education" selected="@(Model.Category == "Education")">Education</option>
+                            <option value="Events" selected="@(Model.Category == "Events")">Events</option>
+                            <option value="Tips" selected="@(Model.Category == "Tips")">Tips</option>
                         </select>
                         <span asp-validation-for="Category" class="text-danger"></span>
                     </div>
 
                     <div class="form-group">
                         <label>Cover Image</label>
+                        @if (!string.IsNullOrEmpty(Model.CoverImagePath))
+                        {
+                            <div class="mb-2">
+                                <img src="@Model.CoverImagePath" alt="Cover Image" class="img-fluid" style="max-height:150px;" />
+                            </div>
+                        }
                         <input type="file" name="CoverImage" class="form-control-file" />
                     </div>
 
                     <div class="form-group">
                         <label>Optional Image 1</label>
+                        @if (!string.IsNullOrEmpty(Model.OptionalImage1Path))
+                        {
+                            <div class="mb-2">
+                                <img src="@Model.OptionalImage1Path" alt="Optional Image 1" class="img-fluid" style="max-height:150px;" />
+                            </div>
+                        }
                         <input type="file" name="OptionalImage1" class="form-control-file" />
                     </div>
 
                     <div class="form-group">
                         <label>Optional Image 2</label>
+                        @if (!string.IsNullOrEmpty(Model.OptionalImage2Path))
+                        {
+                            <div class="mb-2">
+                                <img src="@Model.OptionalImage2Path" alt="Optional Image 2" class="img-fluid" style="max-height:150px;" />
+                            </div>
+                        }
                         <input type="file" name="OptionalImage2" class="form-control-file" />
                     </div>
 
                     <div class="form-group">
                         <label asp-for="Content"></label>
-                        <textarea asp-for="Content" class="form-control" rows="6" placeholder="Write your blog content here..."></textarea>
+                        <textarea asp-for="Content" class="form-control" rows="6" placeholder="Update blog content..."></textarea>
                         <span asp-validation-for="Content" class="text-danger"></span>
                     </div>
 
@@ -82,8 +104,8 @@
                     </div>
 
                     <div class="form-group text-right">
-                        <button type="reset" class="btn btn-outline-secondary mr-2">Reset</button>
-                        <button type="submit" class="btn btn-primary">Publish Blog</button>
+                        <a asp-action="ManageBlogs" class="btn btn-outline-secondary mr-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Update Blog</button>
                     </div>
                 </form>
             </div>

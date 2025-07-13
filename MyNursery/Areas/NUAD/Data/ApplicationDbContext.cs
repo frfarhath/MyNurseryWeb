@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using MyNursery.Models;
+using MyNursery.Areas.NUAD.Models;
 
 
 namespace MyNursery.Areas.NUAD.Data

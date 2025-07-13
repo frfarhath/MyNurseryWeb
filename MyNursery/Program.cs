@@ -10,7 +10,6 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// builder.Services.AddControllersWithViews(); // ❌ Already added above
 
 var app = builder.Build();
 
@@ -32,6 +31,7 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{area=NUAD}/{controller=Home}/{action=Index}/{id?}");
+
 
 // In Program.cs, before "var app = builder.Build();"
 

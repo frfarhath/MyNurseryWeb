@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Hosting;
 using MyNursery.Areas.NUAD.Data;
-using MyNursery.Models;
+using MyNursery.Areas.NUAD.Models;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using System.Linq;
+using Microsoft.AspNetCore.Http;
 
 namespace MyNursery.Areas.NUAD.Controllers
 {
@@ -20,13 +22,16 @@ namespace MyNursery.Areas.NUAD.Controllers
             _env = env;
         }
 
+        // GET: /NUAD/Blogs/CreateBlog
         [HttpGet]
         public IActionResult CreateBlog()
         {
             return View();
         }
 
+        // POST: /NUAD/Blogs/CreateBlog
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateBlog(
             BlogPost blogPost,
             IFormFile? CoverImage,
@@ -38,20 +43,12 @@ namespace MyNursery.Areas.NUAD.Controllers
                 return View(blogPost);
             }
 
-            // Set creation time
             blogPost.CreatedAt = DateTime.Now;
 
-            // Automatically assign status based on publish date
-            if (blogPost.PublishDate.HasValue && blogPost.PublishDate.Value.Date <= DateTime.Now.Date)
-            {
-                blogPost.Status = "Published";
-            }
-            else
-            {
-                blogPost.Status = "Draft";
-            }
+            blogPost.Status = blogPost.PublishDate.HasValue && blogPost.PublishDate.Value.Date <= DateTime.Now.Date
+                ? "Published"
+                : "Draft";
 
-            // Prepare path to save images
             string wwwRootPath = _env.WebRootPath;
             string blogImagesPath = Path.Combine(wwwRootPath, "uploads", "blogs");
 
@@ -60,7 +57,6 @@ namespace MyNursery.Areas.NUAD.Controllers
                 Directory.CreateDirectory(blogImagesPath);
             }
 
-            // Save Cover Image
             if (CoverImage != null)
             {
                 string fileName = Guid.NewGuid().ToString() + Path.GetExtension(CoverImage.FileName);
@@ -72,7 +68,6 @@ namespace MyNursery.Areas.NUAD.Controllers
                 blogPost.CoverImagePath = "/uploads/blogs/" + fileName;
             }
 
-            // Save Optional Image 1
             if (OptionalImage1 != null)
             {
                 string fileName = Guid.NewGuid().ToString() + Path.GetExtension(OptionalImage1.FileName);
@@ -84,7 +79,6 @@ namespace MyNursery.Areas.NUAD.Controllers
                 blogPost.OptionalImage1Path = "/uploads/blogs/" + fileName;
             }
 
-            // Save Optional Image 2
             if (OptionalImage2 != null)
             {
                 string fileName = Guid.NewGuid().ToString() + Path.GetExtension(OptionalImage2.FileName);
@@ -96,14 +90,16 @@ namespace MyNursery.Areas.NUAD.Controllers
                 blogPost.OptionalImage2Path = "/uploads/blogs/" + fileName;
             }
 
-            // Save to DB
             _db.BlogPosts.Add(blogPost);
             await _db.SaveChangesAsync();
 
-            TempData["success"] = "Blog created successfully!";
+            TempData["success"] = "Blog Created Successfully";
+
             return RedirectToAction("ManageBlogs");
         }
 
+        // GET: /NUAD/Blogs/ManageBlogs
+        [HttpGet]
         public IActionResult ManageBlogs()
         {
             var blogs = _db.BlogPosts
@@ -113,6 +109,7 @@ namespace MyNursery.Areas.NUAD.Controllers
             return View(blogs);
         }
 
+        // POST: /NUAD/Blogs/UpdateStatus
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateStatus(int Id, string Status)
@@ -133,6 +130,149 @@ namespace MyNursery.Areas.NUAD.Controllers
             await _db.SaveChangesAsync();
 
             TempData["success"] = "Status updated successfully.";
+            return RedirectToAction("ManageBlogs");
+        }
+
+        // GET: /NUAD/Blogs/GetBlogDetails/5
+        [HttpGet]
+        public async Task<IActionResult> GetBlogDetails(int id)
+        {
+            var blog = await _db.BlogPosts.FindAsync(id);
+            if (blog == null)
+                return NotFound();
+
+            return Json(new
+            {
+                title = blog.Title,
+                category = blog.Category,
+                content = blog.Content,
+                publishDate = blog.PublishDate?.ToString("yyyy-MM-dd"),
+                createdAt = blog.CreatedAt.ToString("yyyy-MM-dd"),
+                status = blog.Status,
+                coverImage = blog.CoverImagePath,
+                image1 = blog.OptionalImage1Path,
+                image2 = blog.OptionalImage2Path
+            });
+        }
+
+        // POST: /NUAD/Blogs/DeleteBlog/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteBlog(int id)
+        {
+            var blog = await _db.BlogPosts.FindAsync(id);
+            if (blog == null)
+            {
+                return Json(new { success = false, message = "Blog not found." });
+            }
+
+            string wwwRootPath = _env.WebRootPath;
+
+            void DeleteFile(string? relativePath)
+            {
+                if (!string.IsNullOrEmpty(relativePath))
+                {
+                    string fullPath = Path.Combine(wwwRootPath, relativePath.TrimStart('/').Replace("/", Path.DirectorySeparatorChar.ToString()));
+                    if (System.IO.File.Exists(fullPath))
+                    {
+                        System.IO.File.Delete(fullPath);
+                    }
+                }
+            }
+
+            DeleteFile(blog.CoverImagePath);
+            DeleteFile(blog.OptionalImage1Path);
+            DeleteFile(blog.OptionalImage2Path);
+
+            _db.BlogPosts.Remove(blog);
+            await _db.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Blog deleted successfully!" });
+        }
+
+        // GET: /NUAD/Blogs/EditBlog/5
+        [HttpGet]
+        public async Task<IActionResult> EditBlog(int id)
+        {
+            var blog = await _db.BlogPosts.FindAsync(id);
+            if (blog == null)
+            {
+                return NotFound();
+            }
+
+            return View(blog);
+        }
+
+        // POST: /NUAD/Blogs/EditBlog/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditBlog(
+            BlogPost blogPost,
+            IFormFile? CoverImage,
+            IFormFile? OptionalImage1,
+            IFormFile? OptionalImage2)
+        {
+            var existingBlog = await _db.BlogPosts.FindAsync(blogPost.Id);
+            if (existingBlog == null)
+            {
+                return NotFound();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(blogPost);
+            }
+
+            string wwwRootPath = _env.WebRootPath;
+            string blogImagesPath = Path.Combine(wwwRootPath, "uploads", "blogs");
+
+            if (!Directory.Exists(blogImagesPath))
+            {
+                Directory.CreateDirectory(blogImagesPath);
+            }
+
+            // Local helper to replace image and return the new path
+            string? ReplaceImage(IFormFile? file, string? existingPath)
+            {
+                if (file == null) return existingPath;
+
+                // Delete old file if exists
+                if (!string.IsNullOrEmpty(existingPath))
+                {
+                    string oldFullPath = Path.Combine(wwwRootPath, existingPath.TrimStart('/').Replace("/", Path.DirectorySeparatorChar.ToString()));
+                    if (System.IO.File.Exists(oldFullPath))
+                    {
+                        System.IO.File.Delete(oldFullPath);
+                    }
+                }
+
+                string fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                string fullPath = Path.Combine(blogImagesPath, fileName);
+                using (var stream = new FileStream(fullPath, FileMode.Create))
+                {
+                    file.CopyTo(stream);
+                }
+
+                return "/uploads/blogs/" + fileName;
+            }
+
+            // Update basic fields
+            existingBlog.Title = blogPost.Title;
+            existingBlog.Category = blogPost.Category;
+            existingBlog.Content = blogPost.Content;
+            existingBlog.PublishDate = blogPost.PublishDate;
+            existingBlog.Status = blogPost.PublishDate.HasValue && blogPost.PublishDate.Value.Date <= DateTime.Now.Date
+                ? "Published"
+                : "Draft";
+
+            // Replace and assign image paths
+            existingBlog.CoverImagePath = ReplaceImage(CoverImage, existingBlog.CoverImagePath);
+            existingBlog.OptionalImage1Path = ReplaceImage(OptionalImage1, existingBlog.OptionalImage1Path);
+            existingBlog.OptionalImage2Path = ReplaceImage(OptionalImage2, existingBlog.OptionalImage2Path);
+
+            await _db.SaveChangesAsync();
+
+            TempData["success"] = "Blog updated successfully!";
             return RedirectToAction("ManageBlogs");
         }
 

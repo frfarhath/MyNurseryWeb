@@ -1,0 +1,46 @@
+﻿@{
+    string? message = null;
+    string alertType = "info";
+
+    var successMessage = TempData["success"] as string;
+    var errorMessage = TempData["error"] as string;
+    var warningMessage = TempData["warning"] as string;
+
+    if (!string.IsNullOrEmpty(successMessage))
+    {
+        message = successMessage;
+        alertType = "success";
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        message = errorMessage;
+        alertType = "danger";
+    }
+    else if (!string.IsNullOrEmpty(warningMessage))
+    {
+        message = warningMessage;
+        alertType = "warning";
+    }
+}
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <div class="alert alert-@alertType alert-dismissible fade show" role="alert">
+        @message
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close" style="font-size: 1.5rem; color: black;">
+            <span aria-hidden="true">&times;</span>
+        </button>
+
+    </div>
+
+    <script>
+        window.setTimeout(function () {
+            const alertNode = document.querySelector('.alert');
+            if (alertNode) {
+                alertNode.classList.remove('show');
+                alertNode.classList.add('hide');
+                setTimeout(() => alertNode.remove(), 500);
+            }
+        }, 5000);
+    </script>
+}
