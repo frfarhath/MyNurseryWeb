@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MyNursery.Data;
 
@@ -11,9 +12,11 @@ using MyNursery.Data;
 namespace MyNursery.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250714122317_InitialCleanMigration")]
+    partial class InitialCleanMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -51,19 +54,19 @@ namespace MyNursery.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "a35cd4a6-2ef5-4099-82a3-2976a4078e40",
+                            Id = "e49184e8-b931-41b5-8a7c-b7449fbc9b1c",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "5edc6d2c-55aa-4148-90d3-55b15c4522fc",
+                            Id = "c2bbe639-9990-4416-9326-a7f396c78fff",
                             Name = "Parent",
                             NormalizedName = "PARENT"
                         },
                         new
                         {
-                            Id = "9bdb3758-fbfd-44af-9a5a-559c88e4acc8",
+                            Id = "bede1fd9-9837-40aa-b479-ebec457f060c",
                             Name = "Staff",
                             NormalizedName = "STAFF"
                         });

@@ -1,0 +1,66 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"] - Little Sprouts Nursery</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Navbar -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <a href="/" class="text-xl font-bold text-green-700">Little Sprouts Nursery</a>
+            <div class="flex items-center space-x-6">
+                <a href="/" class="text-gray-700 hover:text-green-700">Home</a>
+                <a href="/#contact" class="text-gray-700 hover:text-green-700">Contact</a>
+
+                <!-- Sign In Dropdown -->
+                <div class="relative">
+                    <button id="dropdownBtn" class="flex items-center text-gray-700 hover:text-green-700 focus:outline-none">
+                        Sign In
+                        <svg class="w-5 h-5 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.293l3.71-4.06a.75.75 0 111.08 1.04l-4.25 4.65a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    <div id="dropdownMenu" class="absolute right-0 mt-2 w-40 bg-white border rounded-md shadow-md hidden z-50">
+                        <a href="/Parent" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Parent</a>
+                        <a href="/Admin" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Admin</a>
+                        <a href="/Staff" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Staff</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main content -->
+    <main role="main" class="container mx-auto px-4 py-2">
+        @RenderBody()
+    </main>
+
+    <!-- Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+
+    @RenderSection("Scripts", required: false)
+
+    <!-- Dropdown toggle script -->
+    <script>
+        const dropdownBtn = document.getElementById('dropdownBtn');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+
+        dropdownBtn.addEventListener('click', function () {
+            dropdownMenu.classList.toggle('hidden');
+        });
+
+        // Hide dropdown if clicked outside
+        document.addEventListener('click', function (e) {
+            if (!dropdownBtn.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                dropdownMenu.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using System.IO;
 
-namespace MyNursery.Areas.NUAD.Data
+namespace MyNursery.Data
 {
     public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
     {

@@ -1,0 +1,60 @@
+﻿@page
+@model RegisterModel
+@{
+    ViewData["Title"] = "Register";
+    Layout = "/Areas/Identity/Pages/Shared/_Layout.cshtml";
+}
+
+<div class="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-xl w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
+        <h2 class="text-center text-3xl font-extrabold text-[#004d40] font-brand">Create an Account</h2>
+        <div asp-validation-summary="ModelOnly" class="text-red-600 mt-4 mb-2" role="alert"></div>
+
+        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="space-y-6">
+            <div>
+                <label asp-for="Input.FirstName" class="block text-[#004d40] font-medium mb-1"></label>
+                <input asp-for="Input.FirstName" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#004d40] focus:border-[#004d40] sm:text-sm" />
+                <span asp-validation-for="Input.FirstName" class="text-red-600 text-sm mt-1 block"></span>
+            </div>
+
+            <div>
+                <label asp-for="Input.LastName" class="block text-[#004d40] font-medium mb-1"></label>
+                <input asp-for="Input.LastName" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#004d40] focus:border-[#004d40] sm:text-sm" />
+                <span asp-validation-for="Input.LastName" class="text-red-600 text-sm mt-1 block"></span>
+            </div>
+
+            <div>
+                <label asp-for="Input.Email" class="block text-[#004d40] font-medium mb-1"></label>
+                <input asp-for="Input.Email" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#004d40] focus:border-[#004d40] sm:text-sm" />
+                <span asp-validation-for="Input.Email" class="text-red-600 text-sm mt-1 block"></span>
+            </div>
+
+            <div>
+                <label asp-for="Input.Password" class="block text-[#004d40] font-medium mb-1"></label>
+                <input asp-for="Input.Password" type="password" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#004d40] focus:border-[#004d40] sm:text-sm" />
+                <span asp-validation-for="Input.Password" class="text-red-600 text-sm mt-1 block"></span>
+            </div>
+
+            <div>
+                <label asp-for="Input.ConfirmPassword" class="block text-[#004d40] font-medium mb-1"></label>
+                <input asp-for="Input.ConfirmPassword" type="password" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#004d40] focus:border-[#004d40] sm:text-sm" />
+                <span asp-validation-for="Input.ConfirmPassword" class="text-red-600 text-sm mt-1 block"></span>
+            </div>
+
+            <div class="flex space-x-4">
+                <a href="/" class="w-full flex justify-center py-2 px-4 border border-[#004d40] text-[#004d40] text-sm font-medium rounded-md hover:bg-[#004d40] hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#004d40]">
+                    Cancel
+                </a>
+                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-[#004d40] hover:bg-[#00382e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#004d40]">
+                    Register
+                </button>
+            </div>
+
+            <div class="text-center mt-4">
+                <a asp-page="/Account/Login" class="text-sm font-medium text-[#004d40] hover:text-[#00382e]">
+                    Already have an account? Login
+                </a>
+            </div>
+        </form>
+    </div>
+</div>

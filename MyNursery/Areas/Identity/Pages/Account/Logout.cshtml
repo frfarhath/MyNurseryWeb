@@ -1,0 +1,21 @@
+﻿@page
+@model LogoutModel
+@{
+    Layout = "/Areas/Identity/Pages/Shared/_Layout.cshtml";
+}
+
+<header>
+    <h1>@ViewData["Title"]</h1>
+    @{
+        if (User.Identity?.IsAuthenticated ?? false)
+        {
+            <form asp-area="Identity" asp-page="/Account/Logout" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-danger">Logout</button>
+            </form>
+        }
+        else
+        {
+            <p>You have successfully logged out of the application.</p>
+        }
+    }
+</header>

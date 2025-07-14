@@ -2,16 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>MyNursery</RootNamespace>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="Arear\**" />
-    <Content Remove="Arear\**" />
-    <EmbeddedResource Remove="Arear\**" />
-    <None Remove="Arear\**" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\MyNursery.DataAccess\MyNursery.DataAccess.csproj" />
@@ -36,34 +31,28 @@
     <Folder Include="Areas\NUUS\Data\" />
     <Folder Include="Areas\NUUS\Models\" />
     <Folder Include="Areas\NUUS\Views\" />
-    <Folder Include="Areas\Welcome\Controllers\" />
     <Folder Include="Areas\Welcome\Data\" />
-    <Folder Include="Areas\Welcome\Models\" />
-    <Folder Include="Areas\Welcome\Views\" />
-    <Folder Include="Data\" />
-    <Folder Include="Helper\" />
-    <Folder Include="Models\" />
     <Folder Include="wwwroot\css\" />
     <Folder Include="wwwroot\images\" />
     <Folder Include="wwwroot\js\" />
-    <Folder Include="wwwroot\lib\bootstrap\" />
-    <Folder Include="wwwroot\lib\bootstrap\dist\css\" />
-    <Folder Include="wwwroot\lib\bootstrap\dist\js\" />
-    <Folder Include="wwwroot\lib\jquery-validation-unobtrusive\" />
-    <Folder Include="wwwroot\lib\jquery-validation\" />
-    <Folder Include="wwwroot\lib\jquery-validation\dist\" />
-    <Folder Include="wwwroot\lib\jquery\" />
-    <Folder Include="wwwroot\lib\jquery\dist\" />
+    <Folder Include="wwwroot\lib\" />
     <Folder Include="wwwroot\uploads\blogs\" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.7">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    <PackageReference Include="DnsClient" Version="1.8.0" />
+    <PackageReference Include="MailKit" Version="4.13.0" />
+    <PackageReference Include="MimeKit" Version="4.13.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.6" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="9.0.7" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.6">
       <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.7" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
+    <PackageReference Include="Select.HtmlToPdf.NetCore" Version="25.2.0" />
   </ItemGroup>
 
 </Project>

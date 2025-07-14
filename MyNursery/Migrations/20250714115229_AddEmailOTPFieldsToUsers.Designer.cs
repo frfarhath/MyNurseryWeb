@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MyNursery.Data;
 
@@ -11,9 +12,11 @@ using MyNursery.Data;
 namespace MyNursery.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250714115229_AddEmailOTPFieldsToUsers")]
+    partial class AddEmailOTPFieldsToUsers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -51,19 +54,19 @@ namespace MyNursery.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "a35cd4a6-2ef5-4099-82a3-2976a4078e40",
+                            Id = "f13c53ac-2c9d-4a87-97d5-abc5d5ce4c94",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "5edc6d2c-55aa-4148-90d3-55b15c4522fc",
+                            Id = "6e95bd06-6417-4bd1-ac57-890e5e24a703",
                             Name = "Parent",
                             NormalizedName = "PARENT"
                         },
                         new
                         {
-                            Id = "9bdb3758-fbfd-44af-9a5a-559c88e4acc8",
+                            Id = "9f13cf43-6277-4bce-a9a7-35d54a27c8dc",
                             Name = "Staff",
                             NormalizedName = "STAFF"
                         });

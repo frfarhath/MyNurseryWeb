@@ -1,0 +1,835 @@
+﻿@using MyNursery.Areas.Welcome.Models
+@using Microsoft.AspNetCore.Identity
+@using MyNursery.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Inter and Kalam for branding -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Custom Styles & Color Palette -->
+    <style>
+        html {
+            scroll-behavior: smooth; /* Smooth scrolling for anchor links */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif; /* Consistent font */
+        }
+
+        .font-brand {
+            font-family: 'Kalam', cursive;
+        }
+
+        /* Custom color palette based on requirements */
+        .bg-peach {
+            background-color: #FFDAB9;
+        }
+
+        .text-peach {
+            color: #FFDAB9;
+        }
+
+        .border-peach {
+            border-color: #FFDAB9;
+        }
+
+        .bg-mint {
+            background-color: #E0F2F1;
+        }
+
+        .text-mint {
+            color: #E0F2F1;
+        }
+
+        .bg-lavender {
+            background-color: #E6E6FA;
+        }
+
+        .text-lavender {
+            color: #E6E6FA;
+        }
+
+        .bg-light-blue {
+            background-color: #E0F7FA;
+        }
+
+        .text-light-blue {
+            color: #E0F7FA;
+        }
+
+        .bg-deep-green {
+            background-color: #004d40;
+        }
+
+        .text-deep-green {
+            color: #004d40;
+        }
+
+        .hover\:bg-deep-green-dark:hover {
+            background-color: #00382e;
+        }
+
+        /* Smooth transition for gallery items visibility and general card hovers */
+        .card-hover-effect {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+            .card-hover-effect:hover {
+                transform: translateY(-5px); /* Slightly lift the card */
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
+            }
+
+        /* Gallery specific transition for opacity */
+        .gallery-item {
+            transition: transform 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* FAQ Accordion styles */
+        .faq-question {
+            cursor: pointer;
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, padding 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div id="success-alert" class="bg-emerald-100 border border-emerald-300 text-emerald-800 px-6 py-4 rounded-xl shadow-md mb-6 text-center transition-opacity duration-500">
+            <strong class="font-semibold">✅ Application submitted successfully!</strong>
+        </div>
+
+        <script>
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                const alert = document.getElementById('success-alert');
+                if (alert) {
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.remove(), 500);
+                }
+            }, 5000);
+        </script>
+    }
+
+
+
+    <!-- Header Navigation -->
+    <header class="bg-white/80 backdrop-blur-lg shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#home" class="text-2xl font-brand text-deep-green">Little Sprouts Nursery</a>
+
+
+            <!-- Desktop Navigation -->
+            <nav class="hidden lg:flex items-center space-x-6">
+                <a href="#home" class="nav-link text-gray-600 hover:text-deep-green transition duration-300">Home</a>
+                <a href="#about" class="nav-link text-gray-600 hover:text-deep-green transition duration-300">About</a>
+                <a href="#curriculum" class="nav-link text-gray-600 hover:text-deep-green transition duration-300">Curriculum</a>
+                <a href="#admissions" class="nav-link text-gray-600 hover:text-deep-green transition duration-300">Admissions</a>
+                <a href="#gallery" class="nav-link text-gray-600 hover:text-deep-green transition duration-300">Gallery</a>
+                <a href="#faq" class="nav-link text-gray-600 hover:text-deep-green transition duration-300">FAQ</a>
+                <a href="#careers" class="nav-link text-gray-600 hover:text-deep-green transition duration-300">Careers</a>
+                <a href="#contact" class="nav-link text-gray-600 hover:text-deep-green transition duration-300">Contact</a>
+
+                <!-- Auth Links -->
+                <ul class="flex items-center space-x-4 ml-4">
+                    @if (SignInManager.IsSignedIn(User))
+                    {
+                        var user = await UserManager.GetUserAsync(User);
+                        var firstName = user?.FirstName ?? "User";
+                        <li>
+                            <a class="nav-link text-gray-600 hover:text-deep-green" asp-area="Identity" asp-page="/Account/Manage/Index">
+                                Hello @firstName!
+                            </a>
+                        </li>
+                        <li>
+                            <form method="post" asp-area="Identity" asp-page="/Account/Logout">
+                                <button type="submit" class="nav-link text-gray-600 hover:text-deep-green bg-transparent border-none">Logout</button>
+                            </form>
+                        </li>
+                    }
+                    else
+                    {
+                        <li>
+                            <a class="nav-link text-gray-600 hover:text-deep-green transition duration-300" asp-area="Identity" asp-page="/Account/Login">Login</a>
+                        </li>
+                        <li>
+                            <a class="nav-link text-gray-600 hover:text-deep-green transition duration-300" asp-area="Identity" asp-page="/Account/Register">Register</a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+
+            <!-- "Book a Visit" button for desktop -->
+            <div class="hidden lg:flex items-center space-x-4">
+                <a href="#contact" class="bg-deep-green text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-deep-green-dark transition duration-300 shadow">Book a Visit</a>
+            </div>
+
+            <!-- Mobile Menu Toggle Button -->
+            <button id="mobile-menu-button" class="lg:hidden">
+                <i data-lucide="menu" class="h-6 w-6 text-deep-green"></i>
+            </button>
+        </div>
+
+        <!-- Mobile Menu (hidden by default) -->
+        <div id="mobile-menu" class="hidden lg:hidden bg-white">
+            <a href="#home" class="nav-link block py-3 px-6 text-gray-700 hover:bg-mint">Home</a>
+            <a href="#about" class="nav-link block py-3 px-6 text-gray-700 hover:bg-mint">About Us</a>
+            <a href="#curriculum" class="nav-link block py-3 px-6 text-gray-700 hover:bg-mint">Curriculum</a>
+            <a href="#admissions" class="nav-link block py-3 px-6 text-gray-700 hover:bg-mint">Admissions</a>
+            <a href="#gallery" class="nav-link block py-3 px-6 text-gray-700 hover:bg-mint">Gallery</a>
+            <a href="#faq" class="nav-link block py-3 px-6 text-gray-700 hover:bg-mint">FAQ</a>
+            <a href="#careers" class="nav-link block py-3 px-6 text-gray-700 hover:bg-mint">Careers</a>
+            <a href="#contact" class="nav-link block py-3 px-6 text-gray-700 hover:bg-mint">Contact</a>
+            <a href="/ApplicationForm" class="nav-link block py-3 px-6 text-gray-700 hover:bg-mint">Application Form</a>
+            <div class="p-4">
+                <a href="#contact" class="w-full text-center bg-deep-green text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-deep-green-dark transition duration-300 shadow block">Book a Visit</a>
+            </div>
+            <!-- Mobile Authentication Links -->
+            <ul class="block mt-4">
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    if (User.IsInRole("parent"))
+                    {
+                        <li>
+                            <a class="block py-3 px-6 text-gray-700 hover:bg-mint" asp-area="Identity" asp-page="/Account/Manage/Index">Profile (Parent)</a>
+                        </li>
+                        <li>
+                            <form method="post" asp-area="Identity" asp-page="/Account/Logout" id="logoutFormMobileParent" class="block">
+                                <button type="submit" class="w-full text-left py-3 px-6 text-gray-700 hover:bg-mint">Logout</button>
+                            </form>
+                        </li>
+                    }
+                    else if (User.IsInRole("admin"))
+                    {
+                        <li>
+                            <a class="block py-3 px-6 text-gray-700 hover:bg-mint" asp-area="Identity" asp-page="/Account/Manage/Index">Profile (Admin)</a>
+                        </li>
+                        <li>
+                            <form method="post" asp-area="Identity" asp-page="/Account/Logout" id="logoutFormMobileAdmin" class="block">
+                                <button type="submit" class="w-full text-left py-3 px-6 text-gray-700 hover:bg-mint">Logout</button>
+                            </form>
+                        </li>
+                    }
+                    else if (User.IsInRole("staff"))
+                    {
+                        <li>
+                            <a class="block py-3 px-6 text-gray-700 hover:bg-mint" asp-area="Identity" asp-page="/Account/Manage/Index">Profile (Staff)</a>
+                        </li>
+                        <li>
+                            <form method="post" asp-area="Identity" asp-page="/Account/Logout" id="logoutFormMobileStaff" class="block">
+                                <button type="submit" class="w-full text-left py-3 px-6 text-gray-700 hover:bg-mint">Logout</button>
+                            </form>
+                        </li>
+                    }
+                }
+                else
+                {
+                    <li>
+                        <a asp-area="Identity" asp-page="/Account/Register"
+                           class="block py-3 px-6 text-gray-700 hover:bg-mint cursor-pointer">
+                            Register
+                        </a>
+                    </li>
+                    <li>
+                        <a asp-area="Identity" asp-page="/Account/Login"
+                           class="block py-3 px-6 text-gray-700 hover:bg-mint cursor-pointer">
+                            Login
+                        </a>
+                    </li>
+
+
+                }
+            </ul>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <div id="page-container">
+
+        <!-- =================================================================== -->
+        <!-- HOME PAGE CONTENT                                                   -->
+        <!-- =================================================================== -->
+        <main id="home" class="page-section">
+            <!-- Hero Section -->
+            <section class="bg-mint">
+                <div class="container mx-auto px-6 py-20 md:py-32 text-center">
+                    <h1 class="text-4xl md:text-6xl font-brand text-deep-green mb-4 leading-tight">A Place to Grow, Learn, and Blossom</h1>
+                    <p class="text-lg md:text-xl text-gray-700 max-w-3xl mx-auto mb-8">Discover a nurturing, play-based environment where your child's curiosity is celebrated and their potential is unlocked.</p>
+                    <div class="flex justify-center space-x-4">
+                        <a href="#curriculum" class="bg-deep-green text-white px-8 py-3 rounded-lg font-semibold hover:bg-deep-green-dark transition duration-300 shadow-lg">Our Curriculum</a>
+                        <a href="#contact" class="bg-white text-deep-green px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-300 shadow-lg">Enquire Now</a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Key Highlights & Values Section -->
+            <section class="py-16 sm:py-24 bg-white">
+                <div class="container mx-auto px-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-10 text-center">
+                        <div class="p-6 rounded-lg shadow-md card-hover-effect group">
+                            <div class="flex items-center justify-center h-16 w-16 rounded-full bg-light-blue mx-auto mb-4 transform group-hover:scale-110 transition-transform duration-300">
+                                <i data-lucide="shield-check" class="h-8 w-8 text-deep-green"></i>
+                            </div>
+                            <h3 class="text-2xl font-semibold text-gray-900 mb-2">Safe & Nurturing</h3>
+                            <p class="text-gray-600">Our top priority is providing a secure and loving space where every child feels valued and safe.</p>
+                        </div>
+                        <div class="p-6 rounded-lg shadow-md card-hover-effect group">
+                            <div class="flex items-center justify-center h-16 w-16 rounded-full bg-peach mx-auto mb-4 transform group-hover:scale-110 transition-transform duration-300">
+                                <i data-lucide="puzzle" class="h-8 w-8 text-deep-green"></i>
+                            </div>
+                            <h3 class="text-2xl font-semibold text-gray-900 mb-2">Play-Based Learning</h3>
+                            <p class="text-gray-600">We champion learning through play, fostering creativity, problem-solving, and social skills.</p>
+                        </div>
+                        <div class="p-6 rounded-lg shadow-md card-hover-effect group">
+                            <div class="flex items-center justify-center h-16 w-16 rounded-full bg-lavender mx-auto mb-4 transform group-hover:scale-110 transition-transform duration-300">
+                                <i data-lucide="users" class="h-8 w-8 text-deep-green"></i>
+                            </div>
+                            <h3 class="text-2xl font-semibold text-gray-900 mb-2">Experienced Staff</h3>
+                            <p class="text-gray-600">Our passionate and qualified educators are dedicated to your child's growth and development.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- =================================================================== -->
+        <!-- ABOUT US PAGE CONTENT                                               -->
+        <!-- =================================================================== -->
+        <main id="about" class="page-section pt-16 sm:pt-24">
+            <!-- Page Header -->
+            <section class="bg-light-blue">
+                <div class="container mx-auto px-6 py-16 text-center">
+                    <h1 class="text-4xl md:text-5xl font-brand text-deep-green">Our Story & Values</h1>
+                    <p class="text-lg text-gray-700 max-w-2xl mx-auto mt-4">Learn more about the people and philosophy behind Little Sprouts Nursery.</p>
+                </div>
+            </section>
+
+            <!-- Meet the Team Section -->
+            <section class="py-16 sm:py-24 bg-gray-50">
+                <div class="container mx-auto px-6">
+                    <div class="text-center mb-12">
+                        <h2 class="text-3xl md:text-4xl font-bold text-deep-green">Meet Our Passionate Team</h2>
+                        <p class="text-lg text-gray-600 mt-2">The heart and soul of our nursery.</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <!-- Team Member 1 -->
+                        <div class="text-center bg-white p-6 rounded-lg shadow-md card-hover-effect group">
+                            <img src="https://placehold.co/300x300/E0F2F1/004d40?text=Sarah+T." alt="Sarah Thompson" class="w-40 h-40 rounded-full mx-auto mb-4 shadow-lg transform group-hover:scale-105 transition-transform duration-300">
+                            <h3 class="text-xl font-semibold text-gray-900">Sarah Thompson</h3>
+                            <p class="text-deep-green font-medium">Nursery Manager</p>
+                            <p class="text-gray-600 mt-2">With over 15 years of experience in early childhood education, Sarah leads our team with passion and a deep commitment to quality care.</p>
+                        </div>
+                        <!-- Team Member 2 -->
+                        <div class="text-center bg-white p-6 rounded-lg shadow-md card-hover-effect group">
+                            <img src="https://placehold.co/300x300/FFDAB9/004d40?text=David+C." alt="David Chen" class="w-40 h-40 rounded-full mx-auto mb-4 shadow-lg transform group-hover:scale-105 transition-transform duration-300">
+                            <h3 class="text-xl font-semibold text-gray-900">David Chen</h3>
+                            <p class="text-deep-green font-medium">Preschool Room Leader</p>
+                            <p class="text-gray-600 mt-2">David specializes in preparing our oldest children for their transition to primary school, focusing on phonics, numeracy, and social skills.</p>
+                        </div>
+                        <!-- Team Member 3 -->
+                        <div class="text-center bg-white p-6 rounded-lg shadow-md card-hover-effect group">
+                            <img src="https://placehold.co/300x300/E0F7FA/004d40?text=Emily+R." alt="Emily Rodriguez" class="w-40 h-40 rounded-full mx-auto mb-4 shadow-lg transform group-hover:scale-105 transition-transform duration-300">
+                            <h3 class="text-xl font-semibold text-gray-900">Emily Rodriguez</h3>
+                            <p class="text-deep-green font-medium">Toddler Room Leader</p>
+                            <p class="text-gray-600 mt-2">Emily creates a fun and engaging world for our toddlers, with a focus on sensory play, language development, and motor skills.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- =================================================================== -->
+        <!-- CURRICULUM PAGE CONTENT                                             -->
+        <!-- =================================================================== -->
+        <main id="curriculum" class="page-section pt-16 sm:pt-24">
+            <!-- Page Header -->
+            <section class="bg-peach">
+                <div class="container mx-auto px-6 py-16 text-center">
+                    <h1 class="text-4xl md:text-5xl font-brand text-deep-green">Our Curriculum & Learning Journey</h1>
+                    <p class="text-lg text-gray-700 max-w-2xl mx-auto mt-4">Following the EYFS framework to help every child achieve their potential.</p>
+                </div>
+            </section>
+
+            <!-- Age Group Activities -->
+            <section class="py-16 sm:py-24 bg-white">
+                <div class="container mx-auto px-6 space-y-16">
+                    <!-- Babies/Tots (0-2 years) -->
+                    <div class="flex flex-col md:flex-row items-center gap-12 bg-white p-6 rounded-lg shadow-md card-hover-effect">
+                        <div class="md:w-1/2">
+                            <h2 class="text-3xl font-bold text-deep-green mb-4">Babies & Tots (0-2 Years)</h2>
+                            <p class="text-gray-600 mb-6 text-lg">Our baby room provides a calm, sensory-rich environment. We focus on building strong bonds, developing motor skills, and encouraging early communication through singing, stories, and gentle play.</p>
+                        </div>
+                        <div class="md:w-1/2">
+                            <img src="https://placehold.co/600x400/FFDAB9/004d40?text=Babies+Room" alt="Babies room" class="rounded-xl shadow-lg w-full">
+                        </div>
+                    </div>
+                    <!-- Toddlers (2-3 years) -->
+                    <div class="flex flex-col md:flex-row-reverse items-center gap-12 bg-white p-6 rounded-lg shadow-md card-hover-effect">
+                        <div class="md:w-1/2">
+                            <h2 class="text-3xl font-bold text-deep-green mb-4">Toddlers (2-3 Years)</h2>
+                            <p class="text-gray-600 mb-6 text-lg">For our toddlers, the world is a place of endless discovery. We support their growing independence with activities that promote language, problem-solving, and social interaction, including potty training support.</p>
+                        </div>
+                        <div class="md:w-1/2">
+                            <img src="https://placehold.co/600x400/E6E6FA/004d40?text=Toddlers+Room" alt="Toddlers room" class="rounded-xl shadow-lg w-full">
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- =================================================================== -->
+        <!-- ADMISSIONS PAGE CONTENT                                             -->
+        <!-- =================================================================== -->
+        <main id="admissions" class="page-section pt-16 sm:pt-24">
+            <!-- Page Header -->
+            <section class="bg-mint">
+                <div class="container mx-auto px-6 py-16 text-center">
+                    <h1 class="text-4xl md:text-5xl font-brand text-deep-green">Admissions & Parent Info</h1>
+                    <p class="text-lg text-gray-700 max-w-2xl mx-auto mt-4">Everything you need to know about joining the Little Sprouts family.</p>
+                </div>
+            </section>
+
+            <!-- Admissions Process -->
+            <section class="py-16 sm:py-24 bg-white">
+                <div class="container mx-auto px-6">
+                    <h2 class="text-3xl md:text-4xl font-bold text-deep-green text-center mb-12">Our Admissions Process</h2>
+                    <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                        <!-- Enquire & Visit Step (now a link) -->
+                        <a href="/Parent/ApplicationForm" class="block p-6 rounded-lg shadow-md card-hover-effect group">
+                            <div class="flex items-center justify-center h-16 w-16 rounded-full bg-peach mx-auto mb-4 font-bold text-2xl text-deep-green transform group-hover:scale-110 transition-transform duration-300">1</div>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2 group-hover:text-deep-green transition-colors duration-300">Enquire & Visit</h3>
+                            <p class="text-gray-600">Start by filling out our online enquiry form. We'll then invite you for a personal tour of our nursery.</p>
+                        </a>
+
+                        <!-- Register Step -->
+                        <div class="p-6 rounded-lg shadow-md card-hover-effect group">
+                            <div class="flex items-center justify-center h-16 w-16 rounded-full bg-lavender mx-auto mb-4 font-bold text-2xl text-deep-green transform group-hover:scale-110 transition-transform duration-300">2</div>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2 group-hover:text-deep-green transition-colors duration-300">Register</h3>
+                            <p class="text-gray-600">If you feel we're the right fit, you can register your child. We'll discuss availability and settling-in dates.</p>
+                        </div>
+                        <!-- Welcome! Step -->
+                        <div class="p-6 rounded-lg shadow-md card-hover-effect group">
+                            <div class="flex items-center justify-center h-16 w-16 rounded-full bg-light-blue mx-auto mb-4 font-bold text-2xl text-deep-green transform group-hover:scale-110 transition-transform duration-300">3</div>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2 group-hover:text-deep-green transition-colors duration-300">Welcome!</h3>
+                            <p class="text-gray-600">Once your place is confirmed, we'll provide a welcome pack and begin our settling-in sessions to ensure a happy start.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Fees, Funding & Policies -->
+            <section class="py-16 sm:py-24 bg-gray-50">
+                <div class="container mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div class="bg-white p-8 rounded-lg shadow-md card-hover-effect">
+                        <h3 class="text-2xl font-bold text-deep-green mb-4">Fees & Funding</h3>
+                        <p class="text-gray-600 mb-4">We offer a transparent fee structure and accept various funding options, including 15/30 hours free childcare and tax-free childcare schemes.</p>
+                        <a href="#" class="inline-flex items-center bg-deep-green text-white px-6 py-3 rounded-lg font-semibold hover:bg-deep-green-dark transition duration-300">
+                            <i data-lucide="download" class="h-5 w-5 mr-2"></i>
+                            Download Fee Structure
+                        </a>
+                    </div>
+                    <div class="bg-white p-8 rounded-lg shadow-md card-hover-effect">
+                        <h3 class="text-2xl font-bold text-deep-green mb-4">Key Policies</h3>
+                        <p class="text-gray-600 mb-4">Your child's safety and well-being are paramount. You can download our key policies, including Safeguarding and Health & Safety, here.</p>
+                        <a href="#" class="inline-flex items-center bg-deep-green text-white px-6 py-3 rounded-lg font-semibold hover:bg-deep-green-dark transition duration-300">
+                            <i data-lucide="book-open" class="h-5 w-5 mr-2"></i>
+                            View Our Policies
+                        </a>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- =================================================================== -->
+        <!-- GALLERY PAGE CONTENT                                                -->
+        <!-- =================================================================== -->
+        <main id="gallery" class="page-section pt-16 sm:pt-24">
+            <!-- Page Header -->
+            <section class="bg-lavender">
+                <div class="container mx-auto px-6 py-16 text-center">
+                    <h1 class="text-4xl md:text-5xl font-brand text-deep-green">A Glimpse Into Our World</h1>
+                    <p class="text-lg text-gray-700 max-w-2xl mx-auto mt-4">Explore the fun, creativity, and learning that happens every day at Little Sprouts.</p>
+                </div>
+            </section>
+
+            <!-- Gallery Filter & Grid -->
+            <section class="py-16 sm:py-24 bg-white">
+                <div class="container mx-auto px-6">
+                    <!-- Filter Buttons -->
+                    <div id="gallery-filters" class="flex justify-center flex-wrap gap-2 mb-12">
+                        <button class="filter-btn bg-deep-green text-white px-5 py-2 rounded-full font-semibold" data-filter="all">All</button>
+                        <button class="filter-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-full font-semibold hover:bg-deep-green hover:text-white transition-colors duration-300" data-filter="outdoor">Outdoor Play</button>
+                        <button class="filter-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-full font-semibold hover:bg-deep-green hover:text-white transition-colors duration-300" data-filter="art">Art & Craft</button>
+                        <button class="filter-btn bg-gray-200 text-gray-700 px-5 py-2 rounded-full font-semibold hover:bg-deep-green hover:text-white transition-colors duration-300" data-filter="celebrations">Celebrations</button>
+                    </div>
+
+                    <!-- Gallery Grid -->
+                    <div id="gallery-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        <!-- Item 1 -->
+                        <div class="gallery-item bg-white p-4 rounded-lg shadow-md card-hover-effect" data-category="outdoor">
+                            <div class="bg-light-blue p-4 rounded-lg shadow-md aspect-square flex items-center justify-center">
+                                <svg class="w-24 h-24 text-deep-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M12 14l-4-4 1.5-1.5 2.5 2.5 5-5L19 8l-7 7z"></path><path d="M2 17l4-4"></path><path d="M22 17l-4-4"></path><path d="M12 5V2"></path><path d="M5 12H2"></path><path d="M19 12h3"></path></svg>
+                            </div>
+                            <p class="text-center mt-2 font-medium text-gray-700">Exploring the Garden</p>
+                        </div>
+                        <!-- Item 2 -->
+                        <div class="gallery-item bg-white p-4 rounded-lg shadow-md card-hover-effect" data-category="art">
+                            <div class="bg-peach p-4 rounded-lg shadow-md aspect-square flex items-center justify-center">
+                                <svg class="w-24 h-24 text-deep-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M20.44 3.56a1.5 1.5 0 0 0-2.08 0L3.62 18.3a1.53 1.53 0 0 0-.42 1.08V21a1 1 0 0 0 1 1h1.62a1.53 1.53 0 0 0 1.08-.42L20.44 5.64a1.5 1.5 0 0 0 0-2.08z"></path><path d="M18 6l-9 9"></path><path d="M12.5 2.5.5 14.5"></path></svg>
+                            </div>
+                            <p class="text-center mt-2 font-medium text-gray-700">Painting Masterpieces</p>
+                        </div>
+                        <!-- Item 3 -->
+                        <div class="gallery-item bg-white p-4 rounded-lg shadow-md card-hover-effect" data-category="celebrations">
+                            <div class="bg-lavender p-4 rounded-lg shadow-md aspect-square flex items-center justify-center">
+                                <svg class="w-24 h-24 text-deep-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 0-5 5c0 1.84.63 3.54 1.68 4.86L3 18h18l-5.68-6.14A5.04 5.04 0 0 0 17 7a5 5 0 0 0-5-5z"></path><path d="M8 22h8"></path><path d="M12 18v4"></path></svg>
+                            </div>
+                            <p class="text-center mt-2 font-medium text-gray-700">Birthday Fun</p>
+                        </div>
+                        <!-- Item 4 -->
+                        <div class="gallery-item bg-white p-4 rounded-lg shadow-md card-hover-effect" data-category="outdoor">
+                            <div class="bg-mint p-4 rounded-lg shadow-md aspect-square flex items-center justify-center">
+                                <svg class="w-24 h-24 text-deep-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H22v-2.5c0-2-1.5-4-4-4H7.5c-2.5 0-4.5 2-4.5 4.5V19h5"></path><path d="M5 19v-2.5c0-1.5 1-3 2.5-3H10"></path><path d="M14 19.5V14h-4v5.5"></path><path d="M10 14h4"></path><path d="M12 12V9"></path><path d="M12 4.5a2.5 2.5 0 0 1 0 5 2.5 2.5 0 0 1 0-5z"></path></svg>
+                            </div>
+                            <p class="text-center mt-2 font-medium text-gray-700">Building Sandcastles</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- =================================================================== -->
+        <!-- FAQ PAGE CONTENT                                                    -->
+        <!-- =================================================================== -->
+        <main id="faq" class="page-section pt-16 sm:pt-24">
+            <!-- Page Header -->
+            <section class="bg-peach">
+                <div class="container mx-auto px-6 py-16 text-center">
+                    <h1 class="text-4xl md:text-5xl font-brand text-deep-green">Frequently Asked Questions</h1>
+                    <p class="text-lg text-gray-700 max-w-2xl mx-auto mt-4">Have a question? We've answered some common ones here.</p>
+                </div>
+            </section>
+
+            <!-- FAQ Accordion -->
+            <section class="py-16 sm:py-24 bg-white">
+                <div class="container mx-auto px-6 max-w-4xl">
+                    <div class="space-y-4">
+                        <!-- FAQ Item 1 -->
+                        <div class="faq-item bg-gray-50 rounded-lg shadow-sm card-hover-effect">
+                            <div class="faq-question p-6 flex justify-between items-center">
+                                <h3 class="text-lg font-semibold text-gray-800">What age children do you accept?</h3>
+                                <i data-lucide="chevron-down" class="faq-icon h-6 w-6 text-deep-green transition-transform duration-300"></i>
+                            </div>
+                            <div class="faq-answer px-6">
+                                <p class="text-gray-600 pb-6">We welcome children from 3 months to 5 years old. Our rooms are specially designed to cater to the developmental needs of different age groups, from babies and tots to toddlers and preschoolers.</p>
+                            </div>
+                        </div>
+                        <!-- FAQ Item 2 -->
+                        <div class="faq-item bg-gray-50 rounded-lg shadow-sm card-hover-effect">
+                            <div class="faq-question p-6 flex justify-between items-center">
+                                <h3 class="text-lg font-semibold text-gray-800">What are your opening hours?</h3>
+                                <i data-lucide="chevron-down" class="faq-icon h-6 w-6 text-deep-green transition-transform duration-300"></i>
+                            </div>
+                            <div class="faq-answer px-6">
+                                <p class="text-gray-600 pb-6">We are open Monday to Friday, from 7:30 AM to 6:00 PM, 51 weeks of the year. We are closed on bank holidays and for one week between Christmas and New Year.</p>
+                            </div>
+                        </div>
+                        <!-- FAQ Item 3 -->
+                        <div class="faq-item bg-gray-50 rounded-lg shadow-sm card-hover-effect">
+                            <div class="faq-question p-6 flex justify-between items-center">
+                                <h3 class="text-lg font-semibold text-gray-800">Do you provide meals and snacks?</h3>
+                                <i data-lucide="chevron-down" class="faq-icon h-6 w-6 text-deep-green transition-transform duration-300"></i>
+                            </div>
+                            <div class="faq-answer px-6">
+                                <p class="text-gray-600 pb-6">Yes, we provide a healthy and nutritious breakfast, mid-morning snack, lunch, and afternoon tea. All our meals are freshly prepared on-site by our nursery chef, and we can cater to any special dietary requirements or allergies.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- =================================================================== -->
+        <!-- CAREERS PAGE CONTENT                                                -->
+        <!-- =================================================================== -->
+        <main id="careers" class="page-section pt-16 sm:pt-24">
+            <!-- Page Header -->
+            <section class="bg-light-blue">
+                <div class="container mx-auto px-6 py-16 text-center">
+                    <h1 class="text-4xl md:text-5xl font-brand text-deep-green">Join Our Team</h1>
+                    <p class="text-lg text-gray-700 max-w-2xl mx-auto mt-4">We're looking for passionate and dedicated individuals to help us inspire the next generation.</p>
+                </div>
+            </section>
+
+            <!-- Why Work For Us & Vacancies -->
+            <section class="py-16 sm:py-24 bg-white">
+                <div class="container mx-auto px-6 grid grid-cols-1 lg:grid-cols-3 gap-12">
+                    <div class="lg:col-span-2">
+                        <h2 class="text-3xl font-bold text-deep-green mb-6">Current Vacancies</h2>
+                        <!-- Vacancy 1 -->
+                        <div class="bg-gray-50 p-6 rounded-lg shadow-sm card-hover-effect mb-6">
+                            <h3 class="text-xl font-semibold text-gray-900">Early Years Practitioner</h3>
+                            <p class="text-gray-600 mt-2">We are seeking a qualified and enthusiastic Early Years Practitioner to join our toddler room team. You must hold a Level 3 qualification in Childcare and have a genuine passion for working with young children.</p>
+                            <a href="#contact" class="inline-block mt-4 font-semibold text-deep-green hover:underline">Apply Now &rarr;</a>
+                        </div>
+                        <!-- Vacancy 2 -->
+                        <div class="bg-gray-50 p-6 rounded-lg shadow-sm card-hover-effect">
+                            <h3 class="text-xl font-semibold text-gray-900">Nursery Apprentice</h3>
+                            <p class="text-gray-600 mt-2">Looking to start your career in childcare? Our apprenticeship program offers hands-on experience and fully-funded training towards a recognized qualification.</p>
+                            <a href="#contact" class="inline-block mt-4 font-semibold text-deep-green hover:underline">Apply Now &rarr;</a>
+                        </div>
+                    </div>
+                    <div class="bg-mint p-8 rounded-lg shadow-md card-hover-effect">
+                        <h3 class="text-2xl font-bold text-deep-green mb-4">Why Work At Little Sprouts?</h3>
+                        <ul class="space-y-3 text-gray-700">
+                            <li class="flex items-start"><i data-lucide="award" class="h-6 w-6 text-deep-green mr-2 mt-1"></i>A supportive and friendly team environment.</li>
+                            <li class="flex items-start"><i data-lucide="trending-up" class="h-6 w-6 text-deep-green mr-2 mt-1"></i>Opportunities for professional development.</li>
+                            <li class="flex items-start"><i data-lucide="gift" class="h-6 w-6 text-deep-green mr-2 mt-1"></i>Competitive salary and benefits package.</li>
+                            <li class="flex items-start"><i data-lucide="heart" class="h-6 w-6 text-deep-green mr-2 mt-1"></i>The chance to make a real difference in children's lives.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- =================================================================== -->
+        <!-- CONTACT US PAGE CONTENT                                             -->
+        <!-- =================================================================== -->
+        <main id="contact" class="page-section pt-16 sm:pt-24">
+            <!-- Page Header -->
+            <section class="bg-mint">
+                <div class="container mx-auto px-6 py-16 text-center">
+                    <h1 class="text-4xl md:text-5xl font-brand text-deep-green">Get In Touch</h1>
+                    <p class="text-lg text-gray-700 max-w-2xl mx-auto mt-4">We'd love to hear from you. Send us a message or arrange a visit to see our nursery.</p>
+                </div>
+            </section>
+
+            <!-- Contact Form & Details -->
+            <section class="py-16 sm:py-24 bg-white">
+                <div class="container mx-auto px-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                        <!-- Contact Form -->
+                        <div class="bg-gray-50 p-8 rounded-lg shadow-md card-hover-effect">
+                            <h2 class="text-2xl font-bold text-deep-green mb-6">Send us a Message</h2>
+                            <form action="#" method="POST" class="space-y-6">
+                                <div>
+                                    <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
+                                    <input type="text" name="name" id="name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-deep-green focus:border-deep-green">
+                                </div>
+                                <div>
+                                    <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                                    <input type="email" name="email" id="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-deep-green focus:border-deep-green">
+                                </div>
+                                <div>
+                                    <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number (Optional)</label>
+                                    <input type="tel" name="phone" id="phone" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-deep-green focus:border-deep-green">
+                                </div>
+                                <div>
+                                    <label for="subject" class="block text-sm font-medium text-gray-700">Subject</label>
+                                    <input type="text" name="subject" id="subject" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-deep-green focus:border-deep-green">
+                                </div>
+                                <div>
+                                    <label for="message" class="block text-sm font-medium text-gray-700">Your Message</label>
+                                    <textarea name="message" id="message" rows="5" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-deep-green focus:border-deep-green"></textarea>
+                                </div>
+                                <div>
+                                    <button type="submit" class="w-full bg-deep-green text-white px-6 py-3 rounded-lg font-semibold hover:bg-deep-green-dark transition duration-300 shadow">Send Message</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Contact Details -->
+                        <div class="bg-peach p-8 rounded-lg shadow-md card-hover-effect flex flex-col justify-between">
+                            <div>
+                                <h2 class="text-2xl font-bold text-deep-green mb-6">Our Details</h2>
+                                <div class="space-y-4 text-gray-700">
+                                    <p class="flex items-start">
+                                        <i data-lucide="map-pin" class="h-6 w-6 text-deep-green mr-3 flex-shrink-0"></i>
+                                        123 Blossom Lane, Littleville, LS1 2AB
+                                    </p>
+                                    <p class="flex items-start">
+                                        <i data-lucide="phone" class="h-6 w-6 text-deep-green mr-3 flex-shrink-0"></i>
+                                        <a href="tel:+1234567890" class="hover:underline">+1 (234) 567-890</a>
+                                    </p>
+                                    <p class="flex items-start">
+                                        <i data-lucide="mail" class="h-6 w-6 text-deep-green mr-3 flex-shrink-0"></i>
+                                        <a href="mailto:info@littlesprouts.com" class="hover:underline">info@littlesprouts.com</a>
+                                    </p>
+                                    <p class="flex items-start">
+                                        <i data-lucide="clock" class="h-6 w-6 text-deep-green mr-3 flex-shrink-0"></i>
+                                        Mon - Fri: 7:30 AM - 6:00 PM
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="mt-8">
+                                <h3 class="text-xl font-bold text-deep-green mb-4">Find Us</h3>
+                                <!-- Placeholder for a map or map link -->
+                                <div class="bg-gray-200 rounded-lg h-48 flex items-center justify-center text-gray-600">
+                                    Map Placeholder
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+    </div> <!-- End of #page-container -->
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- About -->
+            <div>
+                <h3 class="text-xl font-bold mb-4">Little Sprouts Nursery</h3>
+                <p class="text-gray-300">Providing a nurturing and stimulating environment where children can grow, learn, and blossom into confident individuals.</p>
+            </div>
+            <!-- Quick Links -->
+            <div>
+                <h3 class="text-xl font-bold mb-4">Quick Links</h3>
+                <ul class="space-y-2">
+                    <li><a href="#about" class="text-gray-300 hover:text-white transition duration-300">About Us</a></li>
+                    <li><a href="#curriculum" class="text-gray-300 hover:text-white transition duration-300">Curriculum</a></li>
+                    <li><a href="#admissions" class="text-gray-300 hover:text-white transition duration-300">Admissions</a></li>
+                    <li><a href="#careers" class="text-gray-300 hover:text-white transition duration-300">Careers</a></li>
+                    <li><a href="#contact" class="text-gray-300 hover:text-white transition duration-300">Contact Us</a></li>
+                </ul>
+            </div>
+            <!-- Contact Info -->
+            <div>
+                <h3 class="text-xl font-bold mb-4">Contact Info</h3>
+                <p class="text-gray-300 flex items-center mb-2"><i data-lucide="map-pin" class="h-5 w-5 mr-2"></i> 123 Blossom Lane, Littleville, LS1 2AB</p>
+                <p class="text-gray-300 flex items-center mb-2"><i data-lucide="phone" class="h-5 w-5 mr-2"></i> +1 (234) 567-890</p>
+                <p class="text-gray-300 flex items-center"><i data-lucide="mail" class="h-5 w-5 mr-2"></i> info@littlesprouts.com</p>
+                <div class="flex space-x-4 mt-6">
+                    <a href="#" class="text-gray-300 hover:text-white transition duration-300"><i data-lucide="facebook" class="h-6 w-6"></i></a>
+                    <a href="#" class="text-gray-300 hover:text-white transition duration-300"><i data-lucide="instagram" class="h-6 w-6"></i></a>
+                    <a href="#" class="text-gray-300 hover:text-white transition duration-300"><i data-lucide="twitter" class="h-6 w-6"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="text-center text-gray-400 mt-8 pt-8 border-t border-gray-700">
+            &copy; 2023 Little Sprouts Nursery. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- JavaScript for interactivity -->
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Mobile Menu Toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Close mobile menu when a link is clicked
+        navLinks.forEach(link => {
+            link.addEventListener('click', (event) => { // Added event parameter
+                // Only prevent default if it's an internal anchor link
+                if (link.getAttribute('href').startsWith('#')) {
+                    event.preventDefault();
+                    document.querySelector(link.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+                // Close mobile menu
+                if (!mobileMenu.classList.contains('hidden')) {
+                    mobileMenu.classList.add('hidden');
+                }
+            });
+        });
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // FAQ Accordion
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', () => {
+                const faqItem = question.closest('.faq-item');
+                const answer = faqItem.querySelector('.faq-answer');
+                const icon = faqItem.querySelector('.faq-icon');
+
+                // Toggle the 'open' class on the item
+                faqItem.classList.toggle('open');
+
+                if (faqItem.classList.contains('open')) {
+                    answer.style.maxHeight = answer.scrollHeight + 'px';
+                    answer.style.paddingTop = '1rem'; /* Add padding when open */
+                    icon.style.transform = 'rotate(180deg)';
+                } else {
+                    answer.style.maxHeight = '0';
+                    answer.style.paddingTop = '0'; /* Remove padding when closed */
+                    icon.style.transform = 'rotate(0deg)';
+                }
+            });
+        });
+
+        // Gallery Filter
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const galleryItems = document.querySelectorAll('.gallery-item');
+
+        filterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active class from all buttons
+                filterButtons.forEach(btn => {
+                    btn.classList.remove('bg-deep-green', 'text-white');
+                    btn.classList.add('bg-gray-200', 'text-gray-700');
+                });
+
+                // Add active class to the clicked button
+                button.classList.add('bg-deep-green', 'text-white');
+                button.classList.remove('bg-gray-200', 'text-gray-700');
+
+                const filter = button.dataset.filter;
+
+                galleryItems.forEach(item => {
+                    if (filter === 'all' || item.dataset.category === filter) {
+                        item.style.display = 'block'; // Show the item
+                        setTimeout(() => {
+                            item.style.opacity = '1';
+                            item.style.transform = 'scale(1)';
+                        }, 50); // Small delay for animation
+                    } else {
+                        item.style.opacity = '0';
+                        item.style.transform = 'scale(0.95)';
+                        setTimeout(() => {
+                            item.style.display = 'none'; // Hide after animation
+                        }, 300);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
