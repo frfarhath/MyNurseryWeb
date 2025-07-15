@@ -14,6 +14,8 @@ namespace MyNursery.Data
 
         // Add your app-specific DbSets here
         public DbSet<BlogPost> BlogPosts { get; set; }
+        public DbSet<MyNursery.Areas.NUAD.Models.ContactMessage> ContactMessages { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

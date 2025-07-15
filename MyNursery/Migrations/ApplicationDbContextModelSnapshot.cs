@@ -51,19 +51,19 @@ namespace MyNursery.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "a35cd4a6-2ef5-4099-82a3-2976a4078e40",
+                            Id = "3becf2c1-09e7-471c-ba2b-d3f632eef0fd",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "5edc6d2c-55aa-4148-90d3-55b15c4522fc",
+                            Id = "18aae5fc-669e-4dc0-8884-a11a5f44eeec",
                             Name = "Parent",
                             NormalizedName = "PARENT"
                         },
                         new
                         {
-                            Id = "9bdb3758-fbfd-44af-9a5a-559c88e4acc8",
+                            Id = "e894a381-4532-48af-829f-67001bca029c",
                             Name = "Staff",
                             NormalizedName = "STAFF"
                         });
@@ -216,6 +216,38 @@ namespace MyNursery.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("BlogPosts");
+                });
+
+            modelBuilder.Entity("MyNursery.Areas.NUAD.Models.ContactMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ContactMessages");
                 });
 
             modelBuilder.Entity("MyNursery.Areas.Welcome.Models.ApplicationUser", b =>

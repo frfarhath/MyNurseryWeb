@@ -81,14 +81,14 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// ✅ Area-aware default route
+//✅ Area-aware default route
+app.MapControllerRoute(
+name: "default",
+pattern: "{area=NUAD}/{controller=Home}/{action=Index}/{id?}");
+
 //app.MapControllerRoute(
 //    name: "default",
-//    pattern: "{area=NUAD}/{controller=Home}/{action=Index}/{id?}");
-
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{area=Welcome}/{controller=Home}/{action=Index}/{id?}");
+//    pattern: "{area=Welcome}/{controller=Home}/{action=Index}/{id?}");
 
 
 app.MapRazorPages();
