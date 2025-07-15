@@ -1,8 +1,8 @@
-﻿using MyNursery.Areas.Welcome.Models;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using MyNursery.Areas.NUAD.Models;          // For BlogPost entity
+using MyNursery.Areas.NUAD.Models;          
+using MyNursery.Areas.Welcome.Models;
 
 namespace MyNursery.Data
 {
@@ -15,6 +15,9 @@ namespace MyNursery.Data
         // Add your app-specific DbSets here
         public DbSet<BlogPost> BlogPosts { get; set; }
         public DbSet<MyNursery.Areas.NUAD.Models.ContactMessage> ContactMessages { get; set; }
+
+        public DbSet<MyNursery.Areas.NUAD.Models.User> Users { get; set; }
+
 
 
         protected override void OnModelCreating(ModelBuilder builder)
