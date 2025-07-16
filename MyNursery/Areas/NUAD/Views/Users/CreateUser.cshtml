@@ -4,6 +4,16 @@
     ViewData["Title"] = "Create User";
 }
 
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+        {
+            <p>@error.ErrorMessage</p>
+        }
+    </div>
+}
+
 <!-- [ breadcrumb ] start -->
 <div class="page-header">
     <div class="page-block">

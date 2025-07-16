@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using MyNursery.Areas.NUAD.Models;
+using MyNursery.Areas.Welcome.Models;
 using MyNursery.Data;
-using MyNursery.Models;
-using MyNursery.Services;
 using MyNursery.Utility;
 using System;
 using System.Linq;
@@ -18,11 +18,13 @@ namespace MyNursery.Areas.NUAD.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IEmailSender _emailSender;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public UsersController(ApplicationDbContext context, IEmailSender emailSender)
+        public UsersController(ApplicationDbContext context, IEmailSender emailSender, UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _emailSender = emailSender;
+            _userManager = userManager;
         }
 
         public IActionResult ManageUsers()
@@ -38,46 +40,56 @@ namespace MyNursery.Areas.NUAD.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateUser(User user)
+        public async Task<IActionResult> CreateUser(User model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                user.AddedDate = DateTime.UtcNow;
-
-                // 🔐 Generate random password
-                string generatedPassword = GenerateRandomPassword();
-
-                // 🚫 Not storing password in DB — just emailing it
-
-                _context.Users.Add(user);
-                await _context.SaveChangesAsync();
-
-                // ✉️ Send welcome email with role and password
-                string message = $@"
-    Dear {user.FirstName},<br/><br/>
-
-    You have been successfully added to <strong>Little Sprouts Nursery</strong> as a <strong>{user.Role}</strong>.<br/><br/>
-
-    <strong>Temporary Password:</strong><br/>
-    <code>{generatedPassword}</code><br/><br/>
-
-    Please keep this password secure and confidential. We recommend changing it as soon as possible.<br/><br/>
-
-    If you have any questions or need assistance, feel free to contact the administrator.<br/><br/>
-
-    Best regards,<br/>
-    <strong>Little Sprouts Nursery Team</strong>
-";
-
-
-                await _emailSender.SendEmailAsync(user.EmailAddress, "Welcome to MyNursery", message);
-
-                TempData[SD.Success_Msg] = "User created and password emailed successfully!";
-                return RedirectToAction("ManageUsers");
+                return View(model);
             }
 
-            TempData[SD.Error_Msg] = "Please correct the errors and try again.";
-            return View(user);
+            string generatedPassword = GenerateRandomPassword();
+
+            var identityUser = new ApplicationUser
+            {
+                UserName = model.EmailAddress,
+                Email = model.EmailAddress,
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                PhoneNumber = model.ContactNumber,
+                EmailConfirmed = true,
+                DateCreated = DateTime.UtcNow
+            };
+
+            var result = await _userManager.CreateAsync(identityUser, generatedPassword);
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                return View(model);
+            }
+
+            await _userManager.AddToRoleAsync(identityUser, model.Role);
+
+            model.Password = null;  // do not save plaintext password
+            model.AddedDate = DateTime.UtcNow;
+            _context.Users.Add(model);
+            await _context.SaveChangesAsync();
+
+            string message = $@"
+                Dear {model.FirstName},<br/><br/>
+                You have been successfully added to <strong>Little Sprouts Nursery</strong> as a <strong>{model.Role}</strong>.<br/><br/>
+                <strong>Temporary Password:</strong><br/>
+                <code>{generatedPassword}</code><br/><br/>
+                Please log in and change your password.<br/><br/>
+                Best regards,<br/>
+                <strong>Little Sprouts Nursery Team</strong>";
+
+            await _emailSender.SendEmailAsync(model.EmailAddress, "Welcome to MyNursery", message);
+
+            TempData[SD.Success_Msg] = "User created and credentials emailed!";
+            return RedirectToAction("ManageUsers");
         }
 
         public IActionResult EditUser(int id)
@@ -141,13 +153,12 @@ namespace MyNursery.Areas.NUAD.Controllers
             });
         }
 
-        // 🔐 Password generator
+        // Password generator - only one copy!
         private string GenerateRandomPassword(int length = 10)
         {
             const string valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%&*?";
             Random rnd = new();
-            return new string(Enumerable.Repeat(valid, length)
-                .Select(s => s[rnd.Next(s.Length)]).ToArray());
+            return new string(Enumerable.Repeat(valid, length).Select(s => s[rnd.Next(s.Length)]).ToArray());
         }
     }
 }

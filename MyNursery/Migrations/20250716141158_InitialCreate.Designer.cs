@@ -12,7 +12,7 @@ using MyNursery.Data;
 namespace MyNursery.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250716124851_InitialCreate")]
+    [Migration("20250716141158_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

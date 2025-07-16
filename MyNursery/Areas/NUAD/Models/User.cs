@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyNursery.Areas.NUAD.Models
 {
@@ -18,6 +19,10 @@ namespace MyNursery.Areas.NUAD.Models
 
         [Required, EmailAddress, MaxLength(256)]
         public string EmailAddress { get; set; }
+
+        [MaxLength(100)]
+        [NotMapped]  // Prevent EF from expecting Password column
+        public string? Password { get; set; }
 
         [Required]
         public string Role { get; set; }

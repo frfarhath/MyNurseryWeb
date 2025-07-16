@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using MyNursery.Areas.Welcome.Models;
 using MyNursery.Data;
 using MyNursery.Services; // EmailSender & EmailSettings
@@ -57,9 +56,6 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 
-
-
-
 var app = builder.Build();
 
 // Error handling
@@ -84,8 +80,8 @@ app.MapControllerRoute(
 
 app.MapRazorPages();
 
-// Role and User Seeding
-using (var scope = app.Services.CreateScope())
+// Role and User Seeding - Await async properly inside an async method
+await using (var scope = app.Services.CreateAsyncScope())
 {
     var services = scope.ServiceProvider;
     var loggerFactory = services.GetRequiredService<ILoggerFactory>();
@@ -93,14 +89,14 @@ using (var scope = app.Services.CreateScope())
 
     try
     {
-        logger.LogInformation("\ud83d\udd01 Starting role and user seeding...");
+        logger.LogInformation("🔄 Starting role and user seeding...");
         await SeedRolesAsync(services, logger);
         await SeedUsersAsync(services, logger);
-        logger.LogInformation("\u2705 Seeding completed.");
+        logger.LogInformation("✅ Seeding completed.");
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "\u274c An error occurred during seeding.");
+        logger.LogError(ex, "❌ An error occurred during seeding.");
     }
 }
 
@@ -110,7 +106,7 @@ app.Run();
 async Task SeedRolesAsync(IServiceProvider services, ILogger logger)
 {
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-    string[] roles = { "Parent", "Staff", "NUUS", "NUAD", "NUSAD", "CSAD", "NUOUS" };
+    string[] roles = { "Parent", "Staff", "NUUS", "NUAD", "NUSAD", "CSAD", "NUOUS", "Assistant Teacher", "Teacher", "Principal", "Head Teacher", "Other Staff" };
 
     foreach (var role in roles)
     {
@@ -119,16 +115,16 @@ async Task SeedRolesAsync(IServiceProvider services, ILogger logger)
             var result = await roleManager.CreateAsync(new IdentityRole(role));
             if (result.Succeeded)
             {
-                logger.LogInformation($"\u2705 Created role: {role}");
+                logger.LogInformation($"✅ Created role: {role}");
             }
             else
             {
-                logger.LogError($"\u274c Failed to create role {role}: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+                logger.LogError($"❌ Failed to create role {role}: {string.Join(", ", result.Errors.Select(e => e.Description))}");
             }
         }
         else
         {
-            logger.LogInformation($"\u2139\ufe0f Role already exists: {role}");
+            logger.LogInformation($"ℹ️ Role already exists: {role}");
         }
     }
 }
@@ -139,21 +135,20 @@ async Task SeedUsersAsync(IServiceProvider services, ILogger logger)
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
     var predefinedUsers = new[]
-{
-    new { Email = "nuus.user@littlesprouts.com", FirstName = "NUUS", LastName = "User", Role = "NUUS", Password = "Nuus@123" },
-    new { Email = "nuad.user@littlesprouts.com", FirstName = "NUAD", LastName = "User", Role = "NUAD", Password = "Nuad@123" },
-    new { Email = "nusad.user@littlesprouts.com", FirstName = "NUSAD", LastName = "User", Role = "NUSAD", Password = "Nusad@123" },
-    new { Email = "csad.user@littlesprouts.com", FirstName = "CSAD", LastName = "User", Role = "CSAD", Password = "Csad@123" },
-    new { Email = "nuous.user@littlesprouts.com", FirstName = "NUOUS", LastName = "User", Role = "NUOUS", Password = "Nuous@123" }
-};
-
+    {
+        new { Email = "nuus.user@littlesprouts.com", FirstName = "NUUS", LastName = "User", Role = "NUUS", Password = "Nuus@123" },
+        new { Email = "nuad.user@littlesprouts.com", FirstName = "NUAD", LastName = "User", Role = "NUAD", Password = "Nuad@123" },
+        new { Email = "nusad.user@littlesprouts.com", FirstName = "NUSAD", LastName = "User", Role = "NUSAD", Password = "Nusad@123" },
+        new { Email = "csad.user@littlesprouts.com", FirstName = "CSAD", LastName = "User", Role = "CSAD", Password = "Csad@123" },
+        new { Email = "nuous.user@littlesprouts.com", FirstName = "NUOUS", LastName = "User", Role = "NUOUS", Password = "Nuous@123" }
+    };
 
     foreach (var u in predefinedUsers)
     {
         var existing = await userManager.FindByEmailAsync(u.Email);
         if (existing != null)
         {
-            logger.LogInformation($"\u2139\ufe0f User already exists: {u.Email}");
+            logger.LogInformation($"ℹ️ User already exists: {u.Email}");
             continue;
         }
 
@@ -171,11 +166,11 @@ async Task SeedUsersAsync(IServiceProvider services, ILogger logger)
         if (result.Succeeded)
         {
             await userManager.AddToRoleAsync(user, u.Role);
-            logger.LogInformation($"\u2705 Created user {u.Email} with role {u.Role}");
+            logger.LogInformation($"✅ Created user {u.Email} with role {u.Role}");
         }
         else
         {
-            logger.LogError($"\u274c Failed to create user {u.Email}: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+            logger.LogError($"❌ Failed to create user {u.Email}: {string.Join(", ", result.Errors.Select(e => e.Description))}");
         }
     }
 }
