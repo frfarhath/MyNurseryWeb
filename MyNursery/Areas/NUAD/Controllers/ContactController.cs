@@ -1,8 +1,9 @@
-﻿using MyNursery.Areas.NUAD.Models;
-using MyNursery.Data;
-using MyNursery.Services;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
+using MyNursery.Areas.NUAD.Models;
+using MyNursery.Data;
+using MyNursery.Services;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ using System.Threading.Tasks;
 namespace MyNursery.Areas.NUAD.Controllers
 {
     [Area("NUAD")]
+    [Authorize(Roles = "NUAD")]
     public class ContactController : Controller
     {
         private readonly IEmailSender _emailSender;

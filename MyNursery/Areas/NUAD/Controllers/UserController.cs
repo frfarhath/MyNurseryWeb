@@ -1,17 +1,19 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using MyNursery.Models;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Mvc;
+using MyNursery.Areas.NUAD.Models;
 using MyNursery.Data;
+using MyNursery.Models;
 using MyNursery.Services;
+using MyNursery.Utility;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
-using MyNursery.Areas.NUAD.Models;
-using Microsoft.AspNetCore.Identity.UI.Services;
-using System;
-using MyNursery.Utility;
 
 namespace MyNursery.Areas.NUAD.Controllers
 {
     [Area("NUAD")]
+    [Authorize(Roles = "NUAD")]
     public class UsersController : Controller
     {
         private readonly ApplicationDbContext _context;

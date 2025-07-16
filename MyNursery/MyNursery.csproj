@@ -15,23 +15,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Areas\CSAD\Controllers\" />
     <Folder Include="Areas\CSAD\Data\" />
     <Folder Include="Areas\CSAD\Models\" />
-    <Folder Include="Areas\CSAD\Views\" />
-    <Folder Include="Areas\NUOUS\Controllers\" />
     <Folder Include="Areas\NUOUS\Data\" />
     <Folder Include="Areas\NUOUS\Models\" />
-    <Folder Include="Areas\NUOUS\Views\" />
-    <Folder Include="Areas\NUSAD\Controllers\" />
     <Folder Include="Areas\NUSAD\Data\" />
     <Folder Include="Areas\NUSAD\Models\" />
-    <Folder Include="Areas\NUSAD\Views\" />
-    <Folder Include="Areas\NUUS\Controllers\" />
     <Folder Include="Areas\NUUS\Data\" />
     <Folder Include="Areas\NUUS\Models\" />
-    <Folder Include="Areas\NUUS\Views\" />
     <Folder Include="Areas\Welcome\Data\" />
+    <Folder Include="Migrations\" />
     <Folder Include="wwwroot\css\" />
     <Folder Include="wwwroot\images\" />
     <Folder Include="wwwroot\js\" />

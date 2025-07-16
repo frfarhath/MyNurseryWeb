@@ -51,21 +51,21 @@ namespace MyNursery.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "a21c919d-e7a2-4d99-9b67-1d69c2a960ae",
+                            Id = "1",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "b9cf38fa-504d-498a-af2d-c6ddf57bb1a7",
-                            Name = "Parent",
-                            NormalizedName = "PARENT"
+                            Id = "2",
+                            Name = "Staff",
+                            NormalizedName = "STAFF"
                         },
                         new
                         {
-                            Id = "8450c384-7ea5-4d53-8542-69351e6e80f5",
-                            Name = "Staff",
-                            NormalizedName = "STAFF"
+                            Id = "3",
+                            Name = "Parent",
+                            NormalizedName = "PARENT"
                         });
                 });
 
@@ -302,7 +302,7 @@ namespace MyNursery.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Email")

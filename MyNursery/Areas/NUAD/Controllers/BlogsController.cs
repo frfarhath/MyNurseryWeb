@@ -1,17 +1,19 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using MyNursery.Areas.NUAD.Models;
-using MyNursery.Utility; // ✅ Added for SD class usage
+using MyNursery.Data;
+using MyNursery.Utility;
 using System;
 using System.IO;
-using System.Threading.Tasks;
 using System.Linq;
-using Microsoft.AspNetCore.Http;
-using MyNursery.Data;
+using System.Threading.Tasks;
 
 namespace MyNursery.Areas.NUAD.Controllers
 {
     [Area("NUAD")]
+    [Authorize(Roles = "NUAD")]
     public class BlogsController : Controller
     {
         private readonly ApplicationDbContext _db;

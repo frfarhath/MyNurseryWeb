@@ -84,28 +84,38 @@ namespace MyNursery.Views.Identity.Pages.Account
                 return Page();
             }
 
-            // Sign in using email as username
             var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
 
             if (result.Succeeded)
             {
                 _logger.LogInformation("User logged in.");
 
-                // 🔽 Get the logged-in user
                 var user = await _userManager.FindByEmailAsync(Input.Email);
                 var roles = await _userManager.GetRolesAsync(user);
 
                 if (roles.Contains("Parent"))
-                {
-                    return RedirectToAction("Index", "Parent");
-                }
-                else if (roles.Contains("Admin"))
-                {
-                    return RedirectToAction("Index", "Admin");
-                }
+                    return RedirectToAction("Index", "Home", new { area = "Welcome" });
 
 
-                // Default fallback
+                if (roles.Contains("Staff"))
+                    return RedirectToAction("Index", "Staff");
+
+                if (roles.Contains("NUUS"))
+                    return RedirectToAction("Index", "Home", new { area = "NUUS" });
+
+                if (roles.Contains("NUAD"))
+                    return RedirectToAction("Index", "Home", new { area = "NUAD" });
+
+                if (roles.Contains("NUSAD"))
+                    return RedirectToAction("Index", "Home", new { area = "NUSAD" });
+
+                if (roles.Contains("CSAD"))
+                    return RedirectToAction("Index", "Home", new { area = "CSAD" });
+
+                if (roles.Contains("NUOUS"))
+                    return RedirectToAction("Index", "Home", new { area = "NUOUS" });
+
+                // Default
                 return LocalRedirect(returnUrl);
             }
 
@@ -123,5 +133,6 @@ namespace MyNursery.Views.Identity.Pages.Account
             ModelState.AddModelError(string.Empty, "Invalid login attempt.");
             return Page();
         }
+
     }
 }

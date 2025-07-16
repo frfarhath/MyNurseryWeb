@@ -1,14 +1,15 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MyNursery.Areas.NUAD.Controllers
+namespace MyNursery.Areas.CSAD.Controllers
 {
-    [Area("NUAD")]
-    [Authorize(Roles = "NUAD")]
+    [Area("CSAD")]
+    [Authorize(Roles = "CSAD")]
     public class HomeController : Controller
     {
         public IActionResult Index()
         {
+            // Pass any model if needed, or just return the view
             return View();
         }
     }
