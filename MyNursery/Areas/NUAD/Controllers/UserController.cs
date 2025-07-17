@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 namespace MyNursery.Areas.NUAD.Controllers
 {
     [Area("NUAD")]
-    [Authorize(Roles = "NUAD")]
+    [Authorize(Roles = SD.Role_Admin)]
     public class UsersController : Controller
     {
         private readonly ApplicationDbContext _context;

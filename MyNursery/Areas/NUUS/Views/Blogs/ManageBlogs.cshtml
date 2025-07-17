@@ -1,5 +1,5 @@
 ﻿@model IEnumerable<MyNursery.Models.BlogPost>
-@using MyNursery.Utility;
+@using System.Linq
 
 @{
     ViewData["Title"] = "Manage Blogs";
@@ -11,14 +11,14 @@
         <div class="row align-items-center">
             <div class="col-md-12">
                 <div class="page-header-title">
-                    <h5 class="m-b-10">Published Blog Posts</h5>
+                    <h5 class="m-b-10">Manage Blogs</h5>
                 </div>
                 <ul class="breadcrumb">
                     <li class="breadcrumb-item">
-                        <a asp-area="NUAD" asp-controller="Home" asp-action="Dashboard"><i class="feather icon-home"></i></a>
+                        <a asp-area="NUUS" asp-controller="Home" asp-action="Dashboard"><i class="feather icon-home"></i></a>
                     </li>
                     <li class="breadcrumb-item"><a href="#">Blogs</a></li>
-                    <li class="breadcrumb-item"><a href="#">Published Blogs</a></li>
+                    <li class="breadcrumb-item"><a href="#">Manage Blogs</a></li>
                 </ul>
             </div>
         </div>
@@ -30,8 +30,8 @@
     <div class="col-xl-12">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">Published Blog Posts</h5>
-                <span class="text-muted">Search, filter, and manage published blog entries.</span>
+                <h5 class="mb-0">All Blog Posts</h5>
+                <span class="text-muted">Search, filter, and manage blog entries.</span>
             </div>
             <div class="card-body">
 
@@ -49,68 +49,65 @@
                     </div>
                 </div>
 
-                @if (!Model.Any())
-                {
-                    <div class="alert alert-info">No published posts found.</div>
-                }
-                else
-                {
-                    <div class="table-responsive">
-                        <table class="table table-hover" id="blogsTable">
-                            <thead class="thead-light">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="blogsTable">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Publish Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var blog in Model)
+                            {
                                 <tr>
-                                    <th>Title</th>
-                                    <th>Category</th>
-                                    <th>Publish Date</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var blog in Model)
-                                {
-                                    <tr>
-                                        <td>@blog.Title</td>
-                                        <td>@blog.Category</td>
-                                        <td>@blog.PublishDate?.ToString("yyyy-MM-dd")</td>
-                                        <td>
-                                            <form asp-action="ChangeApprovalStatus" method="post" class="d-flex align-items-center">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="id" value="@blog.Id" />
-                                                <select name="status" class="form-control form-control-sm me-2">
-                                                    <option value="@SD.Status_Approved" selected="@(blog.Status == SD.Status_Approved)">
-                                                        Accepted
-                                                    </option>
-                                                    <option value="@SD.Status_Disapproved" selected="@(blog.Status == SD.Status_Disapproved)">
-                                                        Rejected
-                                                    </option>
-                                                    <option value="Pending" selected="@(blog.Status != SD.Status_Approved && blog.Status != SD.Status_Disapproved)">
-                                                        Pending
-                                                    </option>
-                                                </select>
-                                                <button type="submit" class="btn btn-sm btn-secondary">
-                                                    <i class="feather icon-refresh-cw"></i> Update
-                                                </button>
-                                            </form>
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-info btn-sm" onclick="viewBlog(@blog.Id)">
-                                                <i class="feather icon-eye"></i> View
+                                    <td>@blog.Title</td>
+                                    <td>@blog.Category</td>
+                                    <td>@blog.PublishDate?.ToString("yyyy-MM-dd")</td>
+                                    <td>
+                                        <form asp-action="UpdateStatus" method="post" class="d-flex align-items-center">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="Id" value="@blog.Id" />
+                                            <select name="Status" class="form-control form-control-sm mr-2">
+                                                <option value="Published" selected="@(blog.Status == "Published")">Published</option>
+                                                <option value="Draft" selected="@(blog.Status == "Draft")">Draft</option>
+                                                <option value="Archived" selected="@(blog.Status == "Archived")">Archived</option>
+                                            </select>
+                                            <button type="submit" class="btn btn-sm btn-secondary">
+                                                <i class="feather icon-refresh-cw"></i> Update
                                             </button>
-                                            <form asp-action="DeleteBlog"
-                                                  asp-route-id="@blog.Id"
-                                                  method="post"
-                                                  class="delete-form d-inline ms-1">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-danger btn-sm">
-                                                    <i class="feather icon-trash-2"></i> Delete
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-info btn-sm" onclick="viewBlog(@blog.Id)">
+                                            <i class="feather icon-eye"></i> View
+                                        </button>
+                                        <a asp-action="EditBlog" asp-route-id="@blog.Id" class="btn btn-warning btn-sm">
+                                            <i class="feather icon-edit"></i> Edit
+                                        </a>
+                                        <form asp-action="DeleteBlog"
+                                              asp-route-id="@blog.Id"
+                                              method="post"
+                                              class="delete-form d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                <i class="feather icon-trash-2"></i> Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (!Model?.Any() ?? true)
+                {
+                    <div class="alert alert-info mt-4">
+                        No blog posts found.
                     </div>
                 }
             </div>
@@ -182,15 +179,14 @@
         }
 
         function viewBlog(id) {
-            fetch(`/NUAD/Blogs/GetBlogDetails/${id}`)
-                .then(response => {
-                    if (!response.ok) {
-                        alert("Failed to load blog details.");
-                        throw new Error("Network response was not ok");
-                    }
-                    return response.json();
-                })
+            fetch(`/NUUS/Blogs/GetBlogDetails/${id}`)
+                .then(res => res.json())
                 .then(data => {
+                    if (!data) {
+                        alert("Blog details not found.");
+                        return;
+                    }
+
                     document.getElementById("blogTitle").textContent = data.title || '';
                     document.getElementById("blogCategory").textContent = data.category || '';
                     document.getElementById("blogStatus").textContent = data.status || '';
@@ -216,43 +212,40 @@
 
                     $('#blogViewModal').modal('show');
                 })
-                .catch(error => {
-                    console.error("Error fetching blog details:", error);
-                    alert("Error loading blog details.");
-                });
+                .catch(() => alert('Error loading blog details.'));
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-             const deleteForms = document.querySelectorAll('.delete-form');
+            const deleteForms = document.querySelectorAll('.delete-form');
 
-             deleteForms.forEach(form => {
-                 form.addEventListener('submit', async function (e) {
-                     e.preventDefault();
+            deleteForms.forEach(form => {
+                form.addEventListener('submit', async function (e) {
+                    e.preventDefault();
 
-                     if (!confirm("Are you sure you want to delete this blog?")) return;
+                    if (!confirm("Are you sure you want to delete this blog?")) return;
 
-                     const formData = new FormData(form);
-                     const token = formData.get("__RequestVerificationToken");
+                    const formData = new FormData(form);
+                    const token = formData.get("__RequestVerificationToken");
 
-                     const response = await fetch(form.action, {
-                         method: 'POST',
-                         headers: {
-                             'RequestVerificationToken': token,
-                             'Accept': 'application/json'
-                         },
-                         body: formData
-                     });
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': token,
+                            'Accept': 'application/json'
+                        },
+                        body: formData
+                    });
 
-                     const result = await response.json();
+                    const result = await response.json();
 
-                     if (result.success) {
-                         alert(result.message);
-                         form.closest('tr').remove();
-                     } else {
-                         alert("Failed to delete blog.");
-                     }
-                 });
-             });
-         });
+                    if (result.success) {
+                        alert(result.message);
+                        form.closest('tr').remove();
+                    } else {
+                        alert("Failed to delete blog.");
+                    }
+                });
+            });
+        });
     </script>
 }

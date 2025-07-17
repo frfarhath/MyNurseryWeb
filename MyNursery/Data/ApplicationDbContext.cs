@@ -23,7 +23,7 @@ namespace MyNursery.Data
         /// <summary>
         /// NUAD blog posts
         /// </summary>
-        public DbSet<NUADModels.BlogPost> BlogPosts { get; set; }
+        public DbSet<Models.BlogPost> BlogPosts { get; set; }
 
         /// <summary>
         /// NUAD contact messages

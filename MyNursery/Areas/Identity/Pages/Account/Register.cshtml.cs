@@ -1,93 +1,100 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System;
-using System.ComponentModel.DataAnnotations;
-using MyNursery.Services;
+using Microsoft.Extensions.Logging;
 using MyNursery.Areas.Welcome.Models;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using MyNursery.Data;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authentication;
+using MyNursery.Utility;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
-public class RegisterModel : PageModel
+namespace MyNursery.Areas.Identity.Pages.Account
 {
-    private readonly SignInManager<ApplicationUser> _signInManager;
-    private readonly UserManager<ApplicationUser> _userManager;
-    private readonly IUserStore<ApplicationUser> _userStore;
-    private readonly ILogger<RegisterModel> _logger;
-    private readonly IEmailSender _emailSender;
-
-    public RegisterModel(
-        UserManager<ApplicationUser> userManager,
-        IUserStore<ApplicationUser> userStore,
-        SignInManager<ApplicationUser> signInManager,
-        ILogger<RegisterModel> logger,
-        IEmailSender emailSender)
+    public class RegisterModel : PageModel
     {
-        _userManager = userManager;
-        _userStore = userStore;
-        _signInManager = signInManager;
-        _logger = logger;
-        _emailSender = emailSender;
-    }
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IUserStore<ApplicationUser> _userStore;
+        private readonly ILogger<RegisterModel> _logger;
+        private readonly IEmailSender _emailSender;
 
-    [BindProperty]
-    public InputModel Input { get; set; }
-
-    public string ReturnUrl { get; set; }
-    public IList<AuthenticationScheme> ExternalLogins { get; set; }
-
-    public class InputModel
-    {
-        [Required]
-        [Display(Name = "First Name")]
-        public string FirstName { get; set; }
-
-        [Required]
-        [Display(Name = "Last Name")]
-        public string LastName { get; set; }
-
-        [Required]
-        [EmailAddress]
-        [Display(Name = "Email")]
-        public string Email { get; set; }
-
-        [Required]
-        [StringLength(100, MinimumLength = 6)]
-        [DataType(DataType.Password)]
-        [Display(Name = "Password")]
-        public string Password { get; set; }
-
-        [DataType(DataType.Password)]
-        [Display(Name = "Confirm Password")]
-        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
-        public string ConfirmPassword { get; set; }
-
-        [Required]
-        [Display(Name = "Role")]
-        public string Role { get; set; }
-    }
-
-    public async Task OnGetAsync(string returnUrl = null)
-    {
-        ReturnUrl = returnUrl;
-        ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
-    }
-
-    public async Task<IActionResult> OnPostAsync(string returnUrl = null)
-    {
-        returnUrl ??= Url.Content("~/");
-        ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
-
-        if (ModelState.IsValid)
+        public RegisterModel(
+            UserManager<ApplicationUser> userManager,
+            IUserStore<ApplicationUser> userStore,
+            SignInManager<ApplicationUser> signInManager,
+            ILogger<RegisterModel> logger,
+            IEmailSender emailSender)
         {
+            _userManager = userManager;
+            _userStore = userStore;
+            _signInManager = signInManager;
+            _logger = logger;
+            _emailSender = emailSender;
+        }
+
+        [BindProperty]
+        public InputModel Input { get; set; } = default!;
+
+        public string? ReturnUrl { get; set; }
+
+        public IList<AuthenticationScheme> ExternalLogins { get; set; } = new List<AuthenticationScheme>();
+
+        public class InputModel
+        {
+            [Required]
+            [Display(Name = "First Name")]
+            public string FirstName { get; set; } = default!;
+
+            [Required]
+            [Display(Name = "Last Name")]
+            public string LastName { get; set; } = default!;
+
+            [Required]
+            [EmailAddress]
+            [Display(Name = "Email")]
+            public string Email { get; set; } = default!;
+
+            [Required]
+            [StringLength(100, MinimumLength = 6)]
+            [DataType(DataType.Password)]
+            [Display(Name = "Password")]
+            public string Password { get; set; } = default!;
+
+            [DataType(DataType.Password)]
+            [Display(Name = "Confirm Password")]
+            [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+            public string ConfirmPassword { get; set; } = default!;
+        }
+
+        public async Task OnGetAsync(string? returnUrl = null)
+        {
+            ReturnUrl = returnUrl;
+            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+        }
+
+        public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
+        {
+            returnUrl ??= Url.Content("~/");
+            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
+            if (!ModelState.IsValid)
+            {
+                return Page();
+            }
+
             var user = new ApplicationUser
             {
                 FirstName = Input.FirstName,
                 LastName = Input.LastName,
                 UserName = Input.Email,
                 Email = Input.Email,
-                DateCreated = DateTime.UtcNow
+                NUUSDashboardId = Guid.NewGuid().ToString(),
+                DateCreated = DateTime.UtcNow,
+                UserType = UserType.Registered // Default user type for registered users
             };
 
             var result = await _userManager.CreateAsync(user, Input.Password);
@@ -96,15 +103,18 @@ public class RegisterModel : PageModel
             {
                 _logger.LogInformation("User created a new account with password.");
 
-                // Role assignment
-                if (user.Email.ToLower() == "frfarhath21@gmail.com")
+                // Role assignment logic
+                if (user.Email.Equals("frfarhath21@gmail.com", StringComparison.OrdinalIgnoreCase))
                 {
-                    await _userManager.AddToRoleAsync(user, "Admin");
+                    await _userManager.AddToRoleAsync(user, SD.Role_Admin); // Admin role for this specific email
+                    user.UserType = UserType.AdminAdded;
                 }
                 else
                 {
-                    await _userManager.AddToRoleAsync(user, Input.Role);
+                    await _userManager.AddToRoleAsync(user, SD.Role_User); // Registered user role (NUUS)
                 }
+
+                await _userManager.UpdateAsync(user);
 
                 // Generate OTP for email verification
                 var otp = new Random().Next(100000, 999999).ToString();
@@ -112,6 +122,7 @@ public class RegisterModel : PageModel
                 user.EmailOTPExpiry = DateTime.UtcNow.AddMinutes(5);
                 await _userManager.UpdateAsync(user);
 
+                // Send OTP email
                 await _emailSender.SendEmailAsync(
                     Input.Email,
                     "Your OTP Code for Little Sprouts Nursery",
@@ -135,8 +146,9 @@ public class RegisterModel : PageModel
             {
                 ModelState.AddModelError(string.Empty, error.Description);
             }
-        }
 
-        return Page();
+            // Something failed, redisplay form
+            return Page();
+        }
     }
 }

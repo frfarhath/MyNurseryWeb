@@ -1,4 +1,4 @@
-﻿@model MyNursery.Areas.NUAD.Models.BlogPost
+﻿@model MyNursery.Models.BlogPost
 
 @{
     ViewData["Title"] = "Create Blog";
@@ -14,7 +14,7 @@
                 </div>
                 <ul class="breadcrumb">
                     <li class="breadcrumb-item">
-                        <a asp-area="NUAD" asp-controller="Home" asp-action="Dashboard"><i class="feather icon-home"></i></a>
+                        <a asp-area="NUUS" asp-controller="Home" asp-action="Dashboard"><i class="feather icon-home"></i></a>
                     </li>
                     <li class="breadcrumb-item"><a href="#">Blogs</a></li>
                     <li class="breadcrumb-item"><a href="#">Create Blog</a></li>
@@ -36,7 +36,7 @@
                 <!-- Shared notification partial -->
                 @await Html.PartialAsync("_Notification")
 
-                <form asp-action="CreateBlog" asp-controller="Blogs" asp-area="NUAD" enctype="multipart/form-data" method="post">
+                <form asp-action="CreateBlog" asp-controller="Blogs" asp-area="NUUS" enctype="multipart/form-data" method="post">
                     <div class="form-group">
                         <label asp-for="Title"></label>
                         <input asp-for="Title" class="form-control" />

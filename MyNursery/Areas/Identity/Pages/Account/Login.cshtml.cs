@@ -2,31 +2,32 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using MyNursery.Areas.Welcome.Models;
+using MyNursery.Utility;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace MyNursery.Views.Identity.Pages.Account
 {
+    [AllowAnonymous]
     public class LoginModel : PageModel
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<LoginModel> _logger;
 
-        public LoginModel(SignInManager<ApplicationUser> signInManager,
-                          UserManager<ApplicationUser> userManager,
-                          ILogger<LoginModel> logger)
+        public LoginModel(
+            SignInManager<ApplicationUser> signInManager,
+            UserManager<ApplicationUser> userManager,
+            ILogger<LoginModel> logger)
         {
             _signInManager = signInManager;
             _userManager = userManager;
@@ -34,24 +35,24 @@ namespace MyNursery.Views.Identity.Pages.Account
         }
 
         [BindProperty]
-        public InputModel Input { get; set; }
+        public InputModel Input { get; set; } = new();
 
-        public IList<AuthenticationScheme> ExternalLogins { get; set; }
+        public IList<AuthenticationScheme> ExternalLogins { get; set; } = new List<AuthenticationScheme>();
 
-        public string ReturnUrl { get; set; }
+        public string ReturnUrl { get; set; } = string.Empty;
 
         [TempData]
-        public string ErrorMessage { get; set; }
+        public string ErrorMessage { get; set; } = string.Empty;
 
         public class InputModel
         {
             [Required]
             [EmailAddress]
-            public string Email { get; set; }
+            public string Email { get; set; } = string.Empty;
 
             [Required]
             [DataType(DataType.Password)]
-            public string Password { get; set; }
+            public string Password { get; set; } = string.Empty;
 
             [Display(Name = "Remember me?")]
             public bool RememberMe { get; set; }
@@ -64,13 +65,12 @@ namespace MyNursery.Views.Identity.Pages.Account
                 ModelState.AddModelError(string.Empty, ErrorMessage);
             }
 
-            returnUrl ??= Url.Content("~/");
+            ReturnUrl = returnUrl ?? Url.Content("~/");
 
-            // Clear the existing external cookie to ensure a clean login process
+            // Clear existing external cookies
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
-            ReturnUrl = returnUrl;
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
@@ -92,32 +92,38 @@ namespace MyNursery.Views.Identity.Pages.Account
 
                 var user = await _userManager.FindByEmailAsync(Input.Email);
                 var roles = await _userManager.GetRolesAsync(user);
+                var email = Input.Email.ToLower();
 
-                if (roles.Contains("Parent"))
-                    return RedirectToAction("Index", "Home", new { area = "Welcome" });
+                // Redirect admins based on email first (if needed)
+                if (roles.Contains(SD.Role_Admin))
+                {
+                    return email switch
+                    {
+                        "nuad.user@littlesprouts.com" => RedirectToAction("Index", "Home", new { area = "NUAD" }),
+                        "nusad.user@littlesprouts.com" => RedirectToAction("Index", "Home", new { area = "NUSAD" }),
+                        "csad.user@littlesprouts.com" => RedirectToAction("Index", "Home", new { area = "CSAD" }),
+                        "nuous.user@littlesprouts.com" => RedirectToAction("Index", "Home", new { area = "NUOUS" }),
+                        _ => RedirectToAction("Index", "Home", new { area = "NUAD" }) // Default admin area redirect
+                    };
+                }
 
-
-                if (roles.Contains("Staff"))
-                    return RedirectToAction("Index", "Staff");
-
-                if (roles.Contains("NUUS"))
-                    return RedirectToAction("Index", "Home", new { area = "NUUS" });
-
-                if (roles.Contains("NUAD"))
-                    return RedirectToAction("Index", "Home", new { area = "NUAD" });
-
-                if (roles.Contains("NUSAD"))
+                // Other roles redirect (remove duplicated Role_Admin check)
+                if (roles.Contains(SD.Role_SuperAdmin))
                     return RedirectToAction("Index", "Home", new { area = "NUSAD" });
 
-                if (roles.Contains("CSAD"))
+                if (roles.Contains(SD.Role_AdminCSAD))
                     return RedirectToAction("Index", "Home", new { area = "CSAD" });
 
-                if (roles.Contains("NUOUS"))
+                if (roles.Contains(SD.Role_OtherUser))
                     return RedirectToAction("Index", "Home", new { area = "NUOUS" });
 
-                // Default
-                return LocalRedirect(returnUrl);
+                if (roles.Contains(SD.Role_User))
+                    return RedirectToAction("Index", "Home", new { area = "NUUS" });
+
+                // Default fallback (no roles matched)
+                return RedirectToAction("Index", "Home", new { area = "Welcome" });
             }
+
 
             if (result.RequiresTwoFactor)
             {

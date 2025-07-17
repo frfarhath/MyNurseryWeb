@@ -24,7 +24,7 @@
                         <img class="img-radius" src="~/assets/images/user/avatar-2.jpg" asp-append-version="true" alt="User-Profile-Image">
                         <div class="user-details">
                             <span class="mb-0 font-weight-bold">John Doe</span>
-                            <div id="more-details"><small>UX Designer<i class="fa fa-chevron-down m-l-5"></i></small></div>
+                            <div id="more-details"><small>ADMIN<i class="fa fa-chevron-down m-l-5"></i></small></div>
                         </div>
                     </div>
                     <div class="collapse" id="nav-user-link">
@@ -50,8 +50,8 @@
                             <span class="pcoded-mtext">Blogs</span>
                         </a>
                         <ul class="pcoded-submenu">
-                            <li><a asp-area="NUAD" asp-controller="Blogs" asp-action="ManageBlogs">Manage</a></li>
-                            <li><a asp-area="NUAD" asp-controller="Blogs" asp-action="CreateBlog">Create</a></li>
+                            <li><a asp-area="NUAD" asp-controller="Blogs" asp-action="ManageBlogs">Manage Blogs</a></li>
+                            <li><a asp-area="NUAD" asp-controller="Blogs" asp-action="PublishedBlogs">Published Blogs</a></li>
                         </ul>
                     </li>
 
@@ -79,49 +79,7 @@
                         </ul>
                     </li>
 
-
-                    <!-- Other Sections -->
-                    <li class="nav-item pcoded-hasmenu">
-                        <a href="#!" class="nav-link">
-                            <span class="pcoded-micon"><i class="feather icon-package"></i></span>
-                            <span class="pcoded-mtext">Project &amp; CRM</span>
-                        </a>
-                        <ul class="pcoded-submenu">
-                            <li><a href="project-dashboard.html">Dashboard</a></li>
-                            <li><a href="project-customers.html">Customers</a></li>
-                            <li><a href="project-projects.html">Projects</a></li>
-                            <li><a href="project-task.html">Task</a></li>
-                        </ul>
-                    </li>
-
-                    <li class="nav-item pcoded-hasmenu">
-                        <a href="#!" class="nav-link">
-                            <span class="pcoded-micon"><i class="feather icon-user-check"></i></span>
-                            <span class="pcoded-mtext">Membership</span>
-                        </a>
-                        <ul class="pcoded-submenu">
-                            <li><a href="member-dashboard.html">Dashboard</a></li>
-                            <li><a href="member-mail-template.html">Email templates</a></li>
-                            <li><a href="member-countries.html">Country</a></li>
-                            <li><a href="member-coupons.html">Coupons</a></li>
-                            <li><a href="member-newsletter.html">Newsletter</a></li>
-                            <li><a href="member-user.html">User</a></li>
-                            <li><a href="member-membership.html">Membership</a></li>
-                        </ul>
-                    </li>
-
-                    <li class="nav-item pcoded-hasmenu">
-                        <a href="#!" class="nav-link"><span class="pcoded-micon"><i class="feather icon-life-buoy"></i></span><span class="pcoded-mtext">Helpdesk</span></a>
-                        <ul class="pcoded-submenu">
-                            <li><a href="help-dashboard.html">Helpdesk dashboard</a></li>
-                            <li><a href="help-create-ticket.html">Create ticket</a></li>
-                            <li><a href="help-ticket.html">Ticket list</a></li>
-                            <li><a href="help-ticket-details.html">Ticket Details</a></li>
-                            <li><a href="help-customer.html">Customer</a></li>
-                        </ul>
-                    </li>
                 </ul>
-
 
             </div>
         </div>
@@ -157,64 +115,6 @@
                             <li><a href="email_inbox.html" class="dropdown-item"><i class="fas fa-circle"></i> My Messages</a></li>
                             <li><a href="auth-signin.html" class="dropdown-item"><i class="fas fa-circle"></i> Lock Screen</a></li>
                         </ul>
-                    </div>
-                </li>
-
-                <!-- Mega Menu -->
-                <li class="nav-item dropdown mega-menu">
-                    <a class="dropdown-toggle h-drop" href="#" data-toggle="dropdown">Mega</a>
-                    <div class="dropdown-menu profile-notification">
-                        <div class="row no-gutters">
-                            <!-- UI Elements -->
-                            <div class="col">
-                                <h6 class="mega-title">UI Element</h6>
-                                <ul class="pro-body">
-                                    <li><a href="#!" class="dropdown-item"><i class="fas fa-circle"></i> Alert</a></li>
-                                    <li><a href="#!" class="dropdown-item"><i class="fas fa-circle"></i> Button</a></li>
-                                    <li><a href="#!" class="dropdown-item"><i class="fas fa-circle"></i> Badges</a></li>
-                                    <li><a href="#!" class="dropdown-item"><i class="fas fa-circle"></i> Cards</a></li>
-                                    <li><a href="#!" class="dropdown-item"><i class="fas fa-circle"></i> Modal</a></li>
-                                    <li><a href="#!" class="dropdown-item"><i class="fas fa-circle"></i> Tabs & pills</a></li>
-                                </ul>
-                            </div>
-
-                            <!-- Forms -->
-                            <div class="col">
-                                <h6 class="mega-title">Forms</h6>
-                                <ul class="pro-body">
-                                    <li><a href="#!" class="dropdown-item"><i class="feather icon-minus"></i> Elements</a></li>
-                                    <li><a href="#!" class="dropdown-item"><i class="feather icon-minus"></i> Validation</a></li>
-                                    <li><a href="#!" class="dropdown-item"><i class="feather icon-minus"></i> Masking</a></li>
-                                    <li><a href="#!" class="dropdown-item"><i class="feather icon-minus"></i> Wizard</a></li>
-                                    <li><a href="#!" class="dropdown-item"><i class="feather icon-minus"></i> Picker</a></li>
-                                    <li><a href="#!" class="dropdown-item"><i class="feather icon-minus"></i> Select</a></li>
-                                </ul>
-                            </div>
-
-                            <!-- Applications -->
-                            <div class="col">
-                                <h6 class="mega-title">Application</h6>
-                                <ul class="pro-body">
-                                    <li><a href="#!" class="dropdown-item"><i class="feather icon-mail"></i> Email</a></li>
-                                    <li><a href="#!" class="dropdown-item"><i class="feather icon-clipboard"></i> Task</a></li>
-                                    <li><a href="#!" class="dropdown-item"><i class="feather icon-check-square"></i> To-Do</a></li>
-                                    <li><a href="#!" class="dropdown-item"><i class="feather icon-image"></i> Gallery</a></li>
-                                    <li><a href="#!" class="dropdown-item"><i class="feather icon-help-circle"></i> Helpdesk</a></li>
-                                </ul>
-                            </div>
-
-                            <!-- Extensions -->
-                            <div class="col">
-                                <h6 class="mega-title">Extension</h6>
-                                <ul class="pro-body">
-                                    <li><a href="#!" class="dropdown-item"><i class="feather icon-file-plus"></i> Editor</a></li>
-                                    <li><a href="#!" class="dropdown-item"><i class="feather icon-file-minus"></i> Invoice</a></li>
-                                    <li><a href="#!" class="dropdown-item"><i class="feather icon-calendar"></i> Full calendar</a></li>
-                                    <li><a href="#!" class="dropdown-item"><i class="feather icon-upload-cloud"></i> File upload</a></li>
-                                    <li><a href="#!" class="dropdown-item"><i class="feather icon-scissors"></i> Image cropper</a></li>
-                                </ul>
-                            </div>
-                        </div>
                     </div>
                 </li>
             </ul>
@@ -282,13 +182,10 @@
     <!-- Main Container -->
     <div class="pcoded-main-container">
         <div class="pcoded-content">
-
-            @await Html.PartialAsync("_Notification") <!-- Show notifications here -->
+            @await Html.PartialAsync("_Notification")
             @RenderBody()
-
         </div>
     </div>
-
 
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -300,7 +197,6 @@
     <script src="~/assets/js/menu-setting.min.js"></script>
 
     @RenderSection("Scripts", required: false)
-
 
 </body>
 </html>

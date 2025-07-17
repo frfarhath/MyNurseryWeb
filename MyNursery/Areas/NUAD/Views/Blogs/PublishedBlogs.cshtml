@@ -1,8 +1,8 @@
 ﻿@model IEnumerable<MyNursery.Models.BlogPost>
-@using MyNursery.Utility;
+@using MyNursery.Utility
 
 @{
-    ViewData["Title"] = "Manage Blogs";
+    ViewData["Title"] = "Published Blogs";
 }
 
 <!-- [ breadcrumb ] start -->
@@ -62,7 +62,6 @@
                                     <th>Title</th>
                                     <th>Category</th>
                                     <th>Publish Date</th>
-                                    <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -73,26 +72,6 @@
                                         <td>@blog.Title</td>
                                         <td>@blog.Category</td>
                                         <td>@blog.PublishDate?.ToString("yyyy-MM-dd")</td>
-                                        <td>
-                                            <form asp-action="ChangeApprovalStatus" method="post" class="d-flex align-items-center">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="id" value="@blog.Id" />
-                                                <select name="status" class="form-control form-control-sm me-2">
-                                                    <option value="@SD.Status_Approved" selected="@(blog.Status == SD.Status_Approved)">
-                                                        Accepted
-                                                    </option>
-                                                    <option value="@SD.Status_Disapproved" selected="@(blog.Status == SD.Status_Disapproved)">
-                                                        Rejected
-                                                    </option>
-                                                    <option value="Pending" selected="@(blog.Status != SD.Status_Approved && blog.Status != SD.Status_Disapproved)">
-                                                        Pending
-                                                    </option>
-                                                </select>
-                                                <button type="submit" class="btn btn-sm btn-secondary">
-                                                    <i class="feather icon-refresh-cw"></i> Update
-                                                </button>
-                                            </form>
-                                        </td>
                                         <td>
                                             <button class="btn btn-info btn-sm" onclick="viewBlog(@blog.Id)">
                                                 <i class="feather icon-eye"></i> View
@@ -171,8 +150,8 @@
             const trs = table.tBodies[0].getElementsByTagName("tr");
 
             for (let i = 0; i < trs.length; i++) {
-                let title = trs[i].getElementsByTagName("td")[0].textContent.toLowerCase();
-                let category = trs[i].getElementsByTagName("td")[1].textContent.toLowerCase();
+                const title = trs[i].getElementsByTagName("td")[0].textContent.toLowerCase();
+                const category = trs[i].getElementsByTagName("td")[1].textContent.toLowerCase();
 
                 const matchesTitle = title.includes(input);
                 const matchesCategory = categoryFilter === "" || category === categoryFilter;
@@ -182,44 +161,32 @@
         }
 
         function viewBlog(id) {
-            fetch(`/NUAD/Blogs/GetBlogDetails/${id}`)
-                .then(response => {
-                    if (!response.ok) {
-                        alert("Failed to load blog details.");
-                        throw new Error("Network response was not ok");
+            $.get('/NUAD/Blogs/GetBlogDetails/' + id, function (data) {
+                $('#blogTitle').text(data.title);
+                $('#blogCategory').text(data.category);
+                $('#blogStatus').text(data.status);
+                $('#blogCreatedAt').text(data.createdAt);
+                $('#blogDate').text(data.publishDate);
+                $('#blogContent').html(data.content);
+
+                function setImage(containerId, imgId, url) {
+                    if (url) {
+                        $('#' + containerId).show();
+                        $('#' + imgId).attr('src', url);
+                    } else {
+                        $('#' + containerId).hide();
+                        $('#' + imgId).attr('src', '');
                     }
-                    return response.json();
-                })
-                .then(data => {
-                    document.getElementById("blogTitle").textContent = data.title || '';
-                    document.getElementById("blogCategory").textContent = data.category || '';
-                    document.getElementById("blogStatus").textContent = data.status || '';
-                    document.getElementById("blogCreatedAt").textContent = data.createdAt || '';
-                    document.getElementById("blogDate").textContent = data.publishDate || '';
-                    document.getElementById("blogContent").innerHTML = data.content || '';
+                }
 
-                    function setImage(containerId, imageId, url) {
-                        const container = document.getElementById(containerId);
-                        const img = document.getElementById(imageId);
-                        if (url) {
-                            container.style.display = 'block';
-                            img.src = url;
-                        } else {
-                            container.style.display = 'none';
-                            img.src = '';
-                        }
-                    }
+                setImage('coverImageContainer', 'coverImage', data.coverImage);
+                setImage('optionalImage1Container', 'optionalImage1', data.image1);
+                setImage('optionalImage2Container', 'optionalImage2', data.image2);
 
-                    setImage('coverImageContainer', 'coverImage', data.coverImage);
-                    setImage('optionalImage1Container', 'optionalImage1', data.image1);
-                    setImage('optionalImage2Container', 'optionalImage2', data.image2);
-
-                    $('#blogViewModal').modal('show');
-                })
-                .catch(error => {
-                    console.error("Error fetching blog details:", error);
-                    alert("Error loading blog details.");
-                });
+                $('#blogViewModal').modal('show');
+            }).fail(function () {
+                alert('Failed to load blog details.');
+            });
         }
 
         document.addEventListener('DOMContentLoaded', () => {
