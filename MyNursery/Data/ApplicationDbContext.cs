@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 // Aliases to resolve ambiguous models
 using NUADModels = MyNursery.Areas.NUAD.Models;
 using MyNursery.Areas.Welcome.Models;
+using MyNursery.Models;
 // using WelcomeModels = MyNursery.Areas.Welcome.Models; // Uncomment if you want Welcome ContactMessages too
 
 namespace MyNursery.Data
@@ -18,7 +19,7 @@ namespace MyNursery.Data
         /// <summary>
         /// NUAD users table
         /// </summary>
-        public new DbSet<NUADModels.User> Users { get; set; }
+        public new DbSet<User> Users { get; set; }
 
         /// <summary>
         /// NUAD blog posts

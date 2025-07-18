@@ -1,5 +1,4 @@
-﻿@using MyNursery.Models
-@model IEnumerable<User>
+﻿@model IEnumerable<MyNursery.Areas.NUSAD.Models.UserDisplayViewModel>
 
 @{
     ViewData["Title"] = "Manage Users";
@@ -15,7 +14,7 @@
                 </div>
                 <ul class="breadcrumb">
                     <li class="breadcrumb-item">
-                        <a asp-area="NUAD" asp-controller="Home" asp-action="Dashboard"><i class="feather icon-home"></i></a>
+                        <a asp-area="NUSAD" asp-controller="Home" asp-action="Dashboard"><i class="feather icon-home"></i></a>
                     </li>
                     <li class="breadcrumb-item"><a href="#">Users</a></li>
                     <li class="breadcrumb-item"><a href="#">Manage Users</a></li>
@@ -36,17 +35,33 @@
             <div class="card-body">
 
                 <div class="row mb-3">
-                    <div class="col-md-5">
+                    <div class="col-md-4 mb-2">
                         <input type="text" id="searchInput" class="form-control" placeholder="Search by first name, last name, or email..." onkeyup="filterTable()" />
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-4 mb-2">
                         <select id="roleFilter" class="form-control" onchange="filterTable()">
                             <option value="">-- Filter by Role --</option>
-                            <option>Teacher</option>
-                            <option>Assistant Teacher</option>
-                            <option>Principal</option>
-                            <option>Head Teacher</option>
-                            <option>Other Staff</option>
+                            @{
+                                // Get distinct roles from Model for dynamic options
+                                var roles = Model.Select(u => u.Role).Distinct().OrderBy(r => r);
+                                foreach (var role in roles)
+                                {
+                                    <option>@role</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <select id="userTypeFilter" class="form-control" onchange="filterTable()">
+                            <option value="">-- Filter by User Type --</option>
+                            @{
+                                // Distinct UserTypes
+                                var userTypes = Model.Select(u => u.UserType).Distinct().OrderBy(t => t);
+                                foreach (var type in userTypes)
+                                {
+                                    <option>@type</option>
+                                }
+                            }
                         </select>
                     </div>
                 </div>
@@ -57,10 +72,11 @@
                             <tr>
                                 <th>First Name</th>
                                 <th>Last Name</th>
-                                <th>Email Address</th>
+                                <th>Email</th>
                                 <th>Role</th>
                                 <th>Added Date</th>
-                                <th>Contact Number</th>
+                                <th>Is Active</th>
+                                <th>User Type</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -70,18 +86,14 @@
                                 <tr>
                                     <td>@user.FirstName</td>
                                     <td>@user.LastName</td>
-                                    <td>@user.EmailAddress</td>
+                                    <td>@user.Email</td>
                                     <td>@user.Role</td>
-                                    <td>@user.AddedDate.ToString("yyyy-MM-dd")</td>
-                                    <td>@user.ContactNumber</td>
+                                    <td>@user.DateCreated.ToString("yyyy-MM-dd")</td>
+                            
+                                    <td>@(user.IsActive ? "Yes" : "No")</td>
+                                    <td>@user.UserType</td>
                                     <td>
-                                        <button class="btn btn-info btn-sm" onclick="viewUser(@user.Id)">
-                                            <i class="feather icon-eye"></i> View
-                                        </button>
-                                        <a asp-area="NUAD" asp-controller="Users" asp-action="EditUser" asp-route-id="@user.Id" class="btn btn-warning btn-sm">
-                                            <i class="feather icon-edit"></i> Edit
-                                        </a>
-                                        <form asp-area="NUAD" asp-controller="Users" asp-action="DeleteUser" asp-route-id="@user.Id" method="post" class="delete-form d-inline">
+                                        <form asp-area="NUSAD" asp-controller="Users" asp-action="DeleteUser" asp-route-id="@user.Id" method="post" class="delete-form d-inline">
                                             @Html.AntiForgeryToken()
                                             <button type="submit" class="btn btn-danger btn-sm">
                                                 <i class="feather icon-trash-2"></i> Delete
@@ -105,82 +117,33 @@
     </div>
 </div>
 <!-- [ Main Content ] end -->
-<!-- View User Modal -->
-<div class="modal fade" id="userViewModal" tabindex="-1" role="dialog" aria-labelledby="userViewModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="userViewModalLabel">User Details</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <dl class="row">
-                    <dt class="col-sm-3">First Name:</dt>
-                    <dd class="col-sm-9" id="userFirstName"></dd>
-
-                    <dt class="col-sm-3">Last Name:</dt>
-                    <dd class="col-sm-9" id="userLastName"></dd>
-
-                    <dt class="col-sm-3">Email Address:</dt>
-                    <dd class="col-sm-9" id="userEmail"></dd>
-
-                    <dt class="col-sm-3">Role:</dt>
-                    <dd class="col-sm-9" id="userRole"></dd>
-
-                    <dt class="col-sm-3">Added Date:</dt>
-                    <dd class="col-sm-9" id="userAddedDate"></dd>
-
-                    <dt class="col-sm-3">Contact Number:</dt>
-                    <dd class="col-sm-9" id="userContactNumber"></dd>
-                </dl>
-            </div>
-        </div>
-    </div>
-</div>
-
 @section Scripts {
     <script>
-        function filterTable() {
+                function filterTable() {
             const input = document.getElementById("searchInput").value.toLowerCase();
             const roleFilter = document.getElementById("roleFilter").value.toLowerCase();
+            const userTypeFilter = document.getElementById("userTypeFilter").value.toLowerCase();
+
             const table = document.getElementById("usersTable");
             const trs = table.tBodies[0].getElementsByTagName("tr");
 
             for (let i = 0; i < trs.length; i++) {
-                let firstName = trs[i].getElementsByTagName("td")[0].textContent.toLowerCase();
-                let lastName = trs[i].getElementsByTagName("td")[1].textContent.toLowerCase();
-                let email = trs[i].getElementsByTagName("td")[2].textContent.toLowerCase();
-                let role = trs[i].getElementsByTagName("td")[3].textContent.toLowerCase();
+                let tds = trs[i].getElementsByTagName("td");
+
+                let firstName = tds[0].textContent.toLowerCase();
+                let lastName = tds[1].textContent.toLowerCase();
+                let email = tds[2].textContent.toLowerCase();
+                let role = tds[3].textContent.toLowerCase();
+                let userType = tds[6].textContent.toLowerCase(); 
 
                 const matchesSearch = firstName.includes(input) || lastName.includes(input) || email.includes(input);
                 const matchesRole = roleFilter === "" || role === roleFilter;
+                const matchesUserType = userTypeFilter === "" || userType === userTypeFilter;
 
-                trs[i].style.display = (matchesSearch && matchesRole) ? "" : "none";
+                trs[i].style.display = (matchesSearch && matchesRole && matchesUserType) ? "" : "none";
             }
         }
 
-        function viewUser(id) {
-            fetch(`/NUAD/Users/GetUserDetails/${id}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (!data) {
-                        alert("User details not found.");
-                        return;
-                    }
-
-                    document.getElementById("userFirstName").textContent = data.firstName || '';
-                    document.getElementById("userLastName").textContent = data.lastName || '';
-                    document.getElementById("userEmail").textContent = data.emailAddress || '';
-                    document.getElementById("userRole").textContent = data.role || '';
-                    document.getElementById("userAddedDate").textContent = data.addedDate || '';
-                    document.getElementById("userContactNumber").textContent = data.contactNumber || '';
-
-                    $('#userViewModal').modal('show');
-                })
-                .catch(() => alert('Error loading user details.'));
-        }
 
         document.addEventListener('DOMContentLoaded', () => {
             const deleteForms = document.querySelectorAll('.delete-form');

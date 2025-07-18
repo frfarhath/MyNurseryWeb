@@ -94,7 +94,7 @@ namespace MyNursery.Areas.Identity.Pages.Account
                 Email = Input.Email,
                 NUUSDashboardId = Guid.NewGuid().ToString(),
                 DateCreated = DateTime.UtcNow,
-                UserType = UserType.Registered // Default user type for registered users
+                UserType = SD.UserType_Registered // Default user type for registered users
             };
 
             var result = await _userManager.CreateAsync(user, Input.Password);
@@ -107,7 +107,7 @@ namespace MyNursery.Areas.Identity.Pages.Account
                 if (user.Email.Equals("frfarhath21@gmail.com", StringComparison.OrdinalIgnoreCase))
                 {
                     await _userManager.AddToRoleAsync(user, SD.Role_Admin); // Admin role for this specific email
-                    user.UserType = UserType.AdminAdded;
+                    user.UserType = SD.UserType_AdminAdded;
                 }
                 else
                 {

@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace MyNursery.Areas.NUAD.Models
+namespace MyNursery.Models
 {
     public class User
     {

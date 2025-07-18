@@ -2,9 +2,9 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
-using MyNursery.Areas.NUAD.Models;
 using MyNursery.Areas.Welcome.Models;
 using MyNursery.Data;
+using MyNursery.Models;
 using MyNursery.Utility;
 using System;
 using System.Linq;
