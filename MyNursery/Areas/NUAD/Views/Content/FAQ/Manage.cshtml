@@ -1,0 +1,107 @@
+﻿@model IEnumerable<MyNursery.Areas.NUAD.Models.FAQ>
+
+@{
+    ViewData["Title"] = "Manage FAQs";
+}
+
+<!-- [ breadcrumb ] start -->
+<div class="page-header">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="page-header-title">
+                    <h5 class="m-b-10">Manage FAQs</h5>
+                </div>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a asp-area="NUAD" asp-controller="Home" asp-action="Dashboard"><i class="feather icon-home"></i></a>
+                    </li>
+                    <li class="breadcrumb-item"><a href="#">Content</a></li>
+                    <li class="breadcrumb-item"><a href="#">FAQs</a></li>
+                    <li class="breadcrumb-item"><a href="#">Manage FAQs</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- [ breadcrumb ] end -->
+<!-- [ Main Content ] start -->
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">All FAQs</h5>
+                <span class="text-muted">Search, filter, and manage FAQs.</span>
+            </div>
+            <div class="card-body">
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search by question, answer, or category..." onkeyup="filterTable()" />
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover" id="faqTable">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Question</th>
+                                <th>Answer</th>
+                                <th>Category</th>
+                                <th>Order</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var faq in Model)
+                            {
+                                <tr>
+                                    <td>@faq.Question</td>
+                                    <td>@faq.Answer</td>
+                                    <td>@faq.Category</td>
+                                    <td>@faq.OrderDisplay</td>
+                                    <td>
+                                        <a asp-action="Edit" asp-route-id="@faq.Id" class="btn btn-sm btn-warning mr-1">
+                                            <i class="feather icon-edit"></i> Edit
+                                        </a>
+                                        <form asp-action="Delete" asp-route-id="@faq.Id" method="post" class="d-inline delete-form">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this FAQ?');">
+                                                <i class="feather icon-trash-2"></i> Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (!Model?.Any() ?? true)
+                {
+                    <div class="alert alert-info mt-4">No FAQs found.</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+<!-- [ Main Content ] end -->
+@section Scripts {
+    <script>
+        function filterTable() {
+            const input = document.getElementById("searchInput").value.toLowerCase();
+            const table = document.getElementById("faqTable");
+            const trs = table.tBodies[0].getElementsByTagName("tr");
+
+            for (let i = 0; i < trs.length; i++) {
+                const question = trs[i].cells[0].textContent.toLowerCase();
+                const answer = trs[i].cells[1].textContent.toLowerCase();
+                const category = trs[i].cells[2].textContent.toLowerCase();
+
+                const matches = question.includes(input) || answer.includes(input) || category.includes(input);
+
+                trs[i].style.display = matches ? "" : "none";
+            }
+        }
+    </script>
+}

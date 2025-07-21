@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MyNursery.Areas.Welcome.Models;
@@ -15,19 +16,30 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews()
     .AddRazorOptions(options =>
     {
+        // Optional: you can keep or remove this; your main area config is below
         options.ViewLocationFormats.Add("/Views/{1}/{0}.cshtml");
         options.ViewLocationFormats.Add("/Views/Shared/{0}.cshtml");
     });
+
+// Configure Area view locations including /Content folder inside Areas
+builder.Services.Configure<RazorViewEngineOptions>(options =>
+{
+    options.AreaViewLocationFormats.Clear();
+
+    options.AreaViewLocationFormats.Add("/Areas/{2}/Views/{1}/{0}.cshtml");          // default
+    options.AreaViewLocationFormats.Add("/Areas/{2}/Views/Content/{1}/{0}.cshtml");  // your Content folder
+    options.AreaViewLocationFormats.Add("/Areas/{2}/Views/Shared/{0}.cshtml");       // shared in area
+    options.AreaViewLocationFormats.Add("/Views/Shared/{0}.cshtml");                 // global shared
+});
+
 builder.Services.AddRazorPages();
 
-// Configure DbContext with SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     options.UseSqlServer(connectionString);
 });
 
-// Configure Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
@@ -40,7 +52,6 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.ClaimsIdentity.RoleClaimType = ClaimTypes.Role;
 });
 
-// Configure Authentication Cookies and role-based redirects
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Identity/Account/Login";
@@ -66,41 +77,39 @@ builder.Services.ConfigureApplicationCookie(options =>
             else if (roleClaim == SD.Role_User)
                 context.Properties.RedirectUri = "/NUUS";
             else if (roleClaim == SD.Role_SuperAdmin)
-                context.Properties.RedirectUri = "/NUSAD"; // Adjust if needed
+                context.Properties.RedirectUri = "/NUSAD";
             else if (roleClaim == SD.Role_AdminCSAD)
-                context.Properties.RedirectUri = "/CSAD"; // Adjust if needed
+                context.Properties.RedirectUri = "/CSAD";
 
             return Task.CompletedTask;
         }
     };
 });
 
-// Email service setup
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 var app = builder.Build();
 
-// Middleware setup
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Default route with areas support
 app.MapControllerRoute(
     name: "default",
     pattern: "{area=Welcome}/{controller=Home}/{action=Index}/{id?}");
 
 app.MapRazorPages();
 
-// Seed roles and users on startup
 await using (var scope = app.Services.CreateAsyncScope())
 {
     var services = scope.ServiceProvider;
@@ -160,7 +169,6 @@ static async Task SeedUsersAsync(IServiceProvider services, ILogger logger)
         new { Email = "nusad.user@littlesprouts.com", FirstName = "NUSAD", LastName = "User", Role = SD.Role_SuperAdmin, Password = "Nusad@123" },
         new { Email = "csad.user@littlesprouts.com", FirstName = "CSAD", LastName = "User", Role = SD.Role_AdminCSAD, Password = "Csad@123" },
         new { Email = "nuous.user@littlesprouts.com", FirstName = "NUOUS", LastName = "User", Role = SD.Role_OtherUser, Password = "Nuous@123" }
-        // No NUUS user seed here - for registration only
     };
 
     foreach (var u in predefinedUsers)

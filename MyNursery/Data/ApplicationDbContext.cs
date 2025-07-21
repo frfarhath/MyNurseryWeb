@@ -1,11 +1,10 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-
-// Aliases to resolve ambiguous models
-using NUADModels = MyNursery.Areas.NUAD.Models;
+using MyNursery.Areas.NUAD.Models;
 using MyNursery.Areas.Welcome.Models;
 using MyNursery.Models;
-// using WelcomeModels = MyNursery.Areas.Welcome.Models; // Uncomment if you want Welcome ContactMessages too
+// Aliases to resolve ambiguous models
+using NUADModels = MyNursery.Areas.NUAD.Models;
 
 namespace MyNursery.Data
 {
@@ -16,23 +15,23 @@ namespace MyNursery.Data
         {
         }
 
-        /// <summary>
-        /// NUAD users table
-        /// </summary>
+        // Identity Users table handled by base IdentityDbContext<ApplicationUser>
+
+        // Custom Users table (non-identity user)
         public new DbSet<User> Users { get; set; }
 
-        /// <summary>
-        /// NUAD blog posts
-        /// </summary>
-        public DbSet<Models.BlogPost> BlogPosts { get; set; }
+        // Blog posts
+        public DbSet<BlogPost> BlogPosts { get; set; }
 
-        /// <summary>
-        /// NUAD contact messages
-        /// </summary>
+        // Contact messages
         public DbSet<NUADModels.ContactMessage> ContactMessages { get; set; }
 
-        // If you want Welcome ContactMessages as well, uncomment this and add the using alias above
-        // public DbSet<WelcomeModels.ContactMessage> WelcomeContactMessages { get; set; }
+        // Content management tables
+        public DbSet<Page> Pages { get; set; }
+        public DbSet<CurriculumItem> CurriculumItems { get; set; }
+        public DbSet<Policy> Policies { get; set; }
+        public DbSet<FAQ> FAQs { get; set; }
+        public DbSet<Vacancy> Vacancies { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -45,7 +44,12 @@ namespace MyNursery.Data
                 new Microsoft.AspNetCore.Identity.IdentityRole { Id = "3", Name = "Parent", NormalizedName = "PARENT" }
             );
 
-            // Additional configurations can be added here if needed
+            // Configure relationship: Page.LastUpdatedByUser
+            builder.Entity<Page>()
+                .HasOne(p => p.LastUpdatedByUser)
+                .WithMany() // Assuming ApplicationUser has no Pages collection, adjust if otherwise
+                .HasForeignKey(p => p.LastUpdatedByUserId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

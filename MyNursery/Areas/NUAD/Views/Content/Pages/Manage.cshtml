@@ -1,0 +1,127 @@
+﻿@model IEnumerable<MyNursery.Areas.NUAD.Models.Page>
+
+@{
+    ViewData["Title"] = "Manage Pages";
+}
+
+<!-- [ breadcrumb ] start -->
+<div class="page-header">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="page-header-title">
+                    <h5 class="m-b-10">Manage Pages</h5>
+                </div>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a asp-area="NUAD" asp-controller="Home" asp-action="Dashboard"><i class="feather icon-home"></i></a>
+                    </li>
+                    <li class="breadcrumb-item"><a href="#">Content</a></li>
+                    <li class="breadcrumb-item"><a href="#">Pages</a></li>
+                    <li class="breadcrumb-item"><a href="#">Manage Pages</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- [ breadcrumb ] end -->
+<!-- [ Main Content ] start -->
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">All Pages</h5>
+                <span class="text-muted">Search, filter, and manage website pages.</span>
+            </div>
+            <div class="card-body">
+
+                <div class="row mb-3">
+                    <div class="col-md-5">
+                        <input type="text"
+                               id="searchInput"
+                               class="form-control"
+                               placeholder="Search by Title or Slug..."
+                               onkeyup="filterTable()" />
+                    </div>
+                    <div class="col-md-4">
+                        <select id="userFilter" class="form-control" onchange="filterTable()">
+                            <option value="">-- Filter by Last Updated By --</option>
+                            @* Generate distinct user names for filter options *@
+                            @{
+                                var users = Model
+                                .Select(p => p.LastUpdatedByUser?.UserName ?? "N/A")
+                                .Distinct()
+                                .OrderBy(u => u)
+                                .ToList();
+                            }
+                            @foreach (var user in users)
+                            {
+                                <option value="@user.ToLower()">@user</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover" id="pagesTable">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Title</th>
+                                <th>Slug</th>
+                                <th>Last Updated</th>
+                                <th>Last Updated By</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in Model)
+                            {
+                                <tr>
+                                    <td>@p.Title</td>
+                                    <td>@p.Slug</td>
+                                    <td>@p.LastUpdated.ToString("yyyy-MM-dd")</td>
+                                    <td>@(p.LastUpdatedByUser?.UserName ?? "N/A")</td>
+                                    <td>
+                                        <a asp-action="Edit" asp-route-id="@p.Id" class="btn btn-sm btn-warning mr-1">
+                                            <i class="feather icon-edit"></i> Edit
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@p.Id" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure to delete this page?');">
+                                            <i class="feather icon-trash-2"></i> Delete
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (!Model?.Any() ?? true)
+                {
+                    <div class="alert alert-info mt-4">No pages found.</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+<!-- [ Main Content ] end -->
+@section Scripts {
+    <script>
+        function filterTable() {
+            const input = document.getElementById("searchInput").value.toLowerCase();
+            const userFilter = document.getElementById("userFilter").value.toLowerCase();
+            const table = document.getElementById("pagesTable");
+            const rows = table.tBodies[0].getElementsByTagName("tr");
+
+            for (let row of rows) {
+                const title = row.cells[0].textContent.toLowerCase();
+                const slug = row.cells[1].textContent.toLowerCase();
+                const user = row.cells[3].textContent.toLowerCase();
+
+                const matchesSearch = title.includes(input) || slug.includes(input);
+                const matchesUser = userFilter === "" || user === userFilter;
+
+                row.style.display = (matchesSearch && matchesUser) ? "" : "none";
+            }
+        }
+    </script>
+}

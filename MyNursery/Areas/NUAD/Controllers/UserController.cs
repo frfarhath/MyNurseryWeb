@@ -9,6 +9,7 @@ using MyNursery.Utility;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace MyNursery.Areas.NUAD.Controllers
 {
@@ -19,12 +20,29 @@ namespace MyNursery.Areas.NUAD.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IEmailSender _emailSender;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public UsersController(ApplicationDbContext context, IEmailSender emailSender, UserManager<ApplicationUser> userManager)
+        public UsersController(ApplicationDbContext context, IEmailSender emailSender,
+            UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
         {
             _context = context;
             _emailSender = emailSender;
             _userManager = userManager;
+            _roleManager = roleManager;
+        }
+
+        private List<string> GetAvailableRoles()
+        {
+            var excludedRoles = new[] { SD.Role_Admin,
+    SD.Role_SuperAdmin,
+    SD.Role_OtherUser,
+    SD.Role_User,
+    SD.Role_AdminCSAD };
+
+            return _roleManager.Roles
+                .Select(r => r.Name)
+                .Where(r => !excludedRoles.Contains(r))
+                .ToList();
         }
 
         public IActionResult ManageUsers()
@@ -35,6 +53,7 @@ namespace MyNursery.Areas.NUAD.Controllers
 
         public IActionResult CreateUser()
         {
+            ViewBag.Roles = GetAvailableRoles();
             return View();
         }
 
@@ -44,6 +63,7 @@ namespace MyNursery.Areas.NUAD.Controllers
         {
             if (!ModelState.IsValid)
             {
+                ViewBag.Roles = GetAvailableRoles();
                 return View(model);
             }
 
@@ -57,7 +77,8 @@ namespace MyNursery.Areas.NUAD.Controllers
                 LastName = model.LastName,
                 PhoneNumber = model.ContactNumber,
                 EmailConfirmed = true,
-                DateCreated = DateTime.UtcNow
+                DateCreated = DateTime.UtcNow,
+                UserType = SD.UserType_AdminAdded
             };
 
             var result = await _userManager.CreateAsync(identityUser, generatedPassword);
@@ -67,12 +88,13 @@ namespace MyNursery.Areas.NUAD.Controllers
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
+                ViewBag.Roles = GetAvailableRoles();
                 return View(model);
             }
 
             await _userManager.AddToRoleAsync(identityUser, model.Role);
 
-            model.Password = null;  // do not save plaintext password
+            model.Password = null;
             model.AddedDate = DateTime.UtcNow;
             _context.Users.Add(model);
             await _context.SaveChangesAsync();
@@ -101,6 +123,7 @@ namespace MyNursery.Areas.NUAD.Controllers
                 return RedirectToAction("ManageUsers");
             }
 
+            ViewBag.Roles = GetAvailableRoles();
             return View(user);
         }
 
@@ -117,6 +140,7 @@ namespace MyNursery.Areas.NUAD.Controllers
                 return RedirectToAction("ManageUsers");
             }
 
+            ViewBag.Roles = GetAvailableRoles();
             TempData[SD.Error_Msg] = "Validation failed. Please try again.";
             return View(user);
         }
@@ -153,12 +177,12 @@ namespace MyNursery.Areas.NUAD.Controllers
             });
         }
 
-        // Password generator - only one copy!
         private string GenerateRandomPassword(int length = 10)
         {
             const string valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%&*?";
             Random rnd = new();
-            return new string(Enumerable.Repeat(valid, length).Select(s => s[rnd.Next(s.Length)]).ToArray());
+            return new string(Enumerable.Repeat(valid, length)
+                .Select(s => s[rnd.Next(s.Length)]).ToArray());
         }
     }
 }
