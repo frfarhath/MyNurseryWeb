@@ -1,23 +1,25 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using MyNursery.Areas.NUAD.Models;
+using MyNursery.Areas.NUSAD.Models;
 using MyNursery.Areas.Welcome.Models;
 using MyNursery.Models;
 // Aliases to resolve ambiguous models
 using NUADModels = MyNursery.Areas.NUAD.Models;
+using NUSADModels = MyNursery.Areas.NUSAD.Models;
 
 namespace MyNursery.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+    // Use ApplicationUser and ApplicationRole for Identity
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, string>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
         }
 
-        // Identity Users table handled by base IdentityDbContext<ApplicationUser>
-
-        // Custom Users table (non-identity user)
+        // Custom Users table (non-identity users)
         public new DbSet<User> Users { get; set; }
 
         // Blog posts
@@ -37,17 +39,17 @@ namespace MyNursery.Data
         {
             base.OnModelCreating(builder);
 
-            // Seed roles
-            builder.Entity<Microsoft.AspNetCore.Identity.IdentityRole>().HasData(
-                new Microsoft.AspNetCore.Identity.IdentityRole { Id = "1", Name = "Admin", NormalizedName = "ADMIN" },
-                new Microsoft.AspNetCore.Identity.IdentityRole { Id = "2", Name = "Staff", NormalizedName = "STAFF" },
-                new Microsoft.AspNetCore.Identity.IdentityRole { Id = "3", Name = "Parent", NormalizedName = "PARENT" }
+            // Seed roles with Ids and optionally Description if your ApplicationRole supports it
+            builder.Entity<ApplicationRole>().HasData(
+                new ApplicationRole { Id = "1", Name = "Admin", NormalizedName = "ADMIN", Description = "Administrator role" },
+                new ApplicationRole { Id = "2", Name = "Staff", NormalizedName = "STAFF", Description = "Staff role" },
+                new ApplicationRole { Id = "3", Name = "Parent", NormalizedName = "PARENT", Description = "Parent role" }
             );
 
-            // Configure relationship: Page.LastUpdatedByUser
+            // Configure relationship: Page.LastUpdatedByUser (ApplicationUser)
             builder.Entity<Page>()
                 .HasOne(p => p.LastUpdatedByUser)
-                .WithMany() // Assuming ApplicationUser has no Pages collection, adjust if otherwise
+                .WithMany() // Adjust if ApplicationUser has navigation property for Pages
                 .HasForeignKey(p => p.LastUpdatedByUserId)
                 .OnDelete(DeleteBehavior.SetNull);
         }

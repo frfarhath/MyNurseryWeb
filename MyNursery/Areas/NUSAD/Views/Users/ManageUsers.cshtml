@@ -89,7 +89,7 @@
                                     <td>@user.Email</td>
                                     <td>@user.Role</td>
                                     <td>@user.DateCreated.ToString("yyyy-MM-dd")</td>
-                            
+
                                     <td>@(user.IsActive ? "Yes" : "No")</td>
                                     <td>@user.UserType</td>
                                     <td>
@@ -134,7 +134,7 @@
                 let lastName = tds[1].textContent.toLowerCase();
                 let email = tds[2].textContent.toLowerCase();
                 let role = tds[3].textContent.toLowerCase();
-                let userType = tds[6].textContent.toLowerCase(); 
+                let userType = tds[6].textContent.toLowerCase();
 
                 const matchesSearch = firstName.includes(input) || lastName.includes(input) || email.includes(input);
                 const matchesRole = roleFilter === "" || role === roleFilter;

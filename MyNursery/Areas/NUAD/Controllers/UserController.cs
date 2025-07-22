@@ -2,14 +2,15 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
+using MyNursery.Areas.NUSAD.Models;
 using MyNursery.Areas.Welcome.Models;
 using MyNursery.Data;
 using MyNursery.Models;
 using MyNursery.Utility;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 
 namespace MyNursery.Areas.NUAD.Controllers
 {
@@ -20,10 +21,10 @@ namespace MyNursery.Areas.NUAD.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IEmailSender _emailSender;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly RoleManager<ApplicationRole> _roleManager;  // Changed here
 
         public UsersController(ApplicationDbContext context, IEmailSender emailSender,
-            UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
+            UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager) // Changed here
         {
             _context = context;
             _emailSender = emailSender;

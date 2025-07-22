@@ -1,5 +1,7 @@
 ﻿@model IEnumerable<MyNursery.Models.BlogPost>
 @using System.Linq
+@using MyNursery.Utility
+
 
 @{
     ViewData["Title"] = "Manage Blogs";
@@ -68,19 +70,26 @@
                                     <td>@blog.Category</td>
                                     <td>@blog.PublishDate?.ToString("yyyy-MM-dd")</td>
                                     <td>
-                                        <form asp-action="UpdateStatus" method="post" class="d-flex align-items-center">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="Id" value="@blog.Id" />
-                                            <select name="Status" class="form-control form-control-sm mr-2">
-                                                <option value="Published" selected="@(blog.Status == "Published")">Published</option>
-                                                <option value="Draft" selected="@(blog.Status == "Draft")">Draft</option>
-                                                <option value="Archived" selected="@(blog.Status == "Archived")">Archived</option>
-                                            </select>
-                                            <button type="submit" class="btn btn-sm btn-secondary">
-                                                <i class="feather icon-refresh-cw"></i> Update
-                                            </button>
-                                        </form>
+                                        @{
+                                            string badgeClass = blog.Status switch
+                                            {
+                                                SD.Status_Approved => "badge badge-success",    // ACC
+                                                SD.Status_Disapproved => "badge badge-danger",  // DIS
+                                                SD.Status_Pending => "badge badge-warning",     // PEN
+                                                _ => "badge badge-secondary"
+                                            };
+
+                                            string displayStatus = blog.Status switch
+                                            {
+                                                SD.Status_Approved => "Accepted",
+                                                SD.Status_Disapproved => "Declined",
+                                                SD.Status_Pending => "Pending",
+                                                _ => "Unknown"
+                                            };
+                                        }
+                                        <span class="@badgeClass">@displayStatus</span>
                                     </td>
+
                                     <td>
                                         <button class="btn btn-info btn-sm" onclick="viewBlog(@blog.Id)">
                                             <i class="feather icon-eye"></i> View

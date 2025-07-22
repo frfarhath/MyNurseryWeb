@@ -4,7 +4,8 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using MyNursery.Areas.Welcome.Models;
+using MyNursery.Areas.Welcome.Models; // ApplicationUser
+using MyNursery.Areas.NUSAD.Models;   // ApplicationRole
 using MyNursery.Data;
 using MyNursery.Services;
 using MyNursery.Utility;
@@ -12,46 +13,62 @@ using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add Razor Pages and MVC Controllers with Views
+// Add MVC and Razor Pages with custom view locations for Areas and Content folder
 builder.Services.AddControllersWithViews()
     .AddRazorOptions(options =>
     {
-        // Optional: you can keep or remove this; your main area config is below
+        // Optional additional view locations
         options.ViewLocationFormats.Add("/Views/{1}/{0}.cshtml");
         options.ViewLocationFormats.Add("/Views/Shared/{0}.cshtml");
     });
 
-// Configure Area view locations including /Content folder inside Areas
 builder.Services.Configure<RazorViewEngineOptions>(options =>
 {
     options.AreaViewLocationFormats.Clear();
 
-    options.AreaViewLocationFormats.Add("/Areas/{2}/Views/{1}/{0}.cshtml");          // default
-    options.AreaViewLocationFormats.Add("/Areas/{2}/Views/Content/{1}/{0}.cshtml");  // your Content folder
-    options.AreaViewLocationFormats.Add("/Areas/{2}/Views/Shared/{0}.cshtml");       // shared in area
-    options.AreaViewLocationFormats.Add("/Views/Shared/{0}.cshtml");                 // global shared
+    options.AreaViewLocationFormats.Add("/Areas/{2}/Views/{1}/{0}.cshtml");          // Default Area views
+    options.AreaViewLocationFormats.Add("/Areas/{2}/Views/Content/{1}/{0}.cshtml");  // Custom Content folder inside Areas
+    options.AreaViewLocationFormats.Add("/Areas/{2}/Views/Shared/{0}.cshtml");       // Shared views inside Areas
+    options.AreaViewLocationFormats.Add("/Views/Shared/{0}.cshtml");                 // Global shared views
 });
 
 builder.Services.AddRazorPages();
 
+// Configure EF Core with SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     options.UseSqlServer(connectionString);
 });
 
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+// Add Identity using your ApplicationUser and ApplicationRole
+builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
+
+    // Password policy to match your seeded passwords
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequiredLength = 6;
+    options.Password.RequireNonAlphanumeric = false;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
+// Configure Role claim type for consistency
 builder.Services.Configure<IdentityOptions>(options =>
 {
     options.ClaimsIdentity.RoleClaimType = ClaimTypes.Role;
 });
 
+// Configure token lifespan (optional, e.g., for reset password)
+builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
+{
+    options.TokenLifespan = TimeSpan.FromHours(2);
+});
+
+// Configure application cookie and role-based redirect
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Identity/Account/Login";
@@ -86,11 +103,13 @@ builder.Services.ConfigureApplicationCookie(options =>
     };
 });
 
+// Configure email sender from appsettings.json
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 var app = builder.Build();
 
+// Middleware pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -99,17 +118,20 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Area routing support
 app.MapControllerRoute(
     name: "default",
     pattern: "{area=Welcome}/{controller=Home}/{action=Index}/{id?}");
 
 app.MapRazorPages();
 
+// Seed roles and users inside a scope
 await using (var scope = app.Services.CreateAsyncScope())
 {
     var services = scope.ServiceProvider;
@@ -131,34 +153,39 @@ await using (var scope = app.Services.CreateAsyncScope())
 
 app.Run();
 
+
+// Seed roles with ApplicationRole
 static async Task SeedRolesAsync(IServiceProvider services, ILogger logger)
 {
-    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-    string[] roles = {
-        SD.Role_Admin,
-        SD.Role_User,
-        SD.Role_OtherUser,
-        SD.Role_SuperAdmin,
-        SD.Role_AdminCSAD,
+    var roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();
+
+    var roles = new[]
+    {
+        new ApplicationRole { Name = SD.Role_Admin, NormalizedName = SD.Role_Admin.ToUpper(), Description = "Admin Role" },
+        new ApplicationRole { Name = SD.Role_User, NormalizedName = SD.Role_User.ToUpper(), Description = "Regular User Role" },
+        new ApplicationRole { Name = SD.Role_OtherUser, NormalizedName = SD.Role_OtherUser.ToUpper(), Description = "Other User Role" },
+        new ApplicationRole { Name = SD.Role_SuperAdmin, NormalizedName = SD.Role_SuperAdmin.ToUpper(), Description = "Super Admin Role" },
+        new ApplicationRole { Name = SD.Role_AdminCSAD, NormalizedName = SD.Role_AdminCSAD.ToUpper(), Description = "Admin CSAD Role" }
     };
 
     foreach (var role in roles)
     {
-        if (!await roleManager.RoleExistsAsync(role))
+        if (!await roleManager.RoleExistsAsync(role.Name))
         {
-            var result = await roleManager.CreateAsync(new IdentityRole(role));
+            var result = await roleManager.CreateAsync(role);
             if (result.Succeeded)
-                logger.LogInformation($"✅ Role created: {role}");
+                logger.LogInformation($"✅ Role created: {role.Name}");
             else
-                logger.LogError($"❌ Failed to create role {role}: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+                logger.LogError($"❌ Failed to create role {role.Name}: {string.Join(", ", result.Errors.Select(e => e.Description))}");
         }
         else
         {
-            logger.LogInformation($"ℹ️ Role already exists: {role}");
+            logger.LogInformation($"ℹ️ Role already exists: {role.Name}");
         }
     }
 }
 
+// Seed predefined users with roles
 static async Task SeedUsersAsync(IServiceProvider services, ILogger logger)
 {
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
