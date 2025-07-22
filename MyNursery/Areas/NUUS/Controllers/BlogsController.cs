@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using MyNursery.Areas.Welcome.Models; // ApplicationUser
+using MyNursery.Areas.Welcome.Models; // <-- Correct namespace for ApplicationUser
 using MyNursery.Data;
-using MyNursery.Models;                // BlogPost
+using MyNursery.Models;                // For BlogPost
 using MyNursery.Utility;
 using System;
 using System.IO;
@@ -58,8 +58,6 @@ namespace MyNursery.Areas.NUUS.Controllers
 
             blogPost.CreatedAt = DateTime.Now;
             blogPost.CreatedByUserId = user.Id;
-            blogPost.Status = SD.Status_Pending; // "PEN"
-
 
             if (CoverImage != null)
             {
@@ -107,9 +105,7 @@ namespace MyNursery.Areas.NUUS.Controllers
                 existingBlog.Category = updatedBlog.Category;
                 existingBlog.Content = updatedBlog.Content;
                 existingBlog.PublishDate = updatedBlog.PublishDate;
-
-                // 👇 DO NOT update status here (only admin should do this)
-                // existingBlog.Status = updatedBlog.Status;
+                existingBlog.Status = updatedBlog.Status;
 
                 _db.Update(existingBlog);
                 await _db.SaveChangesAsync();
