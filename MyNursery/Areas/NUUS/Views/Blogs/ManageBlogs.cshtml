@@ -1,7 +1,5 @@
 ﻿@model IEnumerable<MyNursery.Models.BlogPost>
-@using System.Linq
 @using MyNursery.Utility
-
 
 @{
     ViewData["Title"] = "Manage Blogs";
@@ -30,10 +28,10 @@
 <!-- [ Main Content ] start -->
 <div class="row">
     <div class="col-xl-12">
-        <div class="card">
+        <div class="card shadow-sm">
             <div class="card-header">
                 <h5 class="mb-0">All Blog Posts</h5>
-                <span class="text-muted">Search, filter, and manage blog entries.</span>
+                <small class="text-muted">Search, filter, and manage blog entries.</small>
             </div>
             <div class="card-body">
 
@@ -41,19 +39,29 @@
                     <div class="col-md-6">
                         <input type="text" id="searchInput" class="form-control" placeholder="Search by title..." onkeyup="filterTable()" />
                     </div>
-                    <div class="col-md-4">
-                        <select id="categoryFilter" class="form-control" onchange="filterTable()">
+                    <div class="col-md-3">
+                        <select id="specialProgramFilter" class="form-control" onchange="filterTable()">
                             <option value="">-- Filter by Category --</option>
-                            <option value="Education">Education</option>
-                            <option value="Events">Events</option>
-                            <option value="Tips">Tips</option>
+                            @{
+                                var categories = Model
+                                .Select(p => p.Category ?? "N/A")
+                                .Distinct()
+                                .OrderBy(c => c)
+                                .ToList();
+                            }
+                            @foreach (var cat in categories)
+                            {
+                                <option value="@cat.ToLower()">@cat</option>
+                            }
                         </select>
                     </div>
                 </div>
 
+
+
                 <div class="table-responsive">
                     <table class="table table-hover" id="blogsTable">
-                        <thead class="thead-light">
+                        <thead class="table-light">
                             <tr>
                                 <th>Title</th>
                                 <th>Category</th>
@@ -65,42 +73,34 @@
                         <tbody>
                             @foreach (var blog in Model)
                             {
+                                var badgeClass = blog.Status switch
+                                {
+                                    SD.Status_Approved => "badge bg-success",
+                                    SD.Status_Disapproved => "badge bg-danger",
+                                    SD.Status_Pending => "badge bg-warning text-dark",
+                                    _ => "badge bg-secondary"
+                                };
+
+                                var displayStatus = blog.Status switch
+                                {
+                                    SD.Status_Approved => "Accepted",
+                                    SD.Status_Disapproved => "Declined",
+                                    SD.Status_Pending => "Pending",
+                                    _ => "Unknown"
+                                };
                                 <tr>
                                     <td>@blog.Title</td>
                                     <td>@blog.Category</td>
                                     <td>@blog.PublishDate?.ToString("yyyy-MM-dd")</td>
+                                    <td><span class="@badgeClass">@displayStatus</span></td>
                                     <td>
-                                        @{
-                                            string badgeClass = blog.Status switch
-                                            {
-                                                SD.Status_Approved => "badge badge-success",    // ACC
-                                                SD.Status_Disapproved => "badge badge-danger",  // DIS
-                                                SD.Status_Pending => "badge badge-warning",     // PEN
-                                                _ => "badge badge-secondary"
-                                            };
-
-                                            string displayStatus = blog.Status switch
-                                            {
-                                                SD.Status_Approved => "Accepted",
-                                                SD.Status_Disapproved => "Declined",
-                                                SD.Status_Pending => "Pending",
-                                                _ => "Unknown"
-                                            };
-                                        }
-                                        <span class="@badgeClass">@displayStatus</span>
-                                    </td>
-
-                                    <td>
-                                        <button class="btn btn-info btn-sm" onclick="viewBlog(@blog.Id)">
+                                        <button type="button" class="btn btn-info btn-sm me-1" onclick="viewBlog(@blog.Id)">
                                             <i class="feather icon-eye"></i> View
                                         </button>
-                                        <a asp-action="EditBlog" asp-route-id="@blog.Id" class="btn btn-warning btn-sm">
+                                        <a asp-action="EditBlog" asp-route-id="@blog.Id" class="btn btn-warning btn-sm me-1">
                                             <i class="feather icon-edit"></i> Edit
                                         </a>
-                                        <form asp-action="DeleteBlog"
-                                              asp-route-id="@blog.Id"
-                                              method="post"
-                                              class="delete-form d-inline">
+                                        <form class="delete-form d-inline" asp-action="DeleteBlog" asp-route-id="@blog.Id" method="post" onsubmit="return confirm('Are you sure?');">
                                             @Html.AntiForgeryToken()
                                             <button type="submit" class="btn btn-danger btn-sm">
                                                 <i class="feather icon-trash-2"></i> Delete
@@ -113,7 +113,7 @@
                     </table>
                 </div>
 
-                @if (!Model?.Any() ?? true)
+                @if (!(Model?.Any() ?? false))
                 {
                     <div class="alert alert-info mt-4">
                         No blog posts found.
@@ -125,8 +125,8 @@
 </div>
 <!-- [ Main Content ] end -->
 <!-- View Blog Modal -->
-<div class="modal fade" id="blogViewModal" tabindex="-1" role="dialog" aria-labelledby="blogViewModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
+<div class="modal fade" id="blogViewModal" tabindex="-1" aria-labelledby="blogViewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="blogViewModalLabel">Blog Details</h5>
@@ -178,7 +178,7 @@
 
             for (let i = 0; i < trs.length; i++) {
                 let title = trs[i].getElementsByTagName("td")[0].textContent.toLowerCase();
-                let category = trs[i].getElementsByTagName("td")[1].textContent.toLowerCase();
+                let category = trs[i].getElementsByTagName("td")[1].textContent.toLowerCase().trim();
 
                 const matchesTitle = title.includes(input);
                 const matchesCategory = categoryFilter === "" || category === categoryFilter;
@@ -191,8 +191,8 @@
             fetch(`/NUUS/Blogs/GetBlogDetails/${id}`)
                 .then(res => res.json())
                 .then(data => {
-                    if (!data) {
-                        alert("Blog details not found.");
+                    if (!data || !data.success) {
+                        alert(data?.message || "Blog details not found.");
                         return;
                     }
 
@@ -219,7 +219,8 @@
                     setImage('optionalImage1Container', 'optionalImage1', data.image1);
                     setImage('optionalImage2Container', 'optionalImage2', data.image2);
 
-                    $('#blogViewModal').modal('show');
+                    const blogViewModal = new bootstrap.Modal(document.getElementById('blogViewModal'));
+                    blogViewModal.show();
                 })
                 .catch(() => alert('Error loading blog details.'));
         }
@@ -251,7 +252,7 @@
                         alert(result.message);
                         form.closest('tr').remove();
                     } else {
-                        alert("Failed to delete blog.");
+                        alert(result.message || "Failed to delete blog.");
                     }
                 });
             });

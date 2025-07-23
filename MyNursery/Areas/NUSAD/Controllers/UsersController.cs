@@ -34,15 +34,14 @@ namespace MyNursery.Areas.NUSAD.Controllers
         // GET: NUSAD/Users/ManageUsers
         public async Task<IActionResult> ManageUsers()
         {
-            // 1. Get only Registered users (exclude Predefined)
+            // Active registered identity users
             var identityUsersList = await _userManager.Users
-                .Where(u => u.UserType == SD.UserType_Registered)
+                .Where(u => u.IsActive && u.UserType == SD.UserType_Registered)
                 .ToListAsync();
 
             var identityEmails = identityUsersList.Select(u => u.Email.ToLower()).ToList();
 
             var identityUsersWithRoles = new List<UserDisplayViewModel>();
-
             foreach (var user in identityUsersList)
             {
                 var roles = await _userManager.GetRolesAsync(user);
@@ -61,9 +60,9 @@ namespace MyNursery.Areas.NUSAD.Controllers
                 });
             }
 
-            // 2. Get AdminAdded custom users where Email is not already in Identity (avoid duplicates)
+            // Active admin added custom users
             var customUsers = await _context.Users
-                .Where(u => !identityEmails.Contains(u.EmailAddress.ToLower()))
+                .Where(u => u.IsActive && !identityEmails.Contains(u.EmailAddress.ToLower()))
                 .Select(u => new UserDisplayViewModel
                 {
                     Id = u.Id.ToString(),
@@ -73,21 +72,68 @@ namespace MyNursery.Areas.NUSAD.Controllers
                     Role = u.Role,
                     ContactNumber = u.ContactNumber,
                     DateCreated = u.AddedDate,
-                    IsActive = true,
+                    IsActive = u.IsActive,
                     LastLoginDate = null,
-                    UserType = "AdminAdded"
+                    UserType = SD.UserType_AdminAdded
                 }).ToListAsync();
 
-            // 3. Combine and return
             var combinedUsers = identityUsersWithRoles.Concat(customUsers).ToList();
             return View(combinedUsers);
+        }
+
+        // GET: NUSAD/Users/DisabledUsers
+        public async Task<IActionResult> DisabledUsers()
+        {
+            // Disabled registered identity users
+            var disabledIdentityUsers = await _userManager.Users
+                .Where(u => !u.IsActive && u.UserType == SD.UserType_Registered)
+                .ToListAsync();
+
+            var disabledList = new List<UserDisplayViewModel>();
+            foreach (var user in disabledIdentityUsers)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                disabledList.Add(new UserDisplayViewModel
+                {
+                    Id = user.Id,
+                    FirstName = user.FirstName ?? "",
+                    LastName = user.LastName ?? "",
+                    Email = user.Email ?? "",
+                    Role = roles.FirstOrDefault() ?? "",
+                    ContactNumber = user.PhoneNumber,
+                    DateCreated = user.DateCreated,
+                    IsActive = user.IsActive,
+                    LastLoginDate = user.LastLoginDate,
+                    UserType = user.UserType
+                });
+            }
+
+            // Disabled admin added custom users
+            var disabledCustomUsers = await _context.Users
+                .Where(u => !u.IsActive)
+                .Select(u => new UserDisplayViewModel
+                {
+                    Id = u.Id.ToString(),
+                    FirstName = u.FirstName,
+                    LastName = u.LastName,
+                    Email = u.EmailAddress,
+                    Role = u.Role,
+                    ContactNumber = u.ContactNumber,
+                    DateCreated = u.AddedDate,
+                    IsActive = u.IsActive,
+                    LastLoginDate = null,
+                    UserType = SD.UserType_AdminAdded
+                }).ToListAsync();
+
+            var result = disabledList.Concat(disabledCustomUsers).ToList();
+            return View(result);
         }
 
         // GET: NUSAD/Users/GetUserDetails/{id}
         [HttpGet]
         public async Task<IActionResult> GetUserDetails(string id)
         {
-            // Custom user
+            // Try parse as int for custom users
             if (int.TryParse(id, out int userId))
             {
                 var user = await _context.Users
@@ -101,16 +147,16 @@ namespace MyNursery.Areas.NUSAD.Controllers
                         Role = u.Role,
                         ContactNumber = u.ContactNumber,
                         DateCreated = u.AddedDate,
-                        IsActive = true,
+                        IsActive = u.IsActive,
                         LastLoginDate = null,
-                        UserType = "AdminAdded"
+                        UserType = SD.UserType_AdminAdded
                     }).FirstOrDefaultAsync();
 
                 if (user != null)
                     return Json(user);
             }
 
-            // Identity user
+            // Otherwise get from Identity
             var identityUser = await _userManager.FindByIdAsync(id);
             if (identityUser != null)
             {
@@ -130,34 +176,69 @@ namespace MyNursery.Areas.NUSAD.Controllers
                 });
             }
 
-            return Json(null); // not found
+            return Json(null);
         }
 
-        // POST: NUSAD/Users/DeleteUser/{id}
+        // POST: NUSAD/Users/DisableUser/{id}
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteUser(string id)
+        public async Task<IActionResult> DisableUser(string id)
         {
             if (int.TryParse(id, out int userId))
             {
                 var user = await _context.Users.FindAsync(userId);
                 if (user != null)
                 {
-                    _context.Users.Remove(user);
+                    user.IsActive = false;
+                    _context.Users.Update(user);
                     await _context.SaveChangesAsync();
-                    return Json(new { success = true, message = "User deleted successfully." });
+                    return Json(new { success = true, message = "User disabled successfully." });
                 }
             }
 
             var identityUser = await _userManager.FindByIdAsync(id);
             if (identityUser != null)
             {
-                var result = await _userManager.DeleteAsync(identityUser);
+                identityUser.IsActive = false;
+                var result = await _userManager.UpdateAsync(identityUser);
                 if (result.Succeeded)
-                    return Json(new { success = true, message = "User deleted successfully." });
+                {
+                    return Json(new { success = true, message = "User disabled successfully." });
+                }
             }
 
-            return Json(new { success = false, message = "User not found or could not be deleted." });
+            return Json(new { success = false, message = "User not found or could not be disabled." });
+        }
+
+        // POST: NUSAD/Users/EnableUser/{id}
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EnableUser(string id)
+        {
+            if (int.TryParse(id, out int userId))
+            {
+                var user = await _context.Users.FindAsync(userId);
+                if (user != null)
+                {
+                    user.IsActive = true;
+                    _context.Users.Update(user);
+                    await _context.SaveChangesAsync();
+                    return Json(new { success = true, message = "User enabled successfully." });
+                }
+            }
+
+            var identityUser = await _userManager.FindByIdAsync(id);
+            if (identityUser != null)
+            {
+                identityUser.IsActive = true;
+                var result = await _userManager.UpdateAsync(identityUser);
+                if (result.Succeeded)
+                {
+                    return Json(new { success = true, message = "User enabled successfully." });
+                }
+            }
+
+            return Json(new { success = false, message = "User not found or could not be enabled." });
         }
     }
 }

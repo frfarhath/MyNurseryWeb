@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using MyNursery.Areas.Welcome.Models;
 using MyNursery.Utility;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -84,13 +85,34 @@ namespace MyNursery.Views.Identity.Pages.Account
                 return Page();
             }
 
+            // Find user first
+            var user = await _userManager.FindByEmailAsync(Input.Email);
+
+            if (user == null)
+            {
+                // User not found - generic error message
+                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                return Page();
+            }
+
+            // Check if user is active
+            if (!user.IsActive)
+            {
+                ModelState.AddModelError(string.Empty, "Your account is disabled. Please contact administrator.");
+                return Page();
+            }
+
+            // Now proceed with sign-in
             var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
 
             if (result.Succeeded)
             {
                 _logger.LogInformation("User logged in.");
 
-                var user = await _userManager.FindByEmailAsync(Input.Email);
+                // Update last login date here
+                user.LastLoginDate = DateTime.UtcNow;
+                await _userManager.UpdateAsync(user);
+
                 var roles = await _userManager.GetRolesAsync(user);
                 var email = Input.Email.ToLower();
 
@@ -107,7 +129,6 @@ namespace MyNursery.Views.Identity.Pages.Account
                     };
                 }
 
-                // Other roles redirect (remove duplicated Role_Admin check)
                 if (roles.Contains(SD.Role_SuperAdmin))
                     return RedirectToAction("Index", "Home", new { area = "NUSAD" });
 
@@ -124,7 +145,6 @@ namespace MyNursery.Views.Identity.Pages.Account
                 return RedirectToAction("Index", "Home", new { area = "Welcome" });
             }
 
-
             if (result.RequiresTwoFactor)
             {
                 return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, RememberMe = Input.RememberMe });
@@ -139,6 +159,5 @@ namespace MyNursery.Views.Identity.Pages.Account
             ModelState.AddModelError(string.Empty, "Invalid login attempt.");
             return Page();
         }
-
     }
 }

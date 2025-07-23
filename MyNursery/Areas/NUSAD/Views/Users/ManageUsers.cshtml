@@ -42,7 +42,6 @@
                         <select id="roleFilter" class="form-control" onchange="filterTable()">
                             <option value="">-- Filter by Role --</option>
                             @{
-                                // Get distinct roles from Model for dynamic options
                                 var roles = Model.Select(u => u.Role).Distinct().OrderBy(r => r);
                                 foreach (var role in roles)
                                 {
@@ -55,7 +54,6 @@
                         <select id="userTypeFilter" class="form-control" onchange="filterTable()">
                             <option value="">-- Filter by User Type --</option>
                             @{
-                                // Distinct UserTypes
                                 var userTypes = Model.Select(u => u.UserType).Distinct().OrderBy(t => t);
                                 foreach (var type in userTypes)
                                 {
@@ -76,6 +74,7 @@
                                 <th>Role</th>
                                 <th>Added Date</th>
                                 <th>Is Active</th>
+                                <th>Last Login</th>
                                 <th>User Type</th>
                                 <th>Actions</th>
                             </tr>
@@ -89,14 +88,14 @@
                                     <td>@user.Email</td>
                                     <td>@user.Role</td>
                                     <td>@user.DateCreated.ToString("yyyy-MM-dd")</td>
-
                                     <td>@(user.IsActive ? "Yes" : "No")</td>
+                                    <td>@(user.LastLoginDate?.ToString("yyyy-MM-dd") ?? "-")</td>
                                     <td>@user.UserType</td>
                                     <td>
-                                        <form asp-area="NUSAD" asp-controller="Users" asp-action="DeleteUser" asp-route-id="@user.Id" method="post" class="delete-form d-inline">
+                                        <form asp-area="NUSAD" asp-controller="Users" asp-action="DisableUser" asp-route-id="@user.Id" method="post" class="disable-form d-inline">
                                             @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-danger btn-sm">
-                                                <i class="feather icon-trash-2"></i> Delete
+                                            <button type="submit" class="btn btn-warning btn-sm">
+                                                <i class="feather icon-user-x"></i> Disable
                                             </button>
                                         </form>
                                     </td>
@@ -119,7 +118,7 @@
 <!-- [ Main Content ] end -->
 @section Scripts {
     <script>
-                function filterTable() {
+        function filterTable() {
             const input = document.getElementById("searchInput").value.toLowerCase();
             const roleFilter = document.getElementById("roleFilter").value.toLowerCase();
             const userTypeFilter = document.getElementById("userTypeFilter").value.toLowerCase();
@@ -134,7 +133,7 @@
                 let lastName = tds[1].textContent.toLowerCase();
                 let email = tds[2].textContent.toLowerCase();
                 let role = tds[3].textContent.toLowerCase();
-                let userType = tds[6].textContent.toLowerCase();
+                let userType = tds[7].textContent.toLowerCase(); // updated to 7 (LastLogin moved index 6)
 
                 const matchesSearch = firstName.includes(input) || lastName.includes(input) || email.includes(input);
                 const matchesRole = roleFilter === "" || role === roleFilter;
@@ -146,13 +145,13 @@
 
 
         document.addEventListener('DOMContentLoaded', () => {
-            const deleteForms = document.querySelectorAll('.delete-form');
+            const deleteForms = document.querySelectorAll('.disable-form');
 
             deleteForms.forEach(form => {
                 form.addEventListener('submit', async function (e) {
                     e.preventDefault();
 
-                    if (!confirm("Are you sure you want to delete this user?")) return;
+                    if (!confirm("Are you sure you want to disable this user?")) return;
 
                     const formData = new FormData(form);
                     const token = formData.get("__RequestVerificationToken");
@@ -172,7 +171,7 @@
                         alert(result.message);
                         form.closest('tr').remove();
                     } else {
-                        alert("Failed to delete user.");
+                        alert("Failed to disable user.");
                     }
                 });
             });

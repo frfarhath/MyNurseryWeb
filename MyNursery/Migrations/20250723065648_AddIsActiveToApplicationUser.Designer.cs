@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MyNursery.Data;
 
@@ -11,9 +12,11 @@ using MyNursery.Data;
 namespace MyNursery.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250723065648_AddIsActiveToApplicationUser")]
+    partial class AddIsActiveToApplicationUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -482,32 +485,6 @@ namespace MyNursery.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("MyNursery.Models.BlogImage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("BlogPostId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ImagePath")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BlogPostId");
-
-                    b.ToTable("BlogImages");
-                });
-
             modelBuilder.Entity("MyNursery.Models.BlogPost", b =>
                 {
                     b.Property<int>("Id")
@@ -532,15 +509,6 @@ namespace MyNursery.Migrations
 
                     b.Property<string>("CreatedByUserId")
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("ModifiedDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("OptionalImage1Path")
                         .HasColumnType("nvarchar(max)");
@@ -669,17 +637,6 @@ namespace MyNursery.Migrations
                     b.Navigation("LastUpdatedByUser");
                 });
 
-            modelBuilder.Entity("MyNursery.Models.BlogImage", b =>
-                {
-                    b.HasOne("MyNursery.Models.BlogPost", "BlogPost")
-                        .WithMany("BlogImages")
-                        .HasForeignKey("BlogPostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("BlogPost");
-                });
-
             modelBuilder.Entity("MyNursery.Models.BlogPost", b =>
                 {
                     b.HasOne("MyNursery.Areas.Welcome.Models.ApplicationUser", "CreatedByUser")
@@ -687,11 +644,6 @@ namespace MyNursery.Migrations
                         .HasForeignKey("CreatedByUserId");
 
                     b.Navigation("CreatedByUser");
-                });
-
-            modelBuilder.Entity("MyNursery.Models.BlogPost", b =>
-                {
-                    b.Navigation("BlogImages");
                 });
 #pragma warning restore 612, 618
         }

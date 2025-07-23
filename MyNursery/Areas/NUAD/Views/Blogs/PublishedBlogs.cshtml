@@ -189,37 +189,35 @@
             });
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-             const deleteForms = document.querySelectorAll('.delete-form');
+        $(document).ready(function () {
+            $('.delete-form').on('submit', function (e) {
+                e.preventDefault();
+                const form = this;
 
-             deleteForms.forEach(form => {
-                 form.addEventListener('submit', async function (e) {
-                     e.preventDefault();
+                if (!confirm("Are you sure you want to delete this blog?")) return;
 
-                     if (!confirm("Are you sure you want to delete this blog?")) return;
+                const formData = new FormData(form);
+                const token = formData.get("__RequestVerificationToken");
 
-                     const formData = new FormData(form);
-                     const token = formData.get("__RequestVerificationToken");
-
-                     const response = await fetch(form.action, {
-                         method: 'POST',
-                         headers: {
-                             'RequestVerificationToken': token,
-                             'Accept': 'application/json'
-                         },
-                         body: formData
-                     });
-
-                     const result = await response.json();
-
-                     if (result.success) {
-                         alert(result.message);
-                         form.closest('tr').remove();
-                     } else {
-                         alert("Failed to delete blog.");
-                     }
-                 });
-             });
-         });
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': token,
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            alert(result.message);
+                            $(form).closest('tr').remove();
+                        } else {
+                            alert('Failed to delete blog.');
+                        }
+                    })
+                    .catch(() => alert('Failed to delete blog.'));
+            });
+        });
     </script>
 }

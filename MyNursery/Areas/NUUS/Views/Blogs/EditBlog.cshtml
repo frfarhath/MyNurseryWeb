@@ -14,7 +14,9 @@
                 </div>
                 <ul class="breadcrumb">
                     <li class="breadcrumb-item">
-                        <a asp-area="NUUS" asp-controller="Home" asp-action="Dashboard"><i class="feather icon-home"></i></a>
+                        <a asp-area="NUUS" asp-controller="Home" asp-action="Dashboard">
+                            <i class="feather icon-home"></i>
+                        </a>
                     </li>
                     <li class="breadcrumb-item"><a href="#">Blogs</a></li>
                     <li class="breadcrumb-item"><a href="#">Edit Blog</a></li>
@@ -26,7 +28,7 @@
 <!-- [ breadcrumb ] end -->
 <!-- [ Main Content ] start -->
 <div class="row">
-    <div class="col-xl-10 mx-auto">
+    <div class="col-xl-8 mx-auto">
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">Update Blog Post</h5>
@@ -34,77 +36,86 @@
             </div>
             <div class="card-body">
 
-                <!-- Shared notification partial -->
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger">
+                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                        {
+                            <p>@error.ErrorMessage</p>
+                        }
+                    </div>
+                }
+
                 @await Html.PartialAsync("_Notification")
 
-                <form asp-action="EditBlog" asp-controller="Blogs" asp-area="NUUS" method="post" enctype="multipart/form-data">
+                <form asp-action="EditBlog" asp-controller="Blogs" asp-area="NUUS" method="post" enctype="multipart/form-data" novalidate>
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="Id" />
 
-                    <div class="form-group">
-                        <label asp-for="Title"></label>
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label"></label>
                         <input asp-for="Title" class="form-control" />
                         <span asp-validation-for="Title" class="text-danger"></span>
                     </div>
 
-                    <div class="form-group">
-                        <label asp-for="Category"></label>
-                        <select asp-for="Category" class="form-control">
+                    <div class="mb-3">
+                        <label asp-for="Category" class="form-label"></label>
+                        <select asp-for="Category" class="form-select">
                             <option value="">-- Select Category --</option>
-                            <option value="Education" selected="@(Model.Category == "Education")">Education</option>
-                            <option value="Events" selected="@(Model.Category == "Events")">Events</option>
-                            <option value="Tips" selected="@(Model.Category == "Tips")">Tips</option>
+                            <option value="Education" selected="@(Model.Category == "Education" ? "selected" : null)">Education</option>
+                            <option value="Events" selected="@(Model.Category == "Events" ? "selected" : null)">Events</option>
+                            <option value="Tips" selected="@(Model.Category == "Tips" ? "selected" : null)">Tips</option>
                         </select>
                         <span asp-validation-for="Category" class="text-danger"></span>
                     </div>
 
-                    <div class="form-group">
-                        <label>Cover Image</label>
+                    <div class="mb-3">
+                        <label class="form-label">Cover Image</label>
                         @if (!string.IsNullOrEmpty(Model.CoverImagePath))
                         {
                             <div class="mb-2">
-                                <img src="@Model.CoverImagePath" alt="Cover Image" class="img-fluid" style="max-height:150px;" />
+                                <img src="@Model.CoverImagePath" alt="Cover Image" class="img-fluid rounded" style="max-height:150px;" />
                             </div>
                         }
-                        <input type="file" name="CoverImage" class="form-control-file" />
+                        <input type="file" name="CoverImage" class="form-control" accept="image/*" />
                     </div>
 
-                    <div class="form-group">
-                        <label>Optional Image 1</label>
+                    <div class="mb-3">
+                        <label class="form-label">Optional Image 1</label>
                         @if (!string.IsNullOrEmpty(Model.OptionalImage1Path))
                         {
                             <div class="mb-2">
-                                <img src="@Model.OptionalImage1Path" alt="Optional Image 1" class="img-fluid" style="max-height:150px;" />
+                                <img src="@Model.OptionalImage1Path" alt="Optional Image 1" class="img-fluid rounded" style="max-height:150px;" />
                             </div>
                         }
-                        <input type="file" name="OptionalImage1" class="form-control-file" />
+                        <input type="file" name="OptionalImage1" class="form-control" accept="image/*" />
                     </div>
 
-                    <div class="form-group">
-                        <label>Optional Image 2</label>
+                    <div class="mb-3">
+                        <label class="form-label">Optional Image 2</label>
                         @if (!string.IsNullOrEmpty(Model.OptionalImage2Path))
                         {
                             <div class="mb-2">
-                                <img src="@Model.OptionalImage2Path" alt="Optional Image 2" class="img-fluid" style="max-height:150px;" />
+                                <img src="@Model.OptionalImage2Path" alt="Optional Image 2" class="img-fluid rounded" style="max-height:150px;" />
                             </div>
                         }
-                        <input type="file" name="OptionalImage2" class="form-control-file" />
+                        <input type="file" name="OptionalImage2" class="form-control" accept="image/*" />
                     </div>
 
-                    <div class="form-group">
-                        <label asp-for="Content"></label>
+                    <div class="mb-3">
+                        <label asp-for="Content" class="form-label"></label>
                         <textarea asp-for="Content" class="form-control" rows="6" placeholder="Update blog content..."></textarea>
                         <span asp-validation-for="Content" class="text-danger"></span>
                     </div>
 
-                    <div class="form-group">
-                        <label asp-for="PublishDate"></label>
-                        <input asp-for="PublishDate" class="form-control" type="date" />
+                    <div class="mb-3">
+                        <label asp-for="PublishDate" class="form-label"></label>
+                        <input asp-for="PublishDate" type="date" class="form-control" />
                         <span asp-validation-for="PublishDate" class="text-danger"></span>
                     </div>
 
                     <div class="form-group text-right">
-                        <a asp-action="ManageBlogs" class="btn btn-outline-secondary mr-2">Cancel</a>
+                        <a asp-action="ManageBlogs" class="btn btn-outline-secondary me-2">Cancel</a>
                         <button type="submit" class="btn btn-primary">Update Blog</button>
                     </div>
                 </form>

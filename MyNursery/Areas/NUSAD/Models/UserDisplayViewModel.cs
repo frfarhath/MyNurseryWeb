@@ -12,5 +12,7 @@
         public DateTime? LastLoginDate { get; set; }
         public string? ContactNumber { get; set; }
         public string UserType { get; set; } = null!;
+
+
     }
 }
