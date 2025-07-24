@@ -124,7 +124,7 @@ namespace MyNursery.Views.Identity.Pages.Account
                         "nuad.user@littlesprouts.com" => RedirectToAction("Index", "Home", new { area = "NUAD" }),
                         "nusad.user@littlesprouts.com" => RedirectToAction("Index", "Home", new { area = "NUSAD" }),
                         "csad.user@littlesprouts.com" => RedirectToAction("Index", "Home", new { area = "CSAD" }),
-                        "nuous.user@littlesprouts.com" => RedirectToAction("Index", "Home", new { area = "NUOUS" }),
+                        //"nuous.user@littlesprouts.com" => RedirectToAction("Index", "Home", new { area = "NUOUS" }),
                         _ => RedirectToAction("Index", "Home", new { area = "NUAD" }) // Default admin area redirect
                     };
                 }
@@ -135,11 +135,14 @@ namespace MyNursery.Views.Identity.Pages.Account
                 if (roles.Contains(SD.Role_AdminCSAD))
                     return RedirectToAction("Index", "Home", new { area = "CSAD" });
 
+                // Registered users (Role_OtherUser = NuUS) → should go to NUUS
                 if (roles.Contains(SD.Role_OtherUser))
+                    return RedirectToAction("Index", "Home", new { area = "NUUS" });
+
+                // AdminAdded users (Role_User = NuOUS) → should go to NUOUS
+                if (roles.Contains(SD.Role_User))
                     return RedirectToAction("Index", "Home", new { area = "NUOUS" });
 
-                if (roles.Contains(SD.Role_User))
-                    return RedirectToAction("Index", "Home", new { area = "NUUS" });
 
                 // Default fallback (no roles matched)
                 return RedirectToAction("Index", "Home", new { area = "Welcome" });

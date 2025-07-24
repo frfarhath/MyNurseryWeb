@@ -5,7 +5,7 @@ using MyNursery.Utility;
 namespace MyNursery.Areas.NUUS.Controllers
 {
     [Area("NUUS")]
-    [Authorize(Roles = SD.Role_User)]
+    [Authorize(Roles = SD.Role_OtherUser)]
     public class HomeController : Controller
     {
         public IActionResult Index()

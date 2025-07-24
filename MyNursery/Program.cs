@@ -17,7 +17,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews()
     .AddRazorOptions(options =>
     {
-        // Optional additional view locations
         options.ViewLocationFormats.Add("/Views/{1}/{0}.cshtml");
         options.ViewLocationFormats.Add("/Views/Shared/{0}.cshtml");
     });
@@ -46,7 +45,6 @@ builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
 
-    // Password policy to match your seeded passwords
     options.Password.RequireDigit = true;
     options.Password.RequireLowercase = true;
     options.Password.RequireUppercase = true;
@@ -90,13 +88,15 @@ builder.Services.ConfigureApplicationCookie(options =>
             if (roleClaim == SD.Role_Admin)
                 context.Properties.RedirectUri = "/NUAD";
             else if (roleClaim == SD.Role_OtherUser)
-                context.Properties.RedirectUri = "/NUOUS";
+                context.Properties.RedirectUri = "/NUUS";   // Admin added users → NUUS 
             else if (roleClaim == SD.Role_User)
-                context.Properties.RedirectUri = "/NUUS";
+                context.Properties.RedirectUri = "/NUOUS";   // Registered users → NUOUS
             else if (roleClaim == SD.Role_SuperAdmin)
                 context.Properties.RedirectUri = "/NUSAD";
             else if (roleClaim == SD.Role_AdminCSAD)
                 context.Properties.RedirectUri = "/CSAD";
+            else
+                context.Properties.RedirectUri = "/"; // fallback
 
             return Task.CompletedTask;
         }
@@ -162,8 +162,8 @@ static async Task SeedRolesAsync(IServiceProvider services, ILogger logger)
     var roles = new[]
     {
         new ApplicationRole { Name = SD.Role_Admin, NormalizedName = SD.Role_Admin.ToUpper(), Description = "Admin Role" },
-        new ApplicationRole { Name = SD.Role_User, NormalizedName = SD.Role_User.ToUpper(), Description = "Regular User Role" },
-        new ApplicationRole { Name = SD.Role_OtherUser, NormalizedName = SD.Role_OtherUser.ToUpper(), Description = "Other User Role" },
+        new ApplicationRole { Name = SD.Role_User, NormalizedName = SD.Role_User.ToUpper(), Description = "Registered User Role" },
+        new ApplicationRole { Name = SD.Role_OtherUser, NormalizedName = SD.Role_OtherUser.ToUpper(), Description = "Admin Added User Role" },
         new ApplicationRole { Name = SD.Role_SuperAdmin, NormalizedName = SD.Role_SuperAdmin.ToUpper(), Description = "Super Admin Role" },
         new ApplicationRole { Name = SD.Role_AdminCSAD, NormalizedName = SD.Role_AdminCSAD.ToUpper(), Description = "Admin CSAD Role" }
     };
@@ -194,8 +194,7 @@ static async Task SeedUsersAsync(IServiceProvider services, ILogger logger)
     {
         new { Email = "nuad.user@littlesprouts.com", FirstName = "NUAD", LastName = "User", Role = SD.Role_Admin, Password = "Nuad@123" },
         new { Email = "nusad.user@littlesprouts.com", FirstName = "NUSAD", LastName = "User", Role = SD.Role_SuperAdmin, Password = "Nusad@123" },
-        new { Email = "csad.user@littlesprouts.com", FirstName = "CSAD", LastName = "User", Role = SD.Role_AdminCSAD, Password = "Csad@123" },
-        new { Email = "nuous.user@littlesprouts.com", FirstName = "NUOUS", LastName = "User", Role = SD.Role_OtherUser, Password = "Nuous@123" }
+        new { Email = "csad.user@littlesprouts.com", FirstName = "CSAD", LastName = "User", Role = SD.Role_AdminCSAD, Password = "Csad@123" }
     };
 
     foreach (var u in predefinedUsers)
@@ -215,6 +214,11 @@ static async Task SeedUsersAsync(IServiceProvider services, ILogger logger)
             LastName = u.LastName,
             EmailConfirmed = true,
             DateCreated = DateTime.UtcNow,
+            Area = u.Role == SD.Role_User ? "NUOUS" :   // <-- Fixed: Registered user area
+                   u.Role == SD.Role_OtherUser ? "NUUS" : // <-- Fixed: Admin added user area
+                   u.Role == SD.Role_Admin ? "NUAD" :
+                   u.Role == SD.Role_SuperAdmin ? "NUSAD" :
+                   u.Role == SD.Role_AdminCSAD ? "CSAD" : ""
         };
 
         var result = await userManager.CreateAsync(user, u.Password);

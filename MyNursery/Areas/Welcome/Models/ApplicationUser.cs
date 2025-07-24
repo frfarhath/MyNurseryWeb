@@ -32,6 +32,10 @@ namespace MyNursery.Areas.Welcome.Models
         public string UserType { get; set; } = SD.UserType_Registered;
         public string NUUSDashboardId { get; set; } = string.Empty;
 
+        [MaxLength(50)]
+        public string Area { get; set; } = string.Empty;
+
+
     }
 
 }

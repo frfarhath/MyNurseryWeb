@@ -21,10 +21,13 @@ namespace MyNursery.Areas.NUAD.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IEmailSender _emailSender;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RoleManager<ApplicationRole> _roleManager;  // Changed here
+        private readonly RoleManager<ApplicationRole> _roleManager;
 
-        public UsersController(ApplicationDbContext context, IEmailSender emailSender,
-            UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager) // Changed here
+        public UsersController(
+            ApplicationDbContext context,
+            IEmailSender emailSender,
+            UserManager<ApplicationUser> userManager,
+            RoleManager<ApplicationRole> roleManager)
         {
             _context = context;
             _emailSender = emailSender;
@@ -34,11 +37,14 @@ namespace MyNursery.Areas.NUAD.Controllers
 
         private List<string> GetAvailableRoles()
         {
-            var excludedRoles = new[] { SD.Role_Admin,
-    SD.Role_SuperAdmin,
-    SD.Role_OtherUser,
-    SD.Role_User,
-    SD.Role_AdminCSAD };
+            var excludedRoles = new[]
+            {
+                SD.Role_Admin,
+                SD.Role_SuperAdmin,
+                SD.Role_OtherUser,
+                SD.Role_User,
+                SD.Role_AdminCSAD
+            };
 
             return _roleManager.Roles
                 .Select(r => r.Name)
@@ -70,6 +76,7 @@ namespace MyNursery.Areas.NUAD.Controllers
 
             string generatedPassword = GenerateRandomPassword();
 
+            // ✅ Identity user creation
             var identityUser = new ApplicationUser
             {
                 UserName = model.EmailAddress,
@@ -79,7 +86,8 @@ namespace MyNursery.Areas.NUAD.Controllers
                 PhoneNumber = model.ContactNumber,
                 EmailConfirmed = true,
                 DateCreated = DateTime.UtcNow,
-                UserType = SD.UserType_AdminAdded
+                UserType = SD.UserType_AdminAdded,
+                Area = "NUUS" // ✅ Admin-added users get NUUS
             };
 
             var result = await _userManager.CreateAsync(identityUser, generatedPassword);
@@ -93,21 +101,27 @@ namespace MyNursery.Areas.NUAD.Controllers
                 return View(model);
             }
 
-            await _userManager.AddToRoleAsync(identityUser, model.Role);
+            await _userManager.AddToRoleAsync(identityUser, SD.Role_OtherUser); // ✅ Always NuUS for admin-added
 
-            model.Password = null;
+            // ✅ Custom User table record
+            model.Password = null; // Don’t store plaintext
             model.AddedDate = DateTime.UtcNow;
+            model.Area = "NUUS"; // ✅ Match ApplicationUser
+            model.Role = SD.Role_OtherUser; // ✅ Track role
+            model.IsActive = true;
+
             _context.Users.Add(model);
             await _context.SaveChangesAsync();
 
+            // ✅ Email
             string message = $@"
-                Dear {model.FirstName},<br/><br/>
-                You have been successfully added to <strong>Little Sprouts Nursery</strong> as a <strong>{model.Role}</strong>.<br/><br/>
-                <strong>Temporary Password:</strong><br/>
-                <code>{generatedPassword}</code><br/><br/>
-                Please log in and change your password.<br/><br/>
-                Best regards,<br/>
-                <strong>Little Sprouts Nursery Team</strong>";
+            Dear {model.FirstName},<br/><br/>
+            You have been successfully added to <strong>Little Sprouts Nursery</strong> as a <strong>{SD.Role_OtherUser}</strong>.<br/><br/>
+            <strong>Temporary Password:</strong><br/>
+            <code>{generatedPassword}</code><br/><br/>
+            Please log in and change your password.<br/><br/>
+            Best regards,<br/>
+            <strong>Little Sprouts Nursery Team</strong>";
 
             await _emailSender.SendEmailAsync(model.EmailAddress, "Welcome to MyNursery", message);
 
@@ -174,6 +188,7 @@ namespace MyNursery.Areas.NUAD.Controllers
                 user.EmailAddress,
                 user.Role,
                 user.ContactNumber,
+                user.Area,
                 AddedDate = user.AddedDate.ToString("yyyy-MM-dd HH:mm")
             });
         }

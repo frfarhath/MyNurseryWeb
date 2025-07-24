@@ -98,7 +98,6 @@ namespace MyNursery.Areas.Identity.Pages.Account
             };
 
             var result = await _userManager.CreateAsync(user, Input.Password);
-
             if (result.Succeeded)
             {
                 _logger.LogInformation("User created a new account with password.");
@@ -106,13 +105,17 @@ namespace MyNursery.Areas.Identity.Pages.Account
                 // Role assignment logic
                 if (user.Email.Equals("frfarhath21@gmail.com", StringComparison.OrdinalIgnoreCase))
                 {
-                    await _userManager.AddToRoleAsync(user, SD.Role_Admin); // Admin role for this specific email
+                    await _userManager.AddToRoleAsync(user, SD.Role_Admin); // Optional if you want this admin account
                     user.UserType = SD.UserType_AdminAdded;
+                    user.Area = "NUUS"; // ✅ Admin-added user → NUUS
                 }
                 else
                 {
-                    await _userManager.AddToRoleAsync(user, SD.Role_User); // Registered user role (NUUS)
+                    await _userManager.AddToRoleAsync(user, SD.Role_User); // Role_User = NuOUS
+                    user.UserType = SD.UserType_Registered;
+                    user.Area = "NUOUS"; // ✅ Registered user → NUOUS
                 }
+
 
                 await _userManager.UpdateAsync(user);
 
@@ -126,8 +129,7 @@ namespace MyNursery.Areas.Identity.Pages.Account
                 await _emailSender.SendEmailAsync(
                     Input.Email,
                     "Your OTP Code for Little Sprouts Nursery",
-                    $@"
-<html>
+                    $@"<html>
   <body style='font-family: Arial, sans-serif; color: #333;'>
     <h2>Welcome to Little Sprouts Nursery!</h2>
     <p>Thank you for registering. To verify your email, use the OTP below:</p>
@@ -141,6 +143,7 @@ namespace MyNursery.Areas.Identity.Pages.Account
 
                 return RedirectToPage("VerifyOTP", new { userId = user.Id });
             }
+
 
             foreach (var error in result.Errors)
             {

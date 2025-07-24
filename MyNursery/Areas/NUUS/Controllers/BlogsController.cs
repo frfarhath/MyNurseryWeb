@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 namespace MyNursery.Areas.NUUS.Controllers
 {
     [Area("NUUS")]
-    [Authorize(Roles = SD.Role_User)]
+    [Authorize(Roles = SD.Role_OtherUser)]
     public class BlogsController : Controller
     {
         private readonly ApplicationDbContext _db;

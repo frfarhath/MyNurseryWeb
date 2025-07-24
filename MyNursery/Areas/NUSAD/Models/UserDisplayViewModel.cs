@@ -1,4 +1,6 @@
-﻿namespace MyNursery.Areas.NUSAD.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace MyNursery.Areas.NUSAD.Models
 {
     public class UserDisplayViewModel
     {
@@ -12,6 +14,9 @@
         public DateTime? LastLoginDate { get; set; }
         public string? ContactNumber { get; set; }
         public string UserType { get; set; } = null!;
+        [MaxLength(50)]
+        public string Area { get; set; } = string.Empty;
+
 
 
     }

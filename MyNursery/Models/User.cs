@@ -29,6 +29,8 @@ public class User
     [MaxLength(15)]
     public string ContactNumber { get; set; }
 
-    // ✅ Add this:
     public bool IsActive { get; set; } = true;
+
+    public string Area { get; set; } = string.Empty;
+
 }
