@@ -1,0 +1,113 @@
+﻿@model MyNursery.Areas.Welcome.Models.ApplicationUser
+@using MyNursery.Utility
+@{
+    ViewData["Title"] = "User Profile";
+    var roles = ViewData["UserRoles"] as IList<string> ?? new List<string>();
+}
+
+<div class="user-profile user-card mb-4">
+    <div class="card-header border-0 p-0 pb-0">
+        <div class="cover-img-block">
+            <img src="~/assets/images/profile/cover.jpg" alt="Cover Image" class="img-fluid" />
+            <div class="overlay"></div>
+        </div>
+    </div>
+    <div class="card-body py-0">
+        <div class="user-about-block m-0">
+            <div class="row">
+                <div class="col-md-4 text-center mt-n5">
+                    <div class="profile-dp">
+                        <img class="img-radius img-fluid wid-100" src="~/assets/images/user/avatar-5.jpg" alt="User image" />
+                    </div>
+                    <h5 class="mb-1">@Model.FirstName @Model.LastName</h5>
+                    <p class="mb-2 text-muted">@string.Join(", ", roles)</p>
+                </div>
+                <div class="col-md-8 mt-md-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><i class="feather icon-globe mr-2 f-18"></i>www.Codedthemes.net</p>
+                            <p><i class="feather icon-mail mr-2 f-18"></i>@Model.Email</p>
+                            <p><i class="feather icon-phone mr-2 f-18"></i>@Model.PhoneNumber</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><i class="feather icon-map-pin mr-2 f-18"></i>4289 Calvin Street, Baltimore, MD</p>
+                        </div>
+                    </div>
+
+                    <!-- Profile Tabs -->
+                    <ul class="nav nav-tabs profile-tabs nav-fill mt-3" id="profileTab" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab">Profile</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="change-password-tab" data-toggle="tab" href="#change-password" role="tab">Change Password</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="gallery-tab" data-toggle="tab" href="#gallery" role="tab">Gallery</a>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content mt-3" id="profileTabContent">
+                        <div class="tab-pane fade show active" id="home" role="tabpanel">
+                            <p>Welcome to your home tab content.</p>
+                        </div>
+
+                        <div class="tab-pane fade" id="profile" role="tabpanel">
+                            <p>Your profile details or edit form goes here.</p>
+                        </div>
+
+                        <div class="tab-pane fade" id="change-password" role="tabpanel">
+                            <div class="auth-content text-center">
+                                <div class="card borderless">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-12">
+                                            <div class="card-body">
+                                                <h4 class="mb-3 f-w-400">Reset your password</h4>
+
+                                                <form method="post" asp-area="NUUS" asp-controller="Account" asp-action="ChangePassword">
+                                                    <div class="form-group mb-4">
+                                                        <input type="password" class="form-control" id="CurrentPassword" name="currentPassword" placeholder="Current Password" required />
+                                                    </div>
+                                                    <div class="form-group mb-4">
+                                                        <input type="password" class="form-control" id="NewPassword" name="newPassword" placeholder="New Password" required />
+                                                    </div>
+                                                    <div class="form-group mb-4">
+                                                        <input type="password" class="form-control" id="ConfirmPassword" name="confirmPassword" placeholder="Confirm New Password" required />
+                                                    </div>
+                                                    <div class="form-group text-left">
+                                                        <button type="reset" class="btn btn-outline-secondary me-2">Reset</button>
+                                                        <button type="submit" class="btn btn-primary">Update Password</button>
+                                                    </div>
+                                                </form>
+
+                                                <hr />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="gallery" role="tabpanel">
+                            <p>Your gallery content here.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            $('#profileTab a').on('click', function (e) {
+                e.preventDefault();
+                $(this).tab('show');
+            });
+        });
+    </script>
+}

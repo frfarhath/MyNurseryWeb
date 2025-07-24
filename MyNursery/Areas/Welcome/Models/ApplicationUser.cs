@@ -35,6 +35,10 @@ namespace MyNursery.Areas.Welcome.Models
         [MaxLength(50)]
         public string Area { get; set; } = string.Empty;
 
+        public bool MustChangePassword { get; set; } = false;
+
+
+
 
     }
 

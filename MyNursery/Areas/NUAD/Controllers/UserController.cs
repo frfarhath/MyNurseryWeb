@@ -75,8 +75,6 @@ namespace MyNursery.Areas.NUAD.Controllers
             }
 
             string generatedPassword = GenerateRandomPassword();
-
-            // ✅ Identity user creation
             var identityUser = new ApplicationUser
             {
                 UserName = model.EmailAddress,
@@ -87,47 +85,62 @@ namespace MyNursery.Areas.NUAD.Controllers
                 EmailConfirmed = true,
                 DateCreated = DateTime.UtcNow,
                 UserType = SD.UserType_AdminAdded,
-                Area = "NUUS" // ✅ Admin-added users get NUUS
+                Area = "NUOUS",  // or set dynamically based on role if needed
+                MustChangePassword = true // <-- This forces password change on first login
             };
+
 
             var result = await _userManager.CreateAsync(identityUser, generatedPassword);
             if (!result.Succeeded)
             {
                 foreach (var error in result.Errors)
-                {
                     ModelState.AddModelError(string.Empty, error.Description);
-                }
+
                 ViewBag.Roles = GetAvailableRoles();
                 return View(model);
             }
 
-            await _userManager.AddToRoleAsync(identityUser, SD.Role_OtherUser); // ✅ Always NuUS for admin-added
+            var roleResult = await _userManager.AddToRoleAsync(identityUser, model.Role);
+            if (!roleResult.Succeeded)
+            {
+                ModelState.AddModelError(string.Empty, "Failed to assign user role.");
+                ViewBag.Roles = GetAvailableRoles();
+                return View(model);
+            }
 
-            // ✅ Custom User table record
-            model.Password = null; // Don’t store plaintext
+            // Save to custom User table
+            model.Password = null;
             model.AddedDate = DateTime.UtcNow;
-            model.Area = "NUUS"; // ✅ Match ApplicationUser
-            model.Role = SD.Role_OtherUser; // ✅ Track role
+            model.Area = "NUOUS"; // match with identityUser.Area or set dynamically
+            model.Role = model.Role;
             model.IsActive = true;
 
             _context.Users.Add(model);
             await _context.SaveChangesAsync();
 
-            // ✅ Email
             string message = $@"
-            Dear {model.FirstName},<br/><br/>
-            You have been successfully added to <strong>Little Sprouts Nursery</strong> as a <strong>{SD.Role_OtherUser}</strong>.<br/><br/>
-            <strong>Temporary Password:</strong><br/>
-            <code>{generatedPassword}</code><br/><br/>
-            Please log in and change your password.<br/><br/>
-            Best regards,<br/>
-            <strong>Little Sprouts Nursery Team</strong>";
+        Dear {model.FirstName},<br/><br/>
+        You have been successfully added to <strong>Little Sprouts Nursery</strong> as a <strong>{model.Role}</strong>.<br/><br/>
+        <strong>Temporary Password:</strong><br/>
+        <code>{generatedPassword}</code><br/><br/>
+        Please log in and change your password immediately.<br/><br/>
+        Best regards,<br/>
+        <strong>Little Sprouts Nursery Team</strong>";
 
-            await _emailSender.SendEmailAsync(model.EmailAddress, "Welcome to MyNursery", message);
+            try
+            {
+                await _emailSender.SendEmailAsync(model.EmailAddress, "Welcome to MyNursery", message);
+            }
+            catch (Exception ex)
+            {
+                // log exception or add tempdata warning
+                TempData[SD.Warning_Msg] = "User created but email could not be sent.";
+            }
 
             TempData[SD.Success_Msg] = "User created and credentials emailed!";
             return RedirectToAction("ManageUsers");
         }
+
 
         public IActionResult EditUser(int id)
         {
@@ -146,18 +159,18 @@ namespace MyNursery.Areas.NUAD.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditUser(User user)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                _context.Users.Update(user);
-                await _context.SaveChangesAsync();
-
-                TempData[SD.Success_Msg] = "User updated successfully!";
-                return RedirectToAction("ManageUsers");
+                ViewBag.Roles = GetAvailableRoles();
+                TempData[SD.Error_Msg] = "Validation failed. Please try again.";
+                return View(user);
             }
 
-            ViewBag.Roles = GetAvailableRoles();
-            TempData[SD.Error_Msg] = "Validation failed. Please try again.";
-            return View(user);
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            TempData[SD.Success_Msg] = "User updated successfully!";
+            return RedirectToAction("ManageUsers");
         }
 
         [HttpPost]

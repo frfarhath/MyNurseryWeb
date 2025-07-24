@@ -13,10 +13,11 @@ using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add MVC and Razor Pages with custom view locations for Areas and Content folder
+// Add MVC with Razor Pages, configure custom view locations for Areas and Content folder
 builder.Services.AddControllersWithViews()
     .AddRazorOptions(options =>
     {
+        // You can customize locations for views here if needed
         options.ViewLocationFormats.Add("/Views/{1}/{0}.cshtml");
         options.ViewLocationFormats.Add("/Views/Shared/{0}.cshtml");
     });
@@ -33,14 +34,14 @@ builder.Services.Configure<RazorViewEngineOptions>(options =>
 
 builder.Services.AddRazorPages();
 
-// Configure EF Core with SQL Server
+// Configure EF Core with SQL Server using connection string from appsettings.json
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     options.UseSqlServer(connectionString);
 });
 
-// Add Identity using your ApplicationUser and ApplicationRole
+// Add Identity with ApplicationUser and ApplicationRole, configure password and sign-in options
 builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
@@ -54,19 +55,19 @@ builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-// Configure Role claim type for consistency
+// Set Role claim type for consistency across identity and authorization
 builder.Services.Configure<IdentityOptions>(options =>
 {
     options.ClaimsIdentity.RoleClaimType = ClaimTypes.Role;
 });
 
-// Configure token lifespan (optional, e.g., for reset password)
+// Configure token lifespan for password reset tokens, etc.
 builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
 {
     options.TokenLifespan = TimeSpan.FromHours(2);
 });
 
-// Configure application cookie and role-based redirect
+// Configure authentication cookie and set redirect URLs based on user role after login
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Identity/Account/Login";
@@ -90,7 +91,7 @@ builder.Services.ConfigureApplicationCookie(options =>
             else if (roleClaim == SD.Role_OtherUser)
                 context.Properties.RedirectUri = "/NUUS";   // Admin added users → NUUS 
             else if (roleClaim == SD.Role_User)
-                context.Properties.RedirectUri = "/NUOUS";   // Registered users → NUOUS
+                context.Properties.RedirectUri = "/NUOUS";  // Registered users → NUOUS
             else if (roleClaim == SD.Role_SuperAdmin)
                 context.Properties.RedirectUri = "/NUSAD";
             else if (roleClaim == SD.Role_AdminCSAD)
@@ -103,13 +104,13 @@ builder.Services.ConfigureApplicationCookie(options =>
     };
 });
 
-// Configure email sender from appsettings.json
+// Configure EmailSettings from appsettings.json and register EmailSender service
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 var app = builder.Build();
 
-// Middleware pipeline
+// Middleware pipeline setup
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -124,14 +125,14 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Area routing support
+// Configure area routing support
 app.MapControllerRoute(
     name: "default",
     pattern: "{area=Welcome}/{controller=Home}/{action=Index}/{id?}");
 
 app.MapRazorPages();
 
-// Seed roles and users inside a scope
+// Seed roles and users inside a scope during startup
 await using (var scope = app.Services.CreateAsyncScope())
 {
     var services = scope.ServiceProvider;
@@ -154,7 +155,7 @@ await using (var scope = app.Services.CreateAsyncScope())
 app.Run();
 
 
-// Seed roles with ApplicationRole
+// Seed roles method
 static async Task SeedRolesAsync(IServiceProvider services, ILogger logger)
 {
     var roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();
@@ -185,7 +186,7 @@ static async Task SeedRolesAsync(IServiceProvider services, ILogger logger)
     }
 }
 
-// Seed predefined users with roles
+// Seed predefined users method
 static async Task SeedUsersAsync(IServiceProvider services, ILogger logger)
 {
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
@@ -214,8 +215,8 @@ static async Task SeedUsersAsync(IServiceProvider services, ILogger logger)
             LastName = u.LastName,
             EmailConfirmed = true,
             DateCreated = DateTime.UtcNow,
-            Area = u.Role == SD.Role_User ? "NUOUS" :   // <-- Fixed: Registered user area
-                   u.Role == SD.Role_OtherUser ? "NUUS" : // <-- Fixed: Admin added user area
+            Area = u.Role == SD.Role_User ? "NUOUS" :   // Registered user area
+                   u.Role == SD.Role_OtherUser ? "NUUS" : // Admin added user area
                    u.Role == SD.Role_Admin ? "NUAD" :
                    u.Role == SD.Role_SuperAdmin ? "NUSAD" :
                    u.Role == SD.Role_AdminCSAD ? "CSAD" : ""

@@ -109,9 +109,16 @@ namespace MyNursery.Views.Identity.Pages.Account
             {
                 _logger.LogInformation("User logged in.");
 
-                // Update last login date here
                 user.LastLoginDate = DateTime.UtcNow;
                 await _userManager.UpdateAsync(user);
+
+                if (user.MustChangePassword)
+                {
+                    return RedirectToAction("Profile", "Account", new { area = "NUUS" });
+                }
+
+
+
 
                 var roles = await _userManager.GetRolesAsync(user);
                 var email = Input.Email.ToLower();
