@@ -1,5 +1,7 @@
 ﻿@model MyNursery.Models.BlogPost
 
+@using Microsoft.AspNetCore.Mvc.Rendering
+
 @{
     ViewData["Title"] = "Edit Blog";
 }
@@ -59,22 +61,25 @@
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="Category" class="form-label"></label>
-                        <select asp-for="Category" class="form-select">
+                        <label asp-for="CategoryId" class="form-label">Category</label>
+                        <select asp-for="CategoryId" class="form-select" asp-items="@(new SelectList(ViewBag.Categories, "Id", "Name"))">
                             <option value="">-- Select Category --</option>
-                            <option value="Education" selected="@(Model.Category == "Education" ? "selected" : null)">Education</option>
-                            <option value="Events" selected="@(Model.Category == "Events" ? "selected" : null)">Events</option>
-                            <option value="Tips" selected="@(Model.Category == "Tips" ? "selected" : null)">Tips</option>
                         </select>
-                        <span asp-validation-for="Category" class="text-danger"></span>
+                        <span asp-validation-for="CategoryId" class="text-danger"></span>
                     </div>
+
+                    @{
+                        // Helper function to get image path by type
+                        string GetImagePath(string type) =>
+                        Model.BlogImages?.FirstOrDefault(img => img.Type == type)?.ImagePath ?? string.Empty;
+                    }
 
                     <div class="mb-3">
                         <label class="form-label">Cover Image</label>
-                        @if (!string.IsNullOrEmpty(Model.CoverImagePath))
+                        @if (!string.IsNullOrEmpty(GetImagePath("Cover")))
                         {
                             <div class="mb-2">
-                                <img src="@Model.CoverImagePath" alt="Cover Image" class="img-fluid rounded" style="max-height:150px;" />
+                                <img src="@GetImagePath("Cover")" alt="Cover Image" class="img-fluid rounded" style="max-height:150px;" />
                             </div>
                         }
                         <input type="file" name="CoverImage" class="form-control" accept="image/*" />
@@ -82,10 +87,10 @@
 
                     <div class="mb-3">
                         <label class="form-label">Optional Image 1</label>
-                        @if (!string.IsNullOrEmpty(Model.OptionalImage1Path))
+                        @if (!string.IsNullOrEmpty(GetImagePath("Optional1")))
                         {
                             <div class="mb-2">
-                                <img src="@Model.OptionalImage1Path" alt="Optional Image 1" class="img-fluid rounded" style="max-height:150px;" />
+                                <img src="@GetImagePath("Optional1")" alt="Optional Image 1" class="img-fluid rounded" style="max-height:150px;" />
                             </div>
                         }
                         <input type="file" name="OptionalImage1" class="form-control" accept="image/*" />
@@ -93,10 +98,10 @@
 
                     <div class="mb-3">
                         <label class="form-label">Optional Image 2</label>
-                        @if (!string.IsNullOrEmpty(Model.OptionalImage2Path))
+                        @if (!string.IsNullOrEmpty(GetImagePath("Optional2")))
                         {
                             <div class="mb-2">
-                                <img src="@Model.OptionalImage2Path" alt="Optional Image 2" class="img-fluid rounded" style="max-height:150px;" />
+                                <img src="@GetImagePath("Optional2")" alt="Optional Image 2" class="img-fluid rounded" style="max-height:150px;" />
                             </div>
                         }
                         <input type="file" name="OptionalImage2" class="form-control" accept="image/*" />
@@ -114,7 +119,7 @@
                         <span asp-validation-for="PublishDate" class="text-danger"></span>
                     </div>
 
-                    <div class="form-group text-right">
+                    <div class="form-group text-end">
                         <a asp-action="ManageBlogs" class="btn btn-outline-secondary me-2">Cancel</a>
                         <button type="submit" class="btn btn-primary">Update Blog</button>
                     </div>

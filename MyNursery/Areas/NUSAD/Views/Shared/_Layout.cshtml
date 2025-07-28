@@ -50,7 +50,6 @@
                         <ul class="pcoded-submenu">
                             <li><a asp-area="NUSAD" asp-controller="Users" asp-action="ManageUsers">Manage</a></li>
                             <li><a asp-area="NUSAD" asp-controller="Users" asp-action="DisabledUsers">Disabled Users</a></li>
-
                         </ul>
                     </li>
 
@@ -65,7 +64,16 @@
                         </ul>
                     </li>
 
-
+                    <!-- Blog Categories Section -->
+                    <li class="nav-item pcoded-hasmenu">
+                        <a href="javascript:void(0)" class="nav-link">
+                            <span class="pcoded-micon"><i class="feather icon-folder"></i></span>
+                            <span class="pcoded-mtext">Blog Categories</span>
+                        </a>
+                        <ul class="pcoded-submenu">
+                            <li><a asp-area="NUSAD" asp-controller="BlogCategories" asp-action="ManageCategories">Manage Categories</a></li>
+                        </ul>
+                    </li>
                 </ul>
 
             </div>

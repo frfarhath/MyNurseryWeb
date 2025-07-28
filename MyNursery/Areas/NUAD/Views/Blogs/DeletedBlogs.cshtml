@@ -28,10 +28,10 @@
 <!-- [ Main Content ] start -->
 <div class="row">
     <div class="col-xl-12">
-        <div class="card">
+        <div class="card shadow-sm">
             <div class="card-header">
                 <h5 class="mb-0">Deleted Blog Posts</h5>
-                <span class="text-muted">Restore or permanently delete blog entries.</span>
+                <small class="text-muted">Restore or permanently delete blog entries.</small>
             </div>
             <div class="card-body">
 
@@ -43,9 +43,10 @@
                     <div class="col-md-4">
                         <select id="categoryFilter" class="form-control" onchange="filterTable()">
                             <option value="">-- Filter by Category --</option>
-                            <option value="Education">Education</option>
-                            <option value="Events">Events</option>
-                            <option value="Tips">Tips</option>
+                            @foreach (var cat in Model.Select(b => b.Category?.Name).Where(n => !string.IsNullOrEmpty(n)).Distinct())
+                            {
+                                <option value="@cat.ToLower()">@cat</option>
+                            }
                         </select>
                     </div>
                 </div>
@@ -58,12 +59,12 @@
                 {
                     <div class="table-responsive">
                         <table class="table table-hover" id="deletedBlogsTable">
-                            <thead class="thead-light">
+                            <thead class="table-light">
                                 <tr>
                                     <th>Title</th>
                                     <th>Category</th>
                                     <th>Deleted On</th>
-                                    <th>Actions</th>
+                                    <th style="min-width: 180px;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -71,7 +72,7 @@
                                 {
                                     <tr>
                                         <td>@blog.Title</td>
-                                        <td>@blog.Category</td>
+                                        <td>@blog.Category?.Name</td>
                                         <td>@blog.DeletedAt?.ToString("yyyy-MM-dd")</td>
                                         <td>
                                             <form asp-action="RestoreBlog" method="post" class="d-inline restore-form" asp-route-id="@blog.Id">
@@ -101,7 +102,6 @@
 <!-- [ Main Content ] end -->
 @section Scripts {
     <script>
-        // Search & Filter function
         function filterTable() {
             const input = document.getElementById("searchInput").value.toLowerCase();
             const categoryFilter = document.getElementById("categoryFilter").value.toLowerCase();
@@ -109,8 +109,8 @@
             const trs = table.tBodies[0].getElementsByTagName("tr");
 
             for (let i = 0; i < trs.length; i++) {
-                let title = trs[i].getElementsByTagName("td")[0].textContent.toLowerCase();
-                let category = trs[i].getElementsByTagName("td")[1].textContent.toLowerCase();
+                const title = trs[i].getElementsByTagName("td")[0].textContent.toLowerCase();
+                const category = trs[i].getElementsByTagName("td")[1].textContent.toLowerCase();
 
                 const matchesTitle = title.includes(input);
                 const matchesCategory = categoryFilter === "" || category === categoryFilter;
@@ -120,15 +120,16 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Restore Blog
+            // Restore Blog AJAX
             const restoreForms = document.querySelectorAll('.restore-form');
             restoreForms.forEach(form => {
-                form.addEventListener('submit', async (e) => {
+                form.addEventListener('submit', async e => {
                     e.preventDefault();
                     if (!confirm("Restore this blog?")) return;
 
                     const formData = new FormData(form);
                     const token = formData.get("__RequestVerificationToken");
+
                     const response = await fetch(form.action, {
                         method: 'POST',
                         headers: {
@@ -143,20 +144,21 @@
                         alert(result.message);
                         form.closest('tr').remove();
                     } else {
-                        alert("Failed to restore blog.");
+                        alert(result.message || "Failed to restore blog.");
                     }
                 });
             });
 
-            // Permanently Delete Blog
+            // Permanently Delete Blog AJAX
             const deleteForms = document.querySelectorAll('.delete-form');
             deleteForms.forEach(form => {
-                form.addEventListener('submit', async (e) => {
+                form.addEventListener('submit', async e => {
                     e.preventDefault();
                     if (!confirm("Permanently delete this blog? This action cannot be undone.")) return;
 
                     const formData = new FormData(form);
                     const token = formData.get("__RequestVerificationToken");
+
                     const response = await fetch(form.action, {
                         method: 'POST',
                         headers: {
@@ -171,7 +173,7 @@
                         alert(result.message);
                         form.closest('tr').remove();
                     } else {
-                        alert("Failed to delete blog.");
+                        alert(result.message || "Failed to delete blog.");
                     }
                 });
             });

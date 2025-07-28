@@ -112,10 +112,13 @@ namespace MyNursery.Views.Identity.Pages.Account
                 user.LastLoginDate = DateTime.UtcNow;
                 await _userManager.UpdateAsync(user);
 
+
                 if (user.MustChangePassword)
                 {
-                    return RedirectToAction("Profile", "Account", new { area = "NUUS" });
+                    TempData["ForceChangePassword"] = "true";
+                    return RedirectToAction("Index", "Home", new { area = "NUUS" });
                 }
+
 
 
 
@@ -142,17 +145,21 @@ namespace MyNursery.Views.Identity.Pages.Account
                 if (roles.Contains(SD.Role_AdminCSAD))
                     return RedirectToAction("Index", "Home", new { area = "CSAD" });
 
+                // 🔥 If AdminAdded → Go to NUUS, no matter the role
+                if (user.UserType == "AdminAdded")
+                    return RedirectToAction("Index", "Home", new { area = "NUUS" });
+
                 // Registered users (Role_OtherUser = NuUS) → should go to NUUS
                 if (roles.Contains(SD.Role_OtherUser))
                     return RedirectToAction("Index", "Home", new { area = "NUUS" });
 
-                // AdminAdded users (Role_User = NuOUS) → should go to NUOUS
+                // Publicly Registered Users → NUOUS
                 if (roles.Contains(SD.Role_User))
                     return RedirectToAction("Index", "Home", new { area = "NUOUS" });
 
-
-                // Default fallback (no roles matched)
+                // Default fallback
                 return RedirectToAction("Index", "Home", new { area = "Welcome" });
+
             }
 
             if (result.RequiresTwoFactor)

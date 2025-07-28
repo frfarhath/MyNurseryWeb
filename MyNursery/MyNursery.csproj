@@ -21,7 +21,6 @@
     <Folder Include="Areas\NUOUS\Models\" />
     <Folder Include="Areas\NUSAD\Data\" />
     <Folder Include="Areas\NUUS\Data\" />
-    <Folder Include="Areas\NUUS\Models\" />
     <Folder Include="Areas\Welcome\Data\" />
     <Folder Include="Migrations\" />
     <Folder Include="wwwroot\css\" />

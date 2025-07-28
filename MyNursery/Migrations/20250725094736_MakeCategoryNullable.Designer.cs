@@ -12,8 +12,8 @@ using MyNursery.Data;
 namespace MyNursery.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250723081753_UpdateBlogPostModel")]
-    partial class UpdateBlogPostModel
+    [Migration("20250725094736_MakeCategoryNullable")]
+    partial class MakeCategoryNullable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -389,6 +389,28 @@ namespace MyNursery.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MyNursery.Areas.NUSAD.Models.BlogCategories", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BlogCategories");
+                });
+
             modelBuilder.Entity("MyNursery.Areas.Welcome.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -396,6 +418,11 @@ namespace MyNursery.Migrations
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
+
+                    b.Property<string>("Area")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -436,6 +463,9 @@ namespace MyNursery.Migrations
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("MustChangePassword")
+                        .HasColumnType("bit");
 
                     b.Property<string>("NUUSDashboardId")
                         .IsRequired()
@@ -519,15 +549,11 @@ namespace MyNursery.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Content")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CoverImagePath")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -545,12 +571,6 @@ namespace MyNursery.Migrations
                     b.Property<DateTime?>("ModifiedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("OptionalImage1Path")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("OptionalImage2Path")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime?>("PublishDate")
                         .HasColumnType("datetime2");
 
@@ -562,6 +582,8 @@ namespace MyNursery.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
 
                     b.HasIndex("CreatedByUserId");
 
@@ -578,6 +600,10 @@ namespace MyNursery.Migrations
 
                     b.Property<DateTime>("AddedDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Area")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ContactNumber")
                         .IsRequired()
@@ -685,9 +711,15 @@ namespace MyNursery.Migrations
 
             modelBuilder.Entity("MyNursery.Models.BlogPost", b =>
                 {
+                    b.HasOne("MyNursery.Areas.NUSAD.Models.BlogCategories", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId");
+
                     b.HasOne("MyNursery.Areas.Welcome.Models.ApplicationUser", "CreatedByUser")
                         .WithMany()
                         .HasForeignKey("CreatedByUserId");
+
+                    b.Navigation("Category");
 
                     b.Navigation("CreatedByUser");
                 });

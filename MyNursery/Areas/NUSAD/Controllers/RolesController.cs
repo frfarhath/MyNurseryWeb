@@ -1,12 +1,15 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using MyNursery.Areas.NUSAD.Models;
+using MyNursery.Utility;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace MyNursery.Areas.NUSAD.Controllers
 {
     [Area("NUSAD")]
+    [Authorize(Roles = SD.Role_SuperAdmin)]
     public class RolesController : Controller
     {
         private readonly RoleManager<ApplicationRole> _roleManager;

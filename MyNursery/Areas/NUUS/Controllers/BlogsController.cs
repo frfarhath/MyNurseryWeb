@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MyNursery.Areas.NUSAD.Models;
 using MyNursery.Areas.Welcome.Models;
 using MyNursery.Data;
 using MyNursery.Models;
@@ -30,6 +31,7 @@ namespace MyNursery.Areas.NUUS.Controllers
             _userManager = userManager;
         }
 
+        // List blogs of the logged-in user
         public async Task<IActionResult> ManageBlogs()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -41,15 +43,25 @@ namespace MyNursery.Areas.NUUS.Controllers
 
             var blogs = await _db.BlogPosts
                 .Include(b => b.BlogImages)
+                .Include(b => b.Category)
                 .Where(b => b.CreatedByUserId == user.Id)
                 .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
 
+            var categories = await _db.BlogCategories.OrderBy(c => c.Name).ToListAsync();
+            ViewBag.Categories = categories;
+
             return View(blogs);
         }
 
-        public IActionResult CreateBlog() => View();
+        // Show Create blog form
+        public async Task<IActionResult> CreateBlog()
+        {
+            ViewBag.Categories = await _db.BlogCategories.OrderBy(c => c.Name).ToListAsync();
+            return View();
+        }
 
+        // Handle blog creation POST
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateBlog(
@@ -59,7 +71,10 @@ namespace MyNursery.Areas.NUUS.Controllers
             IFormFile? OptionalImage2)
         {
             if (!ModelState.IsValid)
+            {
+                ViewBag.Categories = await _db.BlogCategories.OrderBy(c => c.Name).ToListAsync();
                 return View(blogPost);
+            }
 
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
@@ -90,46 +105,14 @@ namespace MyNursery.Areas.NUUS.Controllers
             return RedirectToAction(nameof(ManageBlogs));
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetBlogDetails(int id)
-        {
-            // Keep JSON response as-is, no change
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-                return Json(new { success = false, message = "User not authenticated." });
-
-            var blog = await _db.BlogPosts
-                .Include(b => b.BlogImages)
-                .FirstOrDefaultAsync(b => b.Id == id);
-
-            if (blog == null)
-                return Json(new { success = false, message = "Blog not found." });
-
-            if (blog.CreatedByUserId != user.Id)
-                return Json(new { success = false, message = "Unauthorized access." });
-
-            var cover = blog.BlogImages?.FirstOrDefault(i => i.Type == "Cover")?.ImagePath;
-            var img1 = blog.BlogImages?.FirstOrDefault(i => i.Type == "Optional1")?.ImagePath;
-            var img2 = blog.BlogImages?.FirstOrDefault(i => i.Type == "Optional2")?.ImagePath;
-
-            return Json(new
-            {
-                success = true,
-                title = blog.Title,
-                category = blog.Category,
-                content = blog.Content,
-                status = blog.Status,
-                createdAt = blog.CreatedAt.ToString("yyyy-MM-dd"),
-                publishDate = blog.PublishDate?.ToString("yyyy-MM-dd"),
-                coverImage = cover,
-                image1 = img1,
-                image2 = img2
-            });
-        }
-
+        // Show Edit blog form
         public async Task<IActionResult> EditBlog(int id)
         {
-            var blog = await _db.BlogPosts.Include(b => b.BlogImages).FirstOrDefaultAsync(b => b.Id == id);
+            var blog = await _db.BlogPosts
+                .Include(b => b.BlogImages)
+                .Include(b => b.Category)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
             if (blog == null)
             {
                 TempData[SD.Error_Msg] = "Blog not found.";
@@ -143,9 +126,12 @@ namespace MyNursery.Areas.NUUS.Controllers
                 return RedirectToAction(nameof(ManageBlogs));
             }
 
+            ViewBag.Categories = await _db.BlogCategories.OrderBy(c => c.Name).ToListAsync();
+
             return View(blog);
         }
 
+        // Handle Edit blog POST
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditBlog(
@@ -170,10 +156,13 @@ namespace MyNursery.Areas.NUUS.Controllers
             }
 
             if (!ModelState.IsValid)
+            {
+                ViewBag.Categories = await _db.BlogCategories.OrderBy(c => c.Name).ToListAsync();
                 return View(updatedBlog);
+            }
 
             blog.Title = updatedBlog.Title;
-            blog.Category = updatedBlog.Category;
+            blog.CategoryId = updatedBlog.CategoryId;
             blog.Content = updatedBlog.Content;
             blog.PublishDate = updatedBlog.PublishDate;
             blog.Status = updatedBlog.Status;
@@ -195,11 +184,13 @@ namespace MyNursery.Areas.NUUS.Controllers
             return RedirectToAction(nameof(ManageBlogs));
         }
 
+        // View details of a blog (HTML view)
         public async Task<IActionResult> Details(int id)
         {
             var blog = await _db.BlogPosts
                 .Include(b => b.BlogImages)
                 .Include(b => b.CreatedByUser)
+                .Include(b => b.Category)
                 .FirstOrDefaultAsync(b => b.Id == id);
 
             if (blog == null)
@@ -218,6 +209,44 @@ namespace MyNursery.Areas.NUUS.Controllers
             return View(blog);
         }
 
+        // JSON API: Get blog details for modal view
+        [HttpGet]
+        public async Task<IActionResult> GetBlogDetails(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Json(new { success = false, message = "User not authenticated." });
+            }
+
+            var blog = await _db.BlogPosts
+                .Include(b => b.BlogImages)
+                .Include(b => b.Category)
+                .FirstOrDefaultAsync(b => b.Id == id && b.CreatedByUserId == user.Id);
+
+            if (blog == null)
+            {
+                return Json(new { success = false, message = "Blog not found or unauthorized." });
+            }
+
+            var images = blog.BlogImages?.ToList();
+
+            return Json(new
+            {
+                success = true,
+                title = blog.Title,
+                content = blog.Content,
+                status = blog.Status,
+                category = blog.Category?.Name ?? "",
+                publishDate = blog.PublishDate?.ToString("yyyy-MM-dd"),
+                createdAt = blog.CreatedAt.ToString("yyyy-MM-dd"),
+                coverImage = images?.FirstOrDefault(i => i.Type == "Cover")?.ImagePath,
+                image1 = images?.FirstOrDefault(i => i.Type == "Optional1")?.ImagePath,
+                image2 = images?.FirstOrDefault(i => i.Type == "Optional2")?.ImagePath
+            });
+        }
+
+        // Delete a blog and its images
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteBlog(int id)
@@ -241,9 +270,7 @@ namespace MyNursery.Areas.NUUS.Controllers
             return Json(new { success = true, message = "Blog deleted successfully." });
         }
 
-
-        // ====== Helper Methods ======
-
+        // Helper: Save file to wwwroot/uploads and return relative path
         private async Task<string> SaveFileAsync(IFormFile file)
         {
             var uniqueFileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
@@ -259,6 +286,7 @@ namespace MyNursery.Areas.NUUS.Controllers
             return "/uploads/" + uniqueFileName;
         }
 
+        // Helper: Add image record to DB
         private async Task AddImage(int blogPostId, IFormFile file, string type)
         {
             var path = await SaveFileAsync(file);
@@ -270,6 +298,7 @@ namespace MyNursery.Areas.NUUS.Controllers
             });
         }
 
+        // Helper: Replace existing image or add if missing
         private async Task ReplaceImageAsync(BlogPost blog, string imageType, IFormFile newFile)
         {
             var existingImage = blog.BlogImages?.FirstOrDefault(i => i.Type == imageType);
@@ -292,6 +321,7 @@ namespace MyNursery.Areas.NUUS.Controllers
             }
         }
 
+        // Helper: Delete file from disk given relative path
         private void DeleteFile(string? relativePath)
         {
             if (string.IsNullOrWhiteSpace(relativePath)) return;

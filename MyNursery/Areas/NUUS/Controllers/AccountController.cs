@@ -35,7 +35,6 @@ namespace MyNursery.Areas.NUUS.Controllers
 
         // GET: /NUUS/Account/Profile
         [HttpGet]
-        [HttpGet]
         public async Task<IActionResult> Profile()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -51,7 +50,6 @@ namespace MyNursery.Areas.NUUS.Controllers
             return View("~/Areas/NUUS/Views/Profile/Profile.cshtml", user);
         }
 
-
         // POST: /NUUS/Account/ChangePassword
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -59,7 +57,6 @@ namespace MyNursery.Areas.NUUS.Controllers
         {
             if (!ModelState.IsValid)
             {
-                // Return view with validation errors
                 return View("~/Areas/NUUS/Views/Profile/Profile.cshtml", model);
             }
 
@@ -80,9 +77,18 @@ namespace MyNursery.Areas.NUUS.Controllers
                 return View("~/Areas/NUUS/Views/Profile/Profile.cshtml", model);
             }
 
+            // ✅ Mark user as no longer needing to change password
+            user.MustChangePassword = false;
+            var updateResult = await _userManager.UpdateAsync(user);
+
+            if (!updateResult.Succeeded)
+            {
+                TempData[SD.Warning_Msg] = "Password changed, but user state could not be updated.";
+            }
+
             await _signInManager.RefreshSignInAsync(user);
 
-            // Prepare email content
+            // 📧 Send confirmation email
             string subject = "Password Changed Successfully";
             string body = $@"
     <div style='font-family:Segoe UI, sans-serif; font-size:15px; line-height:1.6;'>

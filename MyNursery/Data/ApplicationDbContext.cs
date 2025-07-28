@@ -25,6 +25,9 @@ namespace MyNursery.Data
         // Blog posts
         public DbSet<BlogPost> BlogPosts { get; set; }
         public DbSet<BlogImage> BlogImages { get; set; }
+        public DbSet<BlogCategory> BlogCategories { get; set; }
+
+
 
         // Contact messages
         public DbSet<NUADModels.ContactMessage> ContactMessages { get; set; }

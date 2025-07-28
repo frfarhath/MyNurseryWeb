@@ -1,6 +1,6 @@
 ﻿@model IEnumerable<MyNursery.Models.BlogPost>
 @using MyNursery.Utility
-
+@using MyNursery.Areas.NUSAD.Models
 @{
     ViewData["Title"] = "Published Blogs";
 }
@@ -42,9 +42,13 @@
                     <div class="col-md-4">
                         <select id="categoryFilter" class="form-control" onchange="filterTable()">
                             <option value="">-- Filter by Category --</option>
-                            <option value="Education">Education</option>
-                            <option value="Events">Events</option>
-                            <option value="Tips">Tips</option>
+                            @if (ViewBag.Categories != null)
+                            {
+                                foreach (var cat in (List<BlogCategory>)ViewBag.Categories)
+                                {
+                                    <option value="@cat.Name.ToLower()">@cat.Name</option>
+                                }
+                            }
                         </select>
                     </div>
                 </div>
@@ -70,7 +74,7 @@
                                 {
                                     <tr>
                                         <td>@blog.Title</td>
-                                        <td>@blog.Category</td>
+                                        <td>@blog.Category?.Name</td>
                                         <td>@blog.PublishDate?.ToString("yyyy-MM-dd")</td>
                                         <td>
                                             <button class="btn btn-info btn-sm" onclick="viewBlog(@blog.Id)">
@@ -103,9 +107,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="blogViewModalLabel">Blog Details</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <h4 id="blogTitle"></h4>

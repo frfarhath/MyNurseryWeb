@@ -1,9 +1,11 @@
-﻿using MyNursery.Areas.Welcome.Models;
+﻿using MyNursery.Areas.NUSAD.Models;
+using MyNursery.Areas.Welcome.Models;
 using MyNursery.Utility;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 
 namespace MyNursery.Models
 {
@@ -14,13 +16,12 @@ namespace MyNursery.Models
         [Required(ErrorMessage = "Title is required")]
         public required string Title { get; set; }
 
-        [Required(ErrorMessage = "Category is required")]
-        public required string Category { get; set; }
+        // Nullable to allow posts without category initially
+        public int? CategoryId { get; set; }
 
-        // These can be removed later if you fully switch to BlogImage
-        public string? CoverImagePath { get; set; }
-        public string? OptionalImage1Path { get; set; }
-        public string? OptionalImage2Path { get; set; }
+        [ForeignKey("CategoryId")]
+        public BlogCategory? Category { get; set; }
+
 
         [Required(ErrorMessage = "Content is required")]
         public required string Content { get; set; }
@@ -41,7 +42,15 @@ namespace MyNursery.Models
         public DateTime? DeletedAt { get; set; }
 
         public DateTime? ModifiedDate { get; set; }
+        public List<BlogImage> BlogImages { get; set; } = new List<BlogImage>();
 
-        public List<BlogImage>? BlogImages { get; set; }
+        [NotMapped]
+        public string? CoverImagePath => BlogImages.FirstOrDefault(i => i.Type == "Cover")?.ImagePath;
+
+        [NotMapped]
+        public string? OptionalImage1Path => BlogImages.FirstOrDefault(i => i.Type == "Optional1")?.ImagePath;
+
+        [NotMapped]
+        public string? OptionalImage2Path => BlogImages.FirstOrDefault(i => i.Type == "Optional2")?.ImagePath;
     }
 }

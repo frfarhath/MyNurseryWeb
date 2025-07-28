@@ -56,15 +56,14 @@
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="Category" class="form-label"></label>
-                        <select asp-for="Category" class="form-select">
+                        <label asp-for="CategoryId" class="form-label"></label>
+                        <select asp-for="CategoryId" class="form-select" asp-items="@(new SelectList(ViewBag.Categories, "Id", "Name"))">
                             <option value="">-- Select Category --</option>
-                            <option value="Education">Education</option>
-                            <option value="Events">Events</option>
-                            <option value="Tips">Tips</option>
                         </select>
-                        <span asp-validation-for="Category" class="text-danger"></span>
+
+                        <span asp-validation-for="CategoryId" class="text-danger"></span>
                     </div>
+
 
                     <div class="mb-3">
                         <label class="form-label">Cover Image</label>

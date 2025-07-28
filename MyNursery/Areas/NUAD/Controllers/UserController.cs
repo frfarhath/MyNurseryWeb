@@ -85,10 +85,9 @@ namespace MyNursery.Areas.NUAD.Controllers
                 EmailConfirmed = true,
                 DateCreated = DateTime.UtcNow,
                 UserType = SD.UserType_AdminAdded,
-                Area = "NUOUS",  // or set dynamically based on role if needed
-                MustChangePassword = true // <-- This forces password change on first login
+                Area = "NUUS",
+                MustChangePassword = true
             };
-
 
             var result = await _userManager.CreateAsync(identityUser, generatedPassword);
             if (!result.Succeeded)
@@ -101,17 +100,18 @@ namespace MyNursery.Areas.NUAD.Controllers
             }
 
             var roleResult = await _userManager.AddToRoleAsync(identityUser, model.Role);
-            if (!roleResult.Succeeded)
+            var baseRoleResult = await _userManager.AddToRoleAsync(identityUser, SD.Role_OtherUser);
+
+            if (!roleResult.Succeeded || !baseRoleResult.Succeeded)
             {
-                ModelState.AddModelError(string.Empty, "Failed to assign user role.");
+                ModelState.AddModelError(string.Empty, "Failed to assign user role(s).");
                 ViewBag.Roles = GetAvailableRoles();
                 return View(model);
             }
 
-            // Save to custom User table
             model.Password = null;
             model.AddedDate = DateTime.UtcNow;
-            model.Area = "NUOUS"; // match with identityUser.Area or set dynamically
+            model.Area = "NUUS";
             model.Role = model.Role;
             model.IsActive = true;
 
@@ -119,28 +119,26 @@ namespace MyNursery.Areas.NUAD.Controllers
             await _context.SaveChangesAsync();
 
             string message = $@"
-        Dear {model.FirstName},<br/><br/>
-        You have been successfully added to <strong>Little Sprouts Nursery</strong> as a <strong>{model.Role}</strong>.<br/><br/>
-        <strong>Temporary Password:</strong><br/>
-        <code>{generatedPassword}</code><br/><br/>
-        Please log in and change your password immediately.<br/><br/>
-        Best regards,<br/>
-        <strong>Little Sprouts Nursery Team</strong>";
+                Dear {model.FirstName},<br/><br/>
+                You have been successfully added to <strong>Little Sprouts Nursery</strong> as a <strong>{model.Role}</strong>.<br/><br/>
+                <strong>Temporary Password:</strong><br/>
+                <code>{generatedPassword}</code><br/><br/>
+                Please log in and change your password immediately.<br/><br/>
+                Best regards,<br/>
+                <strong>Little Sprouts Nursery Team</strong>";
 
             try
             {
                 await _emailSender.SendEmailAsync(model.EmailAddress, "Welcome to MyNursery", message);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                // log exception or add tempdata warning
                 TempData[SD.Warning_Msg] = "User created but email could not be sent.";
             }
 
             TempData[SD.Success_Msg] = "User created and credentials emailed!";
             return RedirectToAction("ManageUsers");
         }
-
 
         public IActionResult EditUser(int id)
         {
@@ -176,16 +174,28 @@ namespace MyNursery.Areas.NUAD.Controllers
         [HttpPost]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
+            var customUser = await _context.Users.FindAsync(id);
+            if (customUser == null)
             {
-                return Json(new { success = false, message = "User not found." });
+                return Json(new { success = false, message = "User not found in custom table." });
             }
 
-            _context.Users.Remove(user);
+            // Try to find matching Identity user
+            var identityUser = await _userManager.FindByEmailAsync(customUser.EmailAddress);
+            if (identityUser != null)
+            {
+                var result = await _userManager.DeleteAsync(identityUser);
+                if (!result.Succeeded)
+                {
+                    return Json(new { success = false, message = "Failed to delete user from Identity." });
+                }
+            }
+
+            // Delete from custom table
+            _context.Users.Remove(customUser);
             await _context.SaveChangesAsync();
 
-            return Json(new { success = true, message = "User deleted successfully." });
+            return Json(new { success = true, message = "User deleted successfully from both tables." });
         }
 
         public IActionResult GetUserDetails(int id)
