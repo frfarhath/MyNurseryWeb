@@ -1,7 +1,8 @@
-﻿@model MyNursery.Areas.NUAD.Models.FAQ
+﻿@model MyNursery.Areas.NUAD.Models.Policy
 
 @{
-    ViewData["Title"] = "Add FAQ";
+    bool isEdit = Model != null && Model.Id != 0;
+    ViewData["Title"] = isEdit ? "Edit Policy" : "Create Policy";
 }
 
 <!-- [ breadcrumb ] start -->
@@ -10,7 +11,7 @@
         <div class="row align-items-center">
             <div class="col-md-12">
                 <div class="page-header-title">
-                    <h5 class="m-b-10">Add FAQ</h5>
+                    <h5 class="m-b-10">@ViewData["Title"]</h5>
                 </div>
                 <ul class="breadcrumb">
                     <li class="breadcrumb-item">
@@ -19,8 +20,8 @@
                         </a>
                     </li>
                     <li class="breadcrumb-item"><a href="#">Content</a></li>
-                    <li class="breadcrumb-item"><a href="#">FAQ</a></li>
-                    <li class="breadcrumb-item"><a href="#">Add FAQ</a></li>
+                    <li class="breadcrumb-item"><a href="#">Policy</a></li>
+                    <li class="breadcrumb-item active">@ViewData["Title"]</li>
                 </ul>
             </div>
         </div>
@@ -32,8 +33,10 @@
     <div class="col-xl-8 mx-auto">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">New FAQ</h5>
-                <span class="text-muted">Fill in the details to add a new FAQ.</span>
+                <h5 class="mb-0">@ViewData["Title"]</h5>
+                <span class="text-muted">
+                    @(isEdit ? "Update the policy details or upload a new document." : "Use this form to upload a new policy document.")
+                </span>
             </div>
             <div class="card-body">
                 @if (!ViewData.ModelState.IsValid)
@@ -46,17 +49,23 @@
                     </div>
                 }
 
-                <form asp-action="Create" method="post">
+                <form asp-action="@(isEdit ? "Edit" : "Create")" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    @if (isEdit)
+                    {
+                        <input type="hidden" asp-for="Id" />
+                    }
+
                     <div class="form-group">
-                        <label asp-for="Question" class="font-weight-bold"></label>
-                        <input asp-for="Question" class="form-control" />
-                        <span asp-validation-for="Question" class="text-danger"></span>
+                        <label asp-for="Title" class="font-weight-bold"></label>
+                        <input asp-for="Title" class="form-control" />
+                        <span asp-validation-for="Title" class="text-danger"></span>
                     </div>
 
                     <div class="form-group">
-                        <label asp-for="Answer" class="font-weight-bold"></label>
-                        <textarea asp-for="Answer" class="form-control" rows="5"></textarea>
-                        <span asp-validation-for="Answer" class="text-danger"></span>
+                        <label asp-for="Description" class="font-weight-bold"></label>
+                        <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
                     </div>
 
                     <div class="form-group">
@@ -66,14 +75,17 @@
                     </div>
 
                     <div class="form-group">
-                        <label asp-for="OrderDisplay" class="font-weight-bold"></label>
-                        <input asp-for="OrderDisplay" type="number" class="form-control" />
-                        <span asp-validation-for="OrderDisplay" class="text-danger"></span>
+                        <label for="fileUpload" class="font-weight-bold">
+                            @(isEdit ? "Replace Policy File (optional)" : "Upload Policy File")
+                        </label>
+                        <input type="file" name="fileUpload" class="form-control-file" />
                     </div>
 
                     <div class="form-group text-right">
-                        <button type="reset" class="btn btn-outline-secondary mr-2">Reset</button>
-                        <button type="submit" class="btn btn-primary">Add FAQ</button>
+                        <a asp-action="Manage" class="btn btn-outline-secondary mr-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            @(isEdit ? "Update Policy" : "Add New Policy")
+                        </button>
                     </div>
                 </form>
             </div>

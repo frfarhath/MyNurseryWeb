@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
+using MyNursery.Areas.NUAD.Models;
 using MyNursery.Areas.NUSAD.Models;
 using MyNursery.Areas.Welcome.Models;
 using MyNursery.Data;
@@ -35,6 +36,7 @@ namespace MyNursery.Areas.NUAD.Controllers
             _roleManager = roleManager;
         }
 
+        // Helper: get roles excluding system/admin roles
         private List<string> GetAvailableRoles()
         {
             var excludedRoles = new[]
@@ -52,152 +54,191 @@ namespace MyNursery.Areas.NUAD.Controllers
                 .ToList();
         }
 
+        // Redirect CreateUser GET to Upsert (create mode)
+        [HttpGet]
+        public IActionResult CreateUser()
+        {
+            return RedirectToAction("Upsert");
+        }
+
+        // Redirect EditUser GET to Upsert (edit mode)
+        [HttpGet]
+        public IActionResult EditUser(int id)
+        {
+            return RedirectToAction("Upsert", new { id });
+        }
+
+        // Redirect EditUser POST to Upsert POST
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditUser(User model)
+        {
+            return await Upsert(model);
+        }
+
+        // List users
         public IActionResult ManageUsers()
         {
             var users = _context.Users.OrderByDescending(u => u.AddedDate).ToList();
             return View(users);
         }
 
-        public IActionResult CreateUser()
+        // GET: Upsert (create or edit form)
+        [HttpGet]
+        public IActionResult Upsert(int? id)
         {
             ViewBag.Roles = GetAvailableRoles();
-            return View();
-        }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateUser(User model)
-        {
-            if (!ModelState.IsValid)
+            if (id == null || id == 0)
             {
-                ViewBag.Roles = GetAvailableRoles();
-                return View(model);
+                // Create mode
+                return View(new User());
             }
 
-            string generatedPassword = GenerateRandomPassword();
-            var identityUser = new ApplicationUser
-            {
-                UserName = model.EmailAddress,
-                Email = model.EmailAddress,
-                FirstName = model.FirstName,
-                LastName = model.LastName,
-                PhoneNumber = model.ContactNumber,
-                EmailConfirmed = true,
-                DateCreated = DateTime.UtcNow,
-                UserType = SD.UserType_AdminAdded,
-                Area = "NUUS",
-                MustChangePassword = true
-            };
-
-            var result = await _userManager.CreateAsync(identityUser, generatedPassword);
-            if (!result.Succeeded)
-            {
-                foreach (var error in result.Errors)
-                    ModelState.AddModelError(string.Empty, error.Description);
-
-                ViewBag.Roles = GetAvailableRoles();
-                return View(model);
-            }
-
-            var roleResult = await _userManager.AddToRoleAsync(identityUser, model.Role);
-            var baseRoleResult = await _userManager.AddToRoleAsync(identityUser, SD.Role_OtherUser);
-
-            if (!roleResult.Succeeded || !baseRoleResult.Succeeded)
-            {
-                ModelState.AddModelError(string.Empty, "Failed to assign user role(s).");
-                ViewBag.Roles = GetAvailableRoles();
-                return View(model);
-            }
-
-            model.Password = null;
-            model.AddedDate = DateTime.UtcNow;
-            model.Area = "NUUS";
-            model.Role = model.Role;
-            model.IsActive = true;
-
-            _context.Users.Add(model);
-            await _context.SaveChangesAsync();
-
-            string message = $@"
-                Dear {model.FirstName},<br/><br/>
-                You have been successfully added to <strong>Little Sprouts Nursery</strong> as a <strong>{model.Role}</strong>.<br/><br/>
-                <strong>Temporary Password:</strong><br/>
-                <code>{generatedPassword}</code><br/><br/>
-                Please log in and change your password immediately.<br/><br/>
-                Best regards,<br/>
-                <strong>Little Sprouts Nursery Team</strong>";
-
-            try
-            {
-                await _emailSender.SendEmailAsync(model.EmailAddress, "Welcome to MyNursery", message);
-            }
-            catch (Exception)
-            {
-                TempData[SD.Warning_Msg] = "User created but email could not be sent.";
-            }
-
-            TempData[SD.Success_Msg] = "User created and credentials emailed!";
-            return RedirectToAction("ManageUsers");
-        }
-
-        public IActionResult EditUser(int id)
-        {
+            // Edit mode
             var user = _context.Users.Find(id);
             if (user == null)
             {
                 TempData[SD.Error_Msg] = "User not found.";
-                return RedirectToAction("ManageUsers");
+                return RedirectToAction(nameof(ManageUsers));
             }
 
-            ViewBag.Roles = GetAvailableRoles();
             return View(user);
         }
 
+        // POST: Upsert (create or edit user)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditUser(User user)
+        public async Task<IActionResult> Upsert(User model)
         {
+            ViewBag.Roles = GetAvailableRoles();
+
             if (!ModelState.IsValid)
             {
-                ViewBag.Roles = GetAvailableRoles();
                 TempData[SD.Error_Msg] = "Validation failed. Please try again.";
-                return View(user);
+                return View(model);
             }
 
-            _context.Users.Update(user);
-            await _context.SaveChangesAsync();
+            if (model.Id == 0)
+            {
+                // Create new Identity user
+                string generatedPassword = GenerateRandomPassword();
 
-            TempData[SD.Success_Msg] = "User updated successfully!";
-            return RedirectToAction("ManageUsers");
+                var identityUser = new ApplicationUser
+                {
+                    UserName = model.EmailAddress,
+                    Email = model.EmailAddress,
+                    FirstName = model.FirstName,
+                    LastName = model.LastName,
+                    PhoneNumber = model.ContactNumber,
+                    EmailConfirmed = true,
+                    DateCreated = DateTime.UtcNow,
+                    UserType = SD.UserType_AdminAdded,
+                    Area = "NUUS",
+                    MustChangePassword = true
+                };
+
+                var createResult = await _userManager.CreateAsync(identityUser, generatedPassword);
+                if (!createResult.Succeeded)
+                {
+                    foreach (var error in createResult.Errors)
+                        ModelState.AddModelError(string.Empty, error.Description);
+
+                    TempData[SD.Error_Msg] = "Failed to create user in Identity.";
+                    return View(model);
+                }
+
+                // Assign roles
+                var roleResult = await _userManager.AddToRoleAsync(identityUser, model.Role);
+                var baseRoleResult = await _userManager.AddToRoleAsync(identityUser, SD.Role_OtherUser);
+
+                if (!roleResult.Succeeded || !baseRoleResult.Succeeded)
+                {
+                    ModelState.AddModelError(string.Empty, "Failed to assign user roles.");
+                    TempData[SD.Error_Msg] = "Failed to assign roles.";
+                    return View(model);
+                }
+
+                // Add to custom Users table
+                model.Password = null; // never store plain password
+                model.AddedDate = DateTime.UtcNow;
+                model.Area = "NUUS";
+                model.IsActive = true;
+
+                _context.Users.Add(model);
+                await _context.SaveChangesAsync();
+
+                // Send welcome email with temp password
+                string emailBody = $@"
+                    Dear {model.FirstName},<br/><br/>
+                    You have been successfully added to <strong>Little Sprouts Nursery</strong> as a <strong>{model.Role}</strong>.<br/><br/>
+                    <strong>Temporary Password:</strong><br/>
+                    <code>{generatedPassword}</code><br/><br/>
+                    Please log in and change your password immediately.<br/><br/>
+                    Best regards,<br/>
+                    <strong>Little Sprouts Nursery Team</strong>";
+
+                try
+                {
+                    await _emailSender.SendEmailAsync(model.EmailAddress, "Welcome to MyNursery", emailBody);
+                }
+                catch
+                {
+                    TempData[SD.Warning_Msg] = "User created but email could not be sent.";
+                }
+
+                TempData[SD.Success_Msg] = "User created and credentials emailed!";
+            }
+            else
+            {
+                // Edit existing user
+                var userInDb = _context.Users.Find(model.Id);
+                if (userInDb == null)
+                {
+                    TempData[SD.Error_Msg] = "User not found.";
+                    return RedirectToAction(nameof(ManageUsers));
+                }
+
+                // Update fields
+                userInDb.FirstName = model.FirstName;
+                userInDb.LastName = model.LastName;
+                userInDb.EmailAddress = model.EmailAddress;
+                userInDb.Role = model.Role;
+                userInDb.ContactNumber = model.ContactNumber;
+                userInDb.IsActive = model.IsActive;
+
+                _context.Users.Update(userInDb);
+                await _context.SaveChangesAsync();
+
+                TempData[SD.Success_Msg] = "User updated successfully!";
+            }
+
+            return RedirectToAction(nameof(ManageUsers));
         }
 
+        // Delete user POST
         [HttpPost]
         public async Task<IActionResult> DeleteUser(int id)
         {
             var customUser = await _context.Users.FindAsync(id);
             if (customUser == null)
-            {
-                return Json(new { success = false, message = "User not found in custom table." });
-            }
+                return Json(new { success = false, message = "User not found." });
 
-            // Try to find matching Identity user
             var identityUser = await _userManager.FindByEmailAsync(customUser.EmailAddress);
             if (identityUser != null)
             {
-                var result = await _userManager.DeleteAsync(identityUser);
-                if (!result.Succeeded)
-                {
+                var deleteResult = await _userManager.DeleteAsync(identityUser);
+                if (!deleteResult.Succeeded)
                     return Json(new { success = false, message = "Failed to delete user from Identity." });
-                }
             }
 
-            // Delete from custom table
             _context.Users.Remove(customUser);
             await _context.SaveChangesAsync();
 
             return Json(new { success = true, message = "User deleted successfully from both tables." });
         }
 
+        // Fetch user details for AJAX
         public IActionResult GetUserDetails(int id)
         {
             var user = _context.Users.Find(id);
@@ -216,6 +257,7 @@ namespace MyNursery.Areas.NUAD.Controllers
             });
         }
 
+        // Password generator helper
         private string GenerateRandomPassword(int length = 10)
         {
             const string valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%&*?";

@@ -2,7 +2,18 @@
 @model User
 
 @{
-    ViewData["Title"] = "Edit User";
+    var isEdit = Model?.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit User" : "Create User";
+}
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+        {
+            <p>@error.ErrorMessage</p>
+        }
+    </div>
 }
 
 <div class="page-header">
@@ -10,14 +21,16 @@
         <div class="row align-items-center">
             <div class="col-md-12">
                 <div class="page-header-title">
-                    <h5 class="m-b-10">Edit User</h5>
+                    <h5 class="m-b-10">@ViewData["Title"]</h5>
                 </div>
                 <ul class="breadcrumb">
                     <li class="breadcrumb-item">
-                        <a asp-area="NUAD" asp-controller="Home" asp-action="Dashboard"><i class="feather icon-home"></i></a>
+                        <a asp-area="NUAD" asp-controller="Home" asp-action="Dashboard">
+                            <i class="feather icon-home"></i>
+                        </a>
                     </li>
                     <li class="breadcrumb-item"><a href="#">Users</a></li>
-                    <li class="breadcrumb-item"><a href="#">Edit User</a></li>
+                    <li class="breadcrumb-item active">@ViewData["Title"]</li>
                 </ul>
             </div>
         </div>
@@ -28,56 +41,71 @@
     <div class="col-xl-8 mx-auto">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">Update User Details</h5>
-                <span class="text-muted">Modify the user information below.</span>
+                <h5 class="mb-0">@ViewData["Title"]</h5>
+                <span class="text-muted">
+                    @(
+                                        isEdit ? "Modify the user information below." : "Fill in the form below to add a new user."
+                                        )
+                </span>
             </div>
             <div class="card-body">
                 @await Html.PartialAsync("_Notification")
 
-                <form asp-action="EditUser" asp-controller="Users" asp-area="NUAD" method="post">
+                <form asp-action="Upsert" asp-controller="Users" asp-area="NUAD" method="post">
                     @Html.AntiForgeryToken()
-                    <input type="hidden" asp-for="Id" />
+                    @if (isEdit)
+                    {
+                        <input type="hidden" asp-for="Id" />
+                    }
 
                     <div class="form-group">
-                        <label asp-for="FirstName"></label>
+                        <label asp-for="FirstName" class="font-weight-bold"></label>
                         <input asp-for="FirstName" class="form-control" />
                         <span asp-validation-for="FirstName" class="text-danger"></span>
                     </div>
 
                     <div class="form-group">
-                        <label asp-for="LastName"></label>
+                        <label asp-for="LastName" class="font-weight-bold"></label>
                         <input asp-for="LastName" class="form-control" />
                         <span asp-validation-for="LastName" class="text-danger"></span>
                     </div>
 
                     <div class="form-group">
-                        <label asp-for="EmailAddress"></label>
-                        <input asp-for="EmailAddress" class="form-control" />
+                        <label asp-for="EmailAddress" class="font-weight-bold"></label>
+                        <input asp-for="EmailAddress" class="form-control" type="email" />
                         <span asp-validation-for="EmailAddress" class="text-danger"></span>
                     </div>
 
                     <div class="form-group">
-                        <label asp-for="Role" class="font-weight-bold">Role</label>
+                        <label asp-for="Role" class="font-weight-bold"></label>
                         <select asp-for="Role" class="form-control">
                             <option value="">-- Select Role --</option>
                             @foreach (var role in ViewBag.Roles as List<string>)
                             {
-                                <option value="@role">@role</option>
+                                <option value="@role" selected="@(Model.Role == role)">
+                                    @role
+                                </option>
                             }
                         </select>
                         <span asp-validation-for="Role" class="text-danger"></span>
                     </div>
 
-
                     <div class="form-group">
-                        <label asp-for="ContactNumber"></label>
-                        <input asp-for="ContactNumber" class="form-control" />
+                        <label asp-for="ContactNumber" class="font-weight-bold"></label>
+                        <input asp-for="ContactNumber" class="form-control" type="tel" />
                         <span asp-validation-for="ContactNumber" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input asp-for="IsActive" class="form-check-input" />
+                        <label asp-for="IsActive" class="form-check-label"></label>
                     </div>
 
                     <div class="form-group text-right">
                         <a asp-action="ManageUsers" class="btn btn-outline-secondary mr-2">Cancel</a>
-                        <button type="submit" class="btn btn-primary">Update User</button>
+                        <button type="submit" class="btn btn-primary">
+                            @(isEdit ? "Update User" : "Add User")
+                        </button>
                     </div>
                 </form>
             </div>

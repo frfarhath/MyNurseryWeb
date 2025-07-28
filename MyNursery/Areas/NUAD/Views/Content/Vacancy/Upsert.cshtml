@@ -1,7 +1,8 @@
 ﻿@model MyNursery.Areas.NUAD.Models.Vacancy
 
 @{
-    ViewData["Title"] = "Post Vacancy";
+    var isEdit = Model?.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit Vacancy" : "Post Vacancy";
 }
 
 <!-- [ breadcrumb ] start -->
@@ -10,7 +11,7 @@
         <div class="row align-items-center">
             <div class="col-md-12">
                 <div class="page-header-title">
-                    <h5 class="m-b-10">Post New Vacancy</h5>
+                    <h5 class="m-b-10">@ViewData["Title"]</h5>
                 </div>
                 <ul class="breadcrumb">
                     <li class="breadcrumb-item">
@@ -20,7 +21,7 @@
                     </li>
                     <li class="breadcrumb-item"><a href="#">Content</a></li>
                     <li class="breadcrumb-item"><a href="#">Vacancy</a></li>
-                    <li class="breadcrumb-item"><a href="#">Post Vacancy</a></li>
+                    <li class="breadcrumb-item active">@ViewData["Title"]</li>
                 </ul>
             </div>
         </div>
@@ -32,8 +33,10 @@
     <div class="col-xl-8 mx-auto">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">New Vacancy</h5>
-                <span class="text-muted">Fill in the details below to post a new vacancy.</span>
+                <h5 class="mb-0">@ViewData["Title"]</h5>
+                <span class="text-muted">
+                    @(isEdit ? "Update the details of the vacancy post." : "Fill in the details below to post a new vacancy.")
+                </span>
             </div>
             <div class="card-body">
                 @if (!ViewData.ModelState.IsValid)
@@ -46,7 +49,12 @@
                     </div>
                 }
 
-                <form asp-action="Create" method="post">
+                <form asp-action="Upsert" method="post">
+                    @if (isEdit)
+                    {
+                        <input type="hidden" asp-for="Id" />
+                    }
+
                     <div class="form-group">
                         <label asp-for="JobTitle" class="font-weight-bold"></label>
                         <input asp-for="JobTitle" class="form-control" />
@@ -90,7 +98,9 @@
 
                     <div class="form-group text-right">
                         <button type="reset" class="btn btn-outline-secondary mr-2">Reset</button>
-                        <button type="submit" class="btn btn-primary">Post Vacancy</button>
+                        <button type="submit" class="btn btn-primary">
+                            @(isEdit ? "Update Vacancy" : "Post Vacancy")
+                        </button>
                     </div>
                 </form>
             </div>

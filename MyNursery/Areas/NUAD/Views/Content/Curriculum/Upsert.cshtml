@@ -1,16 +1,16 @@
 ﻿@model MyNursery.Areas.NUAD.Models.CurriculumItem
 
 @{
-    ViewData["Title"] = "Add Curriculum Item";
+    bool isEdit = Model != null && Model.Id != 0;
+    ViewData["Title"] = isEdit ? "Edit Curriculum Item" : "Add Curriculum Item";
 }
 
-<!-- [ breadcrumb ] start -->
 <div class="page-header">
     <div class="page-block">
         <div class="row align-items-center">
             <div class="col-md-12">
                 <div class="page-header-title">
-                    <h5 class="m-b-10">Add Curriculum Item</h5>
+                    <h5 class="m-b-10">@ViewData["Title"]</h5>
                 </div>
                 <ul class="breadcrumb">
                     <li class="breadcrumb-item">
@@ -20,22 +20,25 @@
                     </li>
                     <li class="breadcrumb-item"><a href="#">Content</a></li>
                     <li class="breadcrumb-item"><a href="#">Curriculum</a></li>
-                    <li class="breadcrumb-item"><a href="#">Add Curriculum Item</a></li>
+                    <li class="breadcrumb-item"><a href="#">@ViewData["Title"]</a></li>
                 </ul>
             </div>
         </div>
     </div>
 </div>
-<!-- [ breadcrumb ] end -->
-<!-- [ Main Content ] start -->
+
 <div class="row">
     <div class="col-xl-8 mx-auto">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">New Curriculum Item</h5>
-                <span class="text-muted">Use the form below to add a curriculum item.</span>
+                <h5 class="mb-0">@ViewData["Title"]</h5>
+                <span class="text-muted">
+                    @(isEdit ? "Modify the curriculum information below." : "Use the form below to add a curriculum item.")
+                </span>
             </div>
             <div class="card-body">
+                @await Html.PartialAsync("_Notification")
+
                 @if (!ViewData.ModelState.IsValid)
                 {
                     <div class="alert alert-danger">
@@ -46,7 +49,14 @@
                     </div>
                 }
 
-                <form asp-action="Create" method="post">
+                <form asp-action="@(isEdit ? "Edit" : "Create")" asp-controller="Curriculum" asp-area="NUAD" method="post">
+                    @Html.AntiForgeryToken()
+
+                    @if (isEdit)
+                    {
+                        <input type="hidden" asp-for="Id" />
+                    }
+
                     <div class="form-group">
                         <label asp-for="Title" class="font-weight-bold"></label>
                         <input asp-for="Title" class="form-control" />
@@ -71,15 +81,17 @@
                     </div>
 
                     <div class="form-group text-right">
-                        <button type="reset" class="btn btn-outline-secondary mr-2">Reset</button>
-                        <button type="submit" class="btn btn-primary">Add Curriculum Item</button>
+                        <a asp-action="Manage" asp-controller="Curriculum" asp-area="NUAD" class="btn btn-outline-secondary mr-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            @(isEdit ? "Update Curriculum Item" : "Add Curriculum Item")
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
-<!-- [ Main Content ] end -->
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }

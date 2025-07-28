@@ -38,7 +38,7 @@ namespace MyNursery.Areas.NUAD.Controllers
         // GET: NUAD/Page/Create
         public IActionResult Create()
         {
-            return View("~/Areas/NUAD/Views/Content/Pages/Create.cshtml");
+            return View("~/Areas/NUAD/Views/Content/Pages/Upsert.cshtml", new Page());
         }
 
         // POST: NUAD/Page/Create
@@ -61,7 +61,7 @@ namespace MyNursery.Areas.NUAD.Controllers
             }
 
             TempData["Error"] = "Failed to create page. Please fix the errors and try again.";
-            return View("~/Areas/NUAD/Views/Content/Pages/Create.cshtml", page);
+            return View("~/Areas/NUAD/Views/Content/Pages/Upsert.cshtml", page);
         }
 
         // GET: NUAD/Page/Edit/5
@@ -74,7 +74,7 @@ namespace MyNursery.Areas.NUAD.Controllers
                 return NotFound();
             }
 
-            return View("~/Areas/NUAD/Views/Content/Pages/Edit.cshtml", page);
+            return View("~/Areas/NUAD/Views/Content/Pages/Upsert.cshtml", page);
         }
 
         // POST: NUAD/Page/Edit/5
@@ -118,8 +118,9 @@ namespace MyNursery.Areas.NUAD.Controllers
             }
 
             TempData["Error"] = "Failed to update page. Please fix the errors and try again.";
-            return View("~/Areas/NUAD/Views/Content/Pages/Edit.cshtml", page);
+            return View("~/Areas/NUAD/Views/Content/Pages/Upsert.cshtml", page);
         }
+
 
         // GET: NUAD/Page/Delete/5
         public async Task<IActionResult> Delete(int id)

@@ -25,11 +25,10 @@ namespace MyNursery.Areas.NUAD.Controllers
             var policies = _db.Policies.OrderByDescending(p => p.UploadDate).ToList();
             return View(policies);
         }
-
         // GET: Create
         public IActionResult Create()
         {
-            return View();
+            return View("~/Areas/NUAD/Views/Content/Policy/Upsert.cshtml", new Policy());
         }
 
         // POST: Create
@@ -37,51 +36,41 @@ namespace MyNursery.Areas.NUAD.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Policy model, IFormFile fileUpload)
         {
-            // Skip model validation on file fields set in code
             ModelState.Remove("FilePath");
             ModelState.Remove("FileName");
 
             if (!ModelState.IsValid)
-                return View(model);
+                return View("~/Areas/NUAD/Views/Content/Policy/Upsert.cshtml", model);
 
-            if (fileUpload == null || fileUpload.Length == 0)
+            if (fileUpload != null && fileUpload.Length > 0)
             {
-                ModelState.AddModelError("", "Please upload a valid file.");
-                return View(model);
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "policies");
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(fileUpload.FileName);
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await fileUpload.CopyToAsync(stream);
+                }
+
+                model.FileName = fileUpload.FileName;
+                model.FilePath = "/uploads/policies/" + fileName;
             }
 
-            var allowedExtensions = new[] { ".pdf", ".doc", ".docx" };
-            var fileExt = Path.GetExtension(fileUpload.FileName).ToLower();
-
-            if (!allowedExtensions.Contains(fileExt))
-            {
-                ModelState.AddModelError("", "Only PDF, DOC, or DOCX files are allowed.");
-                return View(model);
-            }
-
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "policies");
-            if (!Directory.Exists(uploadsFolder))
-                Directory.CreateDirectory(uploadsFolder);
-
-            var uniqueFileName = Guid.NewGuid() + fileExt;
-            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await fileUpload.CopyToAsync(stream);
-            }
-
-            model.FileName = fileUpload.FileName;
-            model.FilePath = "/uploads/policies/" + uniqueFileName;
-            model.UploadDate = DateTime.UtcNow;
-            model.LastUpdated = DateTime.UtcNow;
+            model.UploadDate = DateTime.Now;
 
             _db.Policies.Add(model);
             await _db.SaveChangesAsync();
 
-            TempData["Success"] = "Policy created successfully.";
+            TempData["Success"] = "Policy added successfully.";
             return RedirectToAction(nameof(Manage));
         }
+
 
         // GET: Edit
         public IActionResult Edit(int id)
@@ -90,7 +79,7 @@ namespace MyNursery.Areas.NUAD.Controllers
             if (policy == null)
                 return NotFound();
 
-            return View(policy);
+            return View("~/Areas/NUAD/Views/Content/Policy/Upsert.cshtml", policy);
         }
 
         // POST: Edit
@@ -102,16 +91,17 @@ namespace MyNursery.Areas.NUAD.Controllers
             ModelState.Remove("FileName");
 
             if (!ModelState.IsValid)
-                return View(model);
+                return View("~/Areas/NUAD/Views/Content/Policy/Upsert.cshtml", model);
 
             var policyInDb = _db.Policies.FirstOrDefault(p => p.Id == model.Id);
             if (policyInDb == null)
                 return NotFound();
 
+            // Update fields
             policyInDb.Title = model.Title;
             policyInDb.Description = model.Description;
             policyInDb.Category = model.Category;
-            policyInDb.LastUpdated = DateTime.UtcNow;
+            policyInDb.LastUpdated = DateTime.Now;
 
             if (fileUpload != null && fileUpload.Length > 0)
             {
@@ -121,14 +111,14 @@ namespace MyNursery.Areas.NUAD.Controllers
                 if (!allowedExtensions.Contains(fileExt))
                 {
                     ModelState.AddModelError("", "Only PDF, DOC, or DOCX files are allowed.");
-                    return View(model);
+                    return View("~/Areas/NUAD/Views/Content/Policy/Upsert.cshtml", model);
                 }
 
                 var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "policies");
                 if (!Directory.Exists(uploadsFolder))
                     Directory.CreateDirectory(uploadsFolder);
 
-                var uniqueFileName = Guid.NewGuid() + fileExt;
+                var uniqueFileName = Guid.NewGuid().ToString() + fileExt;
                 var filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
@@ -141,9 +131,12 @@ namespace MyNursery.Areas.NUAD.Controllers
             }
 
             await _db.SaveChangesAsync();
+
             TempData["Success"] = "Policy updated successfully.";
             return RedirectToAction(nameof(Manage));
         }
+
+
 
         // GET: Delete
         public async Task<IActionResult> Delete(int id)

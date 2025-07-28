@@ -2,6 +2,7 @@
 using MyNursery.Areas.NUAD.Models;
 using MyNursery.Data;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace MyNursery.Areas.NUAD.Controllers
 {
@@ -15,7 +16,21 @@ namespace MyNursery.Areas.NUAD.Controllers
             _db = db;
         }
 
-        // GET: NUAD/Vacancy/Manage
+        // Redirect /Create to /Upsert
+        [HttpGet]
+        public IActionResult Create()
+        {
+            return RedirectToAction("Upsert");
+        }
+
+        // Redirect /Edit/{id} to /Upsert/{id}
+        [HttpGet]
+        public IActionResult Edit(int id)
+        {
+            return RedirectToAction("Upsert", new { id });
+        }
+
+        // GET: Manage all vacancies
         public IActionResult Manage()
         {
             var vacancies = _db.Vacancies.OrderByDescending(v => v.DatePosted).ToList();
@@ -26,71 +41,72 @@ namespace MyNursery.Areas.NUAD.Controllers
             return View(vacancies);
         }
 
-        // GET: NUAD/Vacancy/Create
-        public IActionResult Create()
+        // GET: Upsert (Create or Edit)
+        public IActionResult Upsert(int? id)
         {
-            return View();
+            if (id == null || id == 0)
+            {
+                // Create new vacancy
+                return View(new Vacancy());
+            }
+            else
+            {
+                // Edit existing vacancy
+                var vacancy = _db.Vacancies.Find(id);
+                if (vacancy == null)
+                {
+                    TempData["Error"] = "Vacancy not found.";
+                    return NotFound();
+                }
+                return View(vacancy);
+            }
         }
 
-        // POST: NUAD/Vacancy/Create
+        // POST: Upsert (Create or Edit)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(Vacancy vacancy)
+        public async Task<IActionResult> Upsert(Vacancy vacancy)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
+                return View(vacancy);
+            }
+
+            if (vacancy.Id == 0)
+            {
+                // Create
                 _db.Vacancies.Add(vacancy);
-                _db.SaveChanges();
-
                 TempData["Success"] = "Vacancy created successfully.";
-                return RedirectToAction(nameof(Manage));
             }
-
-            TempData["Error"] = "Failed to create vacancy. Please fix the errors and try again.";
-            return View(vacancy);
-        }
-
-        // GET: NUAD/Vacancy/Edit/5
-        public IActionResult Edit(int id)
-        {
-            var vacancy = _db.Vacancies.Find(id);
-            if (vacancy == null)
+            else
             {
-                TempData["Error"] = "Vacancy not found.";
-                return NotFound();
-            }
+                // Update
+                var vacancyInDb = await _db.Vacancies.FindAsync(vacancy.Id);
+                if (vacancyInDb == null)
+                {
+                    TempData["Error"] = "Vacancy not found.";
+                    return NotFound();
+                }
 
-            return View(vacancy);
-        }
-
-        // POST: NUAD/Vacancy/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Edit(int id, Vacancy vacancy)
-        {
-            if (id != vacancy.Id)
-            {
-                TempData["Error"] = "Vacancy ID mismatch.";
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                _db.Update(vacancy);
-                _db.SaveChanges();
+                vacancyInDb.JobTitle = vacancy.JobTitle;
+                vacancyInDb.Description = vacancy.Description;
+                vacancyInDb.Requirements = vacancy.Requirements;
+                vacancyInDb.ApplicationProcess = vacancy.ApplicationProcess;
+                vacancyInDb.DatePosted = vacancy.DatePosted;
+                vacancyInDb.ClosingDate = vacancy.ClosingDate;
+                vacancyInDb.IsActive = vacancy.IsActive;
 
                 TempData["Success"] = "Vacancy updated successfully.";
-                return RedirectToAction(nameof(Manage));
             }
 
-            TempData["Error"] = "Failed to update vacancy. Please fix the errors and try again.";
-            return View(vacancy);
+            await _db.SaveChangesAsync();
+            return RedirectToAction(nameof(Manage));
         }
 
-        // GET: NUAD/Vacancy/Delete/5
-        public IActionResult Delete(int id)
+        // GET: Delete vacancy
+        public async Task<IActionResult> Delete(int id)
         {
-            var vacancy = _db.Vacancies.Find(id);
+            var vacancy = await _db.Vacancies.FindAsync(id);
             if (vacancy == null)
             {
                 TempData["Error"] = "Vacancy not found.";
@@ -98,7 +114,7 @@ namespace MyNursery.Areas.NUAD.Controllers
             }
 
             _db.Vacancies.Remove(vacancy);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             TempData["Success"] = "Vacancy deleted successfully.";
             return RedirectToAction(nameof(Manage));

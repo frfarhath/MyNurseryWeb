@@ -24,10 +24,12 @@ namespace MyNursery.Areas.NUAD.Controllers
             return View("~/Areas/NUAD/Views/Content/Curriculum/Manage.cshtml", items);
         }
 
+
         // GET: NUAD/Curriculum/Create
         public IActionResult Create()
         {
-            return View("~/Areas/NUAD/Views/Content/Curriculum/Create.cshtml");
+            var model = new CurriculumItem(); // Empty model for create
+            return View("~/Areas/NUAD/Views/Content/Curriculum/Upsert.cshtml", model);
         }
 
         // POST: NUAD/Curriculum/Create
@@ -43,7 +45,7 @@ namespace MyNursery.Areas.NUAD.Controllers
                 return RedirectToAction(nameof(Manage));
             }
             TempData["Error"] = "Failed to create curriculum item. Please fix the errors and try again.";
-            return View("~/Areas/NUAD/Views/Content/Curriculum/Create.cshtml", item);
+            return View("~/Areas/NUAD/Views/Content/Curriculum/Upsert.cshtml", item);
         }
 
         // GET: NUAD/Curriculum/Edit/5
@@ -62,7 +64,7 @@ namespace MyNursery.Areas.NUAD.Controllers
                 return NotFound();
             }
 
-            return View("~/Areas/NUAD/Views/Content/Curriculum/Edit.cshtml", item);
+            return View("~/Areas/NUAD/Views/Content/Curriculum/Upsert.cshtml", item);
         }
 
         // POST: NUAD/Curriculum/Edit/5
@@ -101,8 +103,9 @@ namespace MyNursery.Areas.NUAD.Controllers
             }
 
             TempData["Error"] = "Failed to update curriculum item. Please fix the errors and try again.";
-            return View("~/Areas/NUAD/Views/Content/Curriculum/Edit.cshtml", item);
+            return View("~/Areas/NUAD/Views/Content/Curriculum/Upsert.cshtml", item);
         }
+
 
         // GET: NUAD/Curriculum/Delete/5
         public IActionResult Delete(int? id)

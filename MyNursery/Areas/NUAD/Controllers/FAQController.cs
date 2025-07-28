@@ -31,7 +31,7 @@ namespace MyNursery.Areas.NUAD.Controllers
         // GET: NUAD/FAQ/Create
         public IActionResult Create()
         {
-            return View();
+            return View("~/Areas/NUAD/Views/Content/FAQ/Upsert.cshtml", new FAQ());
         }
 
         // POST: NUAD/FAQ/Create
@@ -48,7 +48,7 @@ namespace MyNursery.Areas.NUAD.Controllers
             }
 
             TempData["Error"] = "Failed to create FAQ. Please fix the errors and try again.";
-            return View(faq);
+            return View("~/Areas/NUAD/Views/Content/FAQ/Upsert.cshtml", faq);
         }
 
         // GET: NUAD/FAQ/Edit/5
@@ -67,7 +67,7 @@ namespace MyNursery.Areas.NUAD.Controllers
                 return NotFound();
             }
 
-            return View(faq);
+            return View("~/Areas/NUAD/Views/Content/FAQ/Upsert.cshtml", faq);
         }
 
         // POST: NUAD/FAQ/Edit/5
@@ -93,13 +93,16 @@ namespace MyNursery.Areas.NUAD.Controllers
                 catch
                 {
                     TempData["Error"] = "Failed to update FAQ due to a database error.";
-                    return View(faq);
                 }
             }
+            else
+            {
+                TempData["Error"] = "Failed to update FAQ. Please fix the errors and try again.";
+            }
 
-            TempData["Error"] = "Failed to update FAQ. Please fix the errors and try again.";
-            return View(faq);
+            return View("~/Areas/NUAD/Views/Content/FAQ/Upsert.cshtml", faq);
         }
+
 
         // GET: NUAD/FAQ/Delete/5
         public IActionResult Delete(int? id)
