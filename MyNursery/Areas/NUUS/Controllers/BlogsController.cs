@@ -48,17 +48,20 @@ namespace MyNursery.Areas.NUUS.Controllers
                 .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
 
-            var categories = await _db.BlogCategories.OrderBy(c => c.Name).ToListAsync();
-            ViewBag.Categories = categories;
+            ViewBag.Categories = await _db.BlogCategories.OrderBy(c => c.Name).ToListAsync();
 
             return View(blogs);
         }
 
-        // Show Create blog form
+        // Show Create blog form (returns UpsertBlog view)
         public async Task<IActionResult> CreateBlog()
         {
             ViewBag.Categories = await _db.BlogCategories.OrderBy(c => c.Name).ToListAsync();
-            return View();
+            return View("UpsertBlog", new BlogPost
+            {
+                Title = "",
+                Content = ""
+            });
         }
 
         // Handle blog creation POST
@@ -73,7 +76,7 @@ namespace MyNursery.Areas.NUUS.Controllers
             if (!ModelState.IsValid)
             {
                 ViewBag.Categories = await _db.BlogCategories.OrderBy(c => c.Name).ToListAsync();
-                return View(blogPost);
+                return View("UpsertBlog", blogPost);
             }
 
             var user = await _userManager.GetUserAsync(User);
@@ -105,7 +108,7 @@ namespace MyNursery.Areas.NUUS.Controllers
             return RedirectToAction(nameof(ManageBlogs));
         }
 
-        // Show Edit blog form
+        // Show Edit blog form (returns UpsertBlog view)
         public async Task<IActionResult> EditBlog(int id)
         {
             var blog = await _db.BlogPosts
@@ -128,7 +131,7 @@ namespace MyNursery.Areas.NUUS.Controllers
 
             ViewBag.Categories = await _db.BlogCategories.OrderBy(c => c.Name).ToListAsync();
 
-            return View(blog);
+            return View("UpsertBlog", blog);
         }
 
         // Handle Edit blog POST
@@ -158,7 +161,7 @@ namespace MyNursery.Areas.NUUS.Controllers
             if (!ModelState.IsValid)
             {
                 ViewBag.Categories = await _db.BlogCategories.OrderBy(c => c.Name).ToListAsync();
-                return View(updatedBlog);
+                return View("UpsertBlog", updatedBlog);
             }
 
             blog.Title = updatedBlog.Title;

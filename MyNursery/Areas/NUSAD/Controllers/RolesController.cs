@@ -31,13 +31,13 @@ namespace MyNursery.Areas.NUSAD.Controllers
         {
             if (string.IsNullOrWhiteSpace(name))
             {
-                TempData["ErrorMessage"] = "Role name cannot be empty.";
+                TempData[SD.Error_Msg] = "Role name cannot be empty.";
                 return RedirectToAction(nameof(ManageRoles));
             }
 
-            if (await _roleManager.RoleExistsAsync(name))
+            if (await _roleManager.RoleExistsAsync(name.Trim()))
             {
-                TempData["ErrorMessage"] = "Role already exists.";
+                TempData[SD.Error_Msg] = "Role already exists.";
                 return RedirectToAction(nameof(ManageRoles));
             }
 
@@ -50,8 +50,14 @@ namespace MyNursery.Areas.NUSAD.Controllers
 
             var result = await _roleManager.CreateAsync(newRole);
 
-            TempData[result.Succeeded ? "SuccessMessage" : "ErrorMessage"] =
-                result.Succeeded ? "Role added successfully." : string.Join(", ", result.Errors.Select(e => e.Description));
+            if (result.Succeeded)
+            {
+                TempData[SD.Success_Msg] = "Role added successfully.";
+            }
+            else
+            {
+                TempData[SD.Error_Msg] = string.Join(", ", result.Errors.Select(e => e.Description));
+            }
 
             return RedirectToAction(nameof(ManageRoles));
         }
@@ -63,13 +69,13 @@ namespace MyNursery.Areas.NUSAD.Controllers
             var role = await _roleManager.FindByIdAsync(id);
             if (role == null)
             {
-                TempData["ErrorMessage"] = "Role not found.";
+                TempData[SD.Error_Msg] = "Role not found.";
                 return RedirectToAction(nameof(ManageRoles));
             }
 
             if (string.IsNullOrWhiteSpace(name))
             {
-                TempData["ErrorMessage"] = "Role name cannot be empty.";
+                TempData[SD.Error_Msg] = "Role name cannot be empty.";
                 return RedirectToAction(nameof(ManageRoles));
             }
 
@@ -79,8 +85,14 @@ namespace MyNursery.Areas.NUSAD.Controllers
 
             var result = await _roleManager.UpdateAsync(role);
 
-            TempData[result.Succeeded ? "SuccessMessage" : "ErrorMessage"] =
-                result.Succeeded ? "Role updated successfully." : string.Join(", ", result.Errors.Select(e => e.Description));
+            if (result.Succeeded)
+            {
+                TempData[SD.Success_Msg] = "Role updated successfully.";
+            }
+            else
+            {
+                TempData[SD.Error_Msg] = string.Join(", ", result.Errors.Select(e => e.Description));
+            }
 
             return RedirectToAction(nameof(ManageRoles));
         }
@@ -92,14 +104,20 @@ namespace MyNursery.Areas.NUSAD.Controllers
             var role = await _roleManager.FindByIdAsync(id);
             if (role == null)
             {
-                TempData["ErrorMessage"] = "Role not found.";
+                TempData[SD.Error_Msg] = "Role not found.";
                 return RedirectToAction(nameof(ManageRoles));
             }
 
             var result = await _roleManager.DeleteAsync(role);
 
-            TempData[result.Succeeded ? "SuccessMessage" : "ErrorMessage"] =
-                result.Succeeded ? "Role deleted successfully." : string.Join(", ", result.Errors.Select(e => e.Description));
+            if (result.Succeeded)
+            {
+                TempData[SD.Success_Msg] = "Role deleted successfully.";
+            }
+            else
+            {
+                TempData[SD.Error_Msg] = string.Join(", ", result.Errors.Select(e => e.Description));
+            }
 
             return RedirectToAction(nameof(ManageRoles));
         }

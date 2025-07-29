@@ -1,9 +1,19 @@
 ﻿@model MyNursery.Models.BlogPost
-
 @using Microsoft.AspNetCore.Mvc.Rendering
 
 @{
-    ViewData["Title"] = "Edit Blog";
+    bool isEdit = Model?.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit Blog" : "Create Blog";
+    string formAction = isEdit ? "EditBlog" : "CreateBlog";
+    string formButtonText = isEdit ? "Update Blog" : "Publish Blog";
+    string pageHeader = isEdit ? "Update Blog Post" : "Add New Blog Post";
+    string pageSubHeader = isEdit
+        ? "Modify the existing blog entry and save your changes."
+        : "Use this form to create a new blog entry.";
+
+    // Helper to get image by type (for edit)
+    string GetImagePath(string type) =>
+        Model.BlogImages?.FirstOrDefault(img => img.Type == type)?.ImagePath ?? string.Empty;
 }
 
 <!-- [ breadcrumb ] start -->
@@ -12,7 +22,7 @@
         <div class="row align-items-center">
             <div class="col-md-12">
                 <div class="page-header-title">
-                    <h5 class="m-b-10">Edit Blog</h5>
+                    <h5 class="m-b-10">@ViewData["Title"]</h5>
                 </div>
                 <ul class="breadcrumb">
                     <li class="breadcrumb-item">
@@ -21,7 +31,7 @@
                         </a>
                     </li>
                     <li class="breadcrumb-item"><a href="#">Blogs</a></li>
-                    <li class="breadcrumb-item"><a href="#">Edit Blog</a></li>
+                    <li class="breadcrumb-item"><a href="#">@ViewData["Title"]</a></li>
                 </ul>
             </div>
         </div>
@@ -33,8 +43,8 @@
     <div class="col-xl-8 mx-auto">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">Update Blog Post</h5>
-                <span class="text-muted">Modify the existing blog entry and save your changes.</span>
+                <h5 class="mb-0">@pageHeader</h5>
+                <span class="text-muted">@pageSubHeader</span>
             </div>
             <div class="card-body">
 
@@ -50,9 +60,12 @@
 
                 @await Html.PartialAsync("_Notification")
 
-                <form asp-action="EditBlog" asp-controller="Blogs" asp-area="NUUS" method="post" enctype="multipart/form-data" novalidate>
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" asp-for="Id" />
+                <form asp-action="@formAction" asp-controller="Blogs" asp-area="NUUS" method="post" enctype="multipart/form-data" novalidate>
+                    @if (isEdit)
+                    {
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+                    }
 
                     <div class="mb-3">
                         <label asp-for="Title" class="form-label"></label>
@@ -61,55 +74,49 @@
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="CategoryId" class="form-label">Category</label>
+                        <label asp-for="CategoryId" class="form-label"></label>
                         <select asp-for="CategoryId" class="form-select" asp-items="@(new SelectList(ViewBag.Categories, "Id", "Name"))">
                             <option value="">-- Select Category --</option>
                         </select>
                         <span asp-validation-for="CategoryId" class="text-danger"></span>
                     </div>
 
-                    @{
-                        // Helper function to get image path by type
-                        string GetImagePath(string type) =>
-                        Model.BlogImages?.FirstOrDefault(img => img.Type == type)?.ImagePath ?? string.Empty;
-                    }
-
                     <div class="mb-3">
                         <label class="form-label">Cover Image</label>
-                        @if (!string.IsNullOrEmpty(GetImagePath("Cover")))
+                        @if (isEdit && !string.IsNullOrEmpty(GetImagePath("Cover")))
                         {
                             <div class="mb-2">
                                 <img src="@GetImagePath("Cover")" alt="Cover Image" class="img-fluid rounded" style="max-height:150px;" />
                             </div>
                         }
-                        <input type="file" name="CoverImage" class="form-control" accept="image/*" />
+                        <input type="file" name="CoverImage" class="form-control" accept="image/*" onchange="validateImageSize(this)" />
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Optional Image 1</label>
-                        @if (!string.IsNullOrEmpty(GetImagePath("Optional1")))
+                        @if (isEdit && !string.IsNullOrEmpty(GetImagePath("Optional1")))
                         {
                             <div class="mb-2">
                                 <img src="@GetImagePath("Optional1")" alt="Optional Image 1" class="img-fluid rounded" style="max-height:150px;" />
                             </div>
                         }
-                        <input type="file" name="OptionalImage1" class="form-control" accept="image/*" />
+                        <input type="file" name="OptionalImage1" class="form-control" accept="image/*" onchange="validateImageSize(this)" />
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Optional Image 2</label>
-                        @if (!string.IsNullOrEmpty(GetImagePath("Optional2")))
+                        @if (isEdit && !string.IsNullOrEmpty(GetImagePath("Optional2")))
                         {
                             <div class="mb-2">
                                 <img src="@GetImagePath("Optional2")" alt="Optional Image 2" class="img-fluid rounded" style="max-height:150px;" />
                             </div>
                         }
-                        <input type="file" name="OptionalImage2" class="form-control" accept="image/*" />
+                        <input type="file" name="OptionalImage2" class="form-control" accept="image/*" onchange="validateImageSize(this)" />
                     </div>
 
                     <div class="mb-3">
                         <label asp-for="Content" class="form-label"></label>
-                        <textarea asp-for="Content" class="form-control" rows="6" placeholder="Update blog content..."></textarea>
+                        <textarea asp-for="Content" class="form-control" rows="6" placeholder="Write your blog content here..."></textarea>
                         <span asp-validation-for="Content" class="text-danger"></span>
                     </div>
 
@@ -120,8 +127,8 @@
                     </div>
 
                     <div class="form-group text-end">
-                        <a asp-action="ManageBlogs" class="btn btn-outline-secondary me-2">Cancel</a>
-                        <button type="submit" class="btn btn-primary">Update Blog</button>
+                        <button type="reset" class="btn btn-outline-secondary me-2">Reset</button>
+                        <button type="submit" class="btn btn-primary">@formButtonText</button>
                     </div>
                 </form>
             </div>
@@ -131,4 +138,18 @@
 <!-- [ Main Content ] end -->
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        const maxSize = 1 * 1024 * 1024; // 1MB
+        function validateImageSize(input) {
+            if (input.files.length === 0) return;
+            for (let i = 0; i < input.files.length; i++) {
+                const file = input.files[i];
+                if (file.size > maxSize) {
+                    alert(`File "${file.name}" exceeds the maximum size of 1MB.`);
+                    input.value = '';
+                    break;
+                }
+            }
+        }
+    </script>
 }
