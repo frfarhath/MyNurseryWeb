@@ -1,0 +1,129 @@
+﻿@model IEnumerable<MyNursery.Areas.NUAD.Models.Policy>
+
+@{
+    ViewData["Title"] = "Manage Policies";
+}
+
+<!-- [ breadcrumb ] start -->
+<div class="page-header">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="page-header-title">
+                    <h5 class="m-b-10">Manage Policies</h5>
+                </div>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a asp-area="NUAD" asp-controller="Home" asp-action="Dashboard"><i class="feather icon-home"></i></a>
+                    </li>
+                    <li class="breadcrumb-item"><a href="#">Content</a></li>
+                    <li class="breadcrumb-item"><a href="#">Policies</a></li>
+                    <li class="breadcrumb-item"><a href="#">Manage Policies</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- [ breadcrumb ] end -->
+<!-- [ Main Content ] start -->
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">All Policies</h5>
+                <span class="text-muted">Search, filter, and manage uploaded policies.</span>
+            </div>
+            <div class="card-body">
+
+                <div class="row mb-3">
+                    <div class="col-md-5">
+                        <input type="text"
+                               id="searchInput"
+                               class="form-control"
+                               placeholder="Search by Title or Category..."
+                               onkeyup="filterTable()" />
+                    </div>
+                    <div class="col-md-4">
+                        <select id="categoryFilter" class="form-control" onchange="filterTable()">
+                            <option value="">-- Filter by Category --</option>
+                            @{
+                                var categories = Model
+                                .Select(p => p.Category ?? "N/A")
+                                .Distinct()
+                                .OrderBy(c => c)
+                                .ToList();
+                            }
+                            @foreach (var cat in categories)
+                            {
+                                <option value="@cat.ToLower()">@cat</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover" id="policiesTable">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Last Updated</th>
+                                <th>File</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var policy in Model)
+                            {
+                                <tr>
+                                    <td>@policy.Title</td>
+                                    <td>@policy.Category</td>
+                                    <td>@policy.LastUpdated.ToString("yyyy-MM-dd")</td>
+                                    <td>
+                                        <a href="@policy.FilePath" target="_blank" class="btn btn-sm btn-info">
+                                            <i class="feather icon-file"></i> View File
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a asp-action="Edit" asp-route-id="@policy.Id" class="btn btn-sm btn-warning mr-1">
+                                            <i class="feather icon-edit"></i> Edit
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@policy.Id" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure to delete this policy?');">
+                                            <i class="feather icon-trash-2"></i> Delete
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (!Model?.Any() ?? true)
+                {
+                    <div class="alert alert-info mt-4">No policies found.</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+<!-- [ Main Content ] end -->
+@section Scripts {
+    <script>
+        function filterTable() {
+            const input = document.getElementById("searchInput").value.toLowerCase();
+            const categoryFilter = document.getElementById("categoryFilter").value.toLowerCase();
+            const table = document.getElementById("policiesTable");
+            const rows = table.tBodies[0].getElementsByTagName("tr");
+
+            for (let row of rows) {
+                const title = row.cells[0].textContent.toLowerCase();
+                const category = row.cells[1].textContent.toLowerCase();
+
+                const matchesSearch = title.includes(input) || category.includes(input);
+                const matchesCategory = categoryFilter === "" || category === categoryFilter;
+
+                row.style.display = (matchesSearch && matchesCategory) ? "" : "none";
+            }
+        }
+    </script>
+}

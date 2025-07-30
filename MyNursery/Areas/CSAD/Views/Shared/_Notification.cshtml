@@ -1,0 +1,47 @@
+﻿@using MyNursery.Utility
+
+@{
+    string? message = null;
+    string alertType = SD.Info_Msg; // default to info
+
+    var successMessage = TempData[SD.Success_Msg] as string;
+    var errorMessage = TempData[SD.Error_Msg] as string;
+    var warningMessage = TempData[SD.Warning_Msg] as string;
+
+    if (!string.IsNullOrEmpty(successMessage))
+    {
+        message = successMessage;
+        alertType = SD.Success_Msg;
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        message = errorMessage;
+        alertType = SD.Error_Msg;
+    }
+    else if (!string.IsNullOrEmpty(warningMessage))
+    {
+        message = warningMessage;
+        alertType = SD.Warning_Msg;
+    }
+}
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <div class="alert alert-@alertType alert-dismissible fade show" role="alert">
+        @message
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close" style="font-size: 1.5rem; color: black;">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+
+    <script>
+        window.setTimeout(function () {
+            const alertNode = document.querySelector('.alert');
+            if (alertNode) {
+                alertNode.classList.remove('show');
+                alertNode.classList.add('hide');
+                setTimeout(() => alertNode.remove(), 500);
+            }
+        }, 5000);
+    </script>
+}

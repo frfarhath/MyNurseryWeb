@@ -1,16 +1,12 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using MyNursery.Utility;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyNursery.Areas.Welcome.Models
 {
-    public enum UserType
-    {
-        Predefined = 0,    // seeded in Program.cs
-        Registered = 1,    // registered through system
-        AdminAdded = 2     // manually added by admin (e.g., NUAD)
-    }
+  
 
     public class ApplicationUser : IdentityUser
     {
@@ -33,8 +29,16 @@ namespace MyNursery.Areas.Welcome.Models
         public DateTime EmailOTPExpiry { get; set; }
 
         [Display(Name = "User Type")]
-        public UserType UserType { get; set; } = UserType.Registered;
+        public string UserType { get; set; } = SD.UserType_Registered;
         public string NUUSDashboardId { get; set; } = string.Empty;
+
+        [MaxLength(50)]
+        public string Area { get; set; } = string.Empty;
+
+        public bool MustChangePassword { get; set; } = false;
+
+
+
 
     }
 

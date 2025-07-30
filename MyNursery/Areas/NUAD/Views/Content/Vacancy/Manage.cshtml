@@ -1,0 +1,112 @@
+﻿@model IEnumerable<MyNursery.Areas.NUAD.Models.Vacancy>
+
+@{
+    ViewData["Title"] = "Manage Vacancies";
+}
+
+<!-- [ breadcrumb ] start -->
+<div class="page-header">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="page-header-title">
+                    <h5 class="m-b-10">Manage Vacancies</h5>
+                </div>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a asp-area="NUAD" asp-controller="Home" asp-action="Dashboard"><i class="feather icon-home"></i></a>
+                    </li>
+                    <li class="breadcrumb-item"><a href="#">Content</a></li>
+                    <li class="breadcrumb-item"><a href="#">Vacancies</a></li>
+                    <li class="breadcrumb-item"><a href="#">Manage Vacancies</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- [ breadcrumb ] end -->
+<!-- [ Main Content ] start -->
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">All Vacancies</h5>
+                <span class="text-muted">Search, filter, and manage current job vacancies.</span>
+            </div>
+            <div class="card-body">
+
+                <div class="row mb-3">
+                    <div class="col-md-5">
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search by job title..." onkeyup="filterTable()" />
+                    </div>
+                    <div class="col-md-4">
+                        <select id="activeFilter" class="form-control" onchange="filterTable()">
+                            <option value="">-- Filter by Active Status --</option>
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover" id="vacancyTable">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Job Title</th>
+                                <th>Date Posted</th>
+                                <th>Closing Date</th>
+                                <th>Active</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var vacancy in Model)
+                            {
+                                <tr>
+                                    <td>@vacancy.JobTitle</td>
+                                    <td>@vacancy.DatePosted.ToString("yyyy-MM-dd")</td>
+                                    <td>@(vacancy.ClosingDate?.ToString("yyyy-MM-dd") ?? "N/A")</td>
+                                    <td>@(vacancy.IsActive ? "Yes" : "No")</td>
+                                    <td>
+                                        <a asp-action="Edit" asp-route-id="@vacancy.Id" class="btn btn-sm btn-warning mr-1">
+                                            <i class="feather icon-edit"></i> Edit
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@vacancy.Id" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this vacancy?');">
+                                            <i class="feather icon-trash-2"></i> Delete
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (!Model?.Any() ?? true)
+                {
+                    <div class="alert alert-info mt-4">No vacancies found.</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+<!-- [ Main Content ] end -->
+@section Scripts {
+    <script>
+        function filterTable() {
+            const input = document.getElementById("searchInput").value.toLowerCase();
+            const activeFilter = document.getElementById("activeFilter").value.toLowerCase();
+            const table = document.getElementById("vacancyTable");
+            const rows = table.tBodies[0].getElementsByTagName("tr");
+
+            for (let row of rows) {
+                const jobTitle = row.cells[0].textContent.toLowerCase();
+                const activeStatus = row.cells[3].textContent.toLowerCase();
+
+                const matchesSearch = jobTitle.includes(input);
+                const matchesActive = activeFilter === "" || activeStatus === activeFilter;
+
+                row.style.display = (matchesSearch && matchesActive) ? "" : "none";
+            }
+        }
+    </script>
+}

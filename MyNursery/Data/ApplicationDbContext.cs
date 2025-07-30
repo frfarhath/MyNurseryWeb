@@ -1,50 +1,61 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-
+using MyNursery.Areas.NUAD.Models;
+using MyNursery.Areas.NUSAD.Models;
+using MyNursery.Areas.Welcome.Models;
+using MyNursery.Models;
 // Aliases to resolve ambiguous models
 using NUADModels = MyNursery.Areas.NUAD.Models;
-using MyNursery.Areas.Welcome.Models;
-// using WelcomeModels = MyNursery.Areas.Welcome.Models; // Uncomment if you want Welcome ContactMessages too
+using NUSADModels = MyNursery.Areas.NUSAD.Models;
 
 namespace MyNursery.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+    // Use ApplicationUser and ApplicationRole for Identity
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, string>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
         }
 
-        /// <summary>
-        /// NUAD users table
-        /// </summary>
-        public new DbSet<NUADModels.User> Users { get; set; }
+        // Custom Users table (non-identity users)
+        public new DbSet<User> Users { get; set; }
 
-        /// <summary>
-        /// NUAD blog posts
-        /// </summary>
-        public DbSet<Models.BlogPost> BlogPosts { get; set; }
+        // Blog posts
+        public DbSet<BlogPost> BlogPosts { get; set; }
+        public DbSet<BlogImage> BlogImages { get; set; }
+        public DbSet<BlogCategory> BlogCategories { get; set; }
 
-        /// <summary>
-        /// NUAD contact messages
-        /// </summary>
+
+
+        // Contact messages
         public DbSet<NUADModels.ContactMessage> ContactMessages { get; set; }
 
-        // If you want Welcome ContactMessages as well, uncomment this and add the using alias above
-        // public DbSet<WelcomeModels.ContactMessage> WelcomeContactMessages { get; set; }
+        // Content management tables
+        public DbSet<Page> Pages { get; set; }
+        public DbSet<CurriculumItem> CurriculumItems { get; set; }
+        public DbSet<Policy> Policies { get; set; }
+        public DbSet<FAQ> FAQs { get; set; }
+        public DbSet<Vacancy> Vacancies { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
-            // Seed roles
-            builder.Entity<Microsoft.AspNetCore.Identity.IdentityRole>().HasData(
-                new Microsoft.AspNetCore.Identity.IdentityRole { Id = "1", Name = "Admin", NormalizedName = "ADMIN" },
-                new Microsoft.AspNetCore.Identity.IdentityRole { Id = "2", Name = "Staff", NormalizedName = "STAFF" },
-                new Microsoft.AspNetCore.Identity.IdentityRole { Id = "3", Name = "Parent", NormalizedName = "PARENT" }
+            // Seed roles with Ids and optionally Description if your ApplicationRole supports it
+            builder.Entity<ApplicationRole>().HasData(
+                new ApplicationRole { Id = "1", Name = "Admin", NormalizedName = "ADMIN", Description = "Administrator role" },
+                new ApplicationRole { Id = "2", Name = "Staff", NormalizedName = "STAFF", Description = "Staff role" },
+                new ApplicationRole { Id = "3", Name = "Parent", NormalizedName = "PARENT", Description = "Parent role" }
             );
 
-            // Additional configurations can be added here if needed
+            // Configure relationship: Page.LastUpdatedByUser (ApplicationUser)
+            builder.Entity<Page>()
+                .HasOne(p => p.LastUpdatedByUser)
+                .WithMany() // Adjust if ApplicationUser has navigation property for Pages
+                .HasForeignKey(p => p.LastUpdatedByUserId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

@@ -1,0 +1,113 @@
+﻿@model MyNursery.Areas.NUAD.Models.Vacancy
+
+@{
+    var isEdit = Model?.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit Vacancy" : "Post Vacancy";
+}
+
+<!-- [ breadcrumb ] start -->
+<div class="page-header">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="page-header-title">
+                    <h5 class="m-b-10">@ViewData["Title"]</h5>
+                </div>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a asp-area="NUAD" asp-controller="Home" asp-action="Dashboard">
+                            <i class="feather icon-home"></i>
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item"><a href="#">Content</a></li>
+                    <li class="breadcrumb-item"><a href="#">Vacancy</a></li>
+                    <li class="breadcrumb-item active">@ViewData["Title"]</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- [ breadcrumb ] end -->
+<!-- [ Main Content ] start -->
+<div class="row">
+    <div class="col-xl-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">@ViewData["Title"]</h5>
+                <span class="text-muted">
+                    @(isEdit ? "Update the details of the vacancy post." : "Fill in the details below to post a new vacancy.")
+                </span>
+            </div>
+            <div class="card-body">
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger">
+                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                        {
+                            <p>@error.ErrorMessage</p>
+                        }
+                    </div>
+                }
+
+                <form asp-action="Upsert" method="post">
+                    @if (isEdit)
+                    {
+                        <input type="hidden" asp-for="Id" />
+                    }
+
+                    <div class="form-group">
+                        <label asp-for="JobTitle" class="font-weight-bold"></label>
+                        <input asp-for="JobTitle" class="form-control" />
+                        <span asp-validation-for="JobTitle" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Description" class="font-weight-bold"></label>
+                        <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Requirements" class="font-weight-bold"></label>
+                        <textarea asp-for="Requirements" class="form-control" rows="4"></textarea>
+                        <span asp-validation-for="Requirements" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="ApplicationProcess" class="font-weight-bold"></label>
+                        <textarea asp-for="ApplicationProcess" class="form-control" rows="4"></textarea>
+                        <span asp-validation-for="ApplicationProcess" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="DatePosted" class="font-weight-bold"></label>
+                        <input asp-for="DatePosted" type="date" class="form-control" />
+                        <span asp-validation-for="DatePosted" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="ClosingDate" class="font-weight-bold"></label>
+                        <input asp-for="ClosingDate" type="date" class="form-control" />
+                        <span asp-validation-for="ClosingDate" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input asp-for="IsActive" class="form-check-input" />
+                        <label asp-for="IsActive" class="form-check-label"></label>
+                    </div>
+
+                    <div class="form-group text-right">
+                        <button type="reset" class="btn btn-outline-secondary mr-2">Reset</button>
+                        <button type="submit" class="btn btn-primary">
+                            @(isEdit ? "Update Vacancy" : "Post Vacancy")
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- [ Main Content ] end -->
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,182 @@
+﻿@model IEnumerable<MyNursery.Models.BlogPost>
+@using MyNursery.Utility
+
+@{
+    ViewData["Title"] = "Deleted Blogs";
+}
+
+<!-- [ breadcrumb ] start -->
+<div class="page-header">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="page-header-title">
+                    <h5 class="m-b-10">Deleted Blog Posts</h5>
+                </div>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a asp-area="NUAD" asp-controller="Home" asp-action="Dashboard"><i class="feather icon-home"></i></a>
+                    </li>
+                    <li class="breadcrumb-item"><a href="#">Blogs</a></li>
+                    <li class="breadcrumb-item"><a href="#">Deleted Blogs</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- [ breadcrumb ] end -->
+<!-- [ Main Content ] start -->
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">Deleted Blog Posts</h5>
+                <small class="text-muted">Restore or permanently delete blog entries.</small>
+            </div>
+            <div class="card-body">
+
+                <!-- Search & Filter -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search by title..." onkeyup="filterTable()" />
+                    </div>
+                    <div class="col-md-4">
+                        <select id="categoryFilter" class="form-control" onchange="filterTable()">
+                            <option value="">-- Filter by Category --</option>
+                            @foreach (var cat in Model.Select(b => b.Category?.Name).Where(n => !string.IsNullOrEmpty(n)).Distinct())
+                            {
+                                <option value="@cat.ToLower()">@cat</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                @if (!Model.Any())
+                {
+                    <div class="alert alert-info">No deleted blogs found.</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="deletedBlogsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Category</th>
+                                    <th>Deleted On</th>
+                                    <th style="min-width: 180px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var blog in Model)
+                                {
+                                    <tr>
+                                        <td>@blog.Title</td>
+                                        <td>@blog.Category?.Name</td>
+                                        <td>@blog.DeletedAt?.ToString("yyyy-MM-dd")</td>
+                                        <td>
+                                            <form asp-action="RestoreBlog" method="post" class="d-inline restore-form" asp-route-id="@blog.Id">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-success btn-sm">
+                                                    <i class="feather icon-rotate-ccw"></i> Restore
+                                                </button>
+                                            </form>
+
+                                            <form asp-action="PermanentlyDeleteBlog" method="post" class="d-inline ms-1 delete-form" asp-route-id="@blog.Id">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-danger btn-sm">
+                                                    <i class="feather icon-trash"></i> Delete Permanently
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+<!-- [ Main Content ] end -->
+@section Scripts {
+    <script>
+        function filterTable() {
+            const input = document.getElementById("searchInput").value.toLowerCase();
+            const categoryFilter = document.getElementById("categoryFilter").value.toLowerCase();
+            const table = document.getElementById("deletedBlogsTable");
+            const trs = table.tBodies[0].getElementsByTagName("tr");
+
+            for (let i = 0; i < trs.length; i++) {
+                const title = trs[i].getElementsByTagName("td")[0].textContent.toLowerCase();
+                const category = trs[i].getElementsByTagName("td")[1].textContent.toLowerCase();
+
+                const matchesTitle = title.includes(input);
+                const matchesCategory = categoryFilter === "" || category === categoryFilter;
+
+                trs[i].style.display = (matchesTitle && matchesCategory) ? "" : "none";
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Restore Blog AJAX
+            const restoreForms = document.querySelectorAll('.restore-form');
+            restoreForms.forEach(form => {
+                form.addEventListener('submit', async e => {
+                    e.preventDefault();
+                    if (!confirm("Restore this blog?")) return;
+
+                    const formData = new FormData(form);
+                    const token = formData.get("__RequestVerificationToken");
+
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': token,
+                            'Accept': 'application/json'
+                        },
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        alert(result.message);
+                        form.closest('tr').remove();
+                    } else {
+                        alert(result.message || "Failed to restore blog.");
+                    }
+                });
+            });
+
+            // Permanently Delete Blog AJAX
+            const deleteForms = document.querySelectorAll('.delete-form');
+            deleteForms.forEach(form => {
+                form.addEventListener('submit', async e => {
+                    e.preventDefault();
+                    if (!confirm("Permanently delete this blog? This action cannot be undone.")) return;
+
+                    const formData = new FormData(form);
+                    const token = formData.get("__RequestVerificationToken");
+
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': token,
+                            'Accept': 'application/json'
+                        },
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        alert(result.message);
+                        form.closest('tr').remove();
+                    } else {
+                        alert(result.message || "Failed to delete blog.");
+                    }
+                });
+            });
+        });
+    </script>
+}

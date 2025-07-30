@@ -1,6 +1,6 @@
 ﻿@model IEnumerable<MyNursery.Models.BlogPost>
-@using System.Linq
-
+@using MyNursery.Utility
+@using MyNursery.Areas.NUSAD.Models
 @{
     ViewData["Title"] = "Manage Blogs";
 }
@@ -15,7 +15,9 @@
                 </div>
                 <ul class="breadcrumb">
                     <li class="breadcrumb-item">
-                        <a asp-area="NUUS" asp-controller="Home" asp-action="Dashboard"><i class="feather icon-home"></i></a>
+                        <a asp-area="NUUS" asp-controller="Home" asp-action="Dashboard">
+                            <i class="feather icon-home"></i>
+                        </a>
                     </li>
                     <li class="breadcrumb-item"><a href="#">Blogs</a></li>
                     <li class="breadcrumb-item"><a href="#">Manage Blogs</a></li>
@@ -28,70 +30,73 @@
 <!-- [ Main Content ] start -->
 <div class="row">
     <div class="col-xl-12">
-        <div class="card">
+        <div class="card shadow-sm">
             <div class="card-header">
                 <h5 class="mb-0">All Blog Posts</h5>
-                <span class="text-muted">Search, filter, and manage blog entries.</span>
+                <small class="text-muted">Search, filter, and manage blog entries.</small>
             </div>
             <div class="card-body">
-
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <input type="text" id="searchInput" class="form-control" placeholder="Search by title..." onkeyup="filterTable()" />
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <select id="categoryFilter" class="form-control" onchange="filterTable()">
                             <option value="">-- Filter by Category --</option>
-                            <option value="Education">Education</option>
-                            <option value="Events">Events</option>
-                            <option value="Tips">Tips</option>
+                            @if (ViewBag.Categories != null)
+                            {
+                                foreach (var cat in (List<BlogCategory>)ViewBag.Categories)
+                                {
+                                    <option value="@cat.Name.ToLower()">@cat.Name</option>
+                                }
+                            }
                         </select>
                     </div>
                 </div>
 
                 <div class="table-responsive">
                     <table class="table table-hover" id="blogsTable">
-                        <thead class="thead-light">
+                        <thead class="table-light">
                             <tr>
                                 <th>Title</th>
                                 <th>Category</th>
                                 <th>Publish Date</th>
                                 <th>Status</th>
-                                <th>Actions</th>
+                                <th style="min-width: 150px;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var blog in Model)
                             {
+                                var badgeClass = blog.Status switch
+                                {
+                                    SD.Status_Approved => "badge bg-success",
+                                    SD.Status_Disapproved => "badge bg-danger",
+                                    SD.Status_Pending => "badge bg-warning text-dark",
+                                    _ => "badge bg-secondary"
+                                };
+
+                                var displayStatus = blog.Status switch
+                                {
+                                    SD.Status_Approved => "Accepted",
+                                    SD.Status_Disapproved => "Declined",
+                                    SD.Status_Pending => "Pending",
+                                    _ => "Unknown"
+                                };
+
                                 <tr>
                                     <td>@blog.Title</td>
-                                    <td>@blog.Category</td>
+                                    <td>@blog.Category?.Name</td>
                                     <td>@blog.PublishDate?.ToString("yyyy-MM-dd")</td>
+                                    <td><span class="@badgeClass">@displayStatus</span></td>
                                     <td>
-                                        <form asp-action="UpdateStatus" method="post" class="d-flex align-items-center">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="Id" value="@blog.Id" />
-                                            <select name="Status" class="form-control form-control-sm mr-2">
-                                                <option value="Published" selected="@(blog.Status == "Published")">Published</option>
-                                                <option value="Draft" selected="@(blog.Status == "Draft")">Draft</option>
-                                                <option value="Archived" selected="@(blog.Status == "Archived")">Archived</option>
-                                            </select>
-                                            <button type="submit" class="btn btn-sm btn-secondary">
-                                                <i class="feather icon-refresh-cw"></i> Update
-                                            </button>
-                                        </form>
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-info btn-sm" onclick="viewBlog(@blog.Id)">
+                                        <button type="button" class="btn btn-info btn-sm me-1" onclick="viewBlog(@blog.Id)">
                                             <i class="feather icon-eye"></i> View
                                         </button>
-                                        <a asp-action="EditBlog" asp-route-id="@blog.Id" class="btn btn-warning btn-sm">
+                                        <a asp-action="EditBlog" asp-route-id="@blog.Id" class="btn btn-warning btn-sm me-1">
                                             <i class="feather icon-edit"></i> Edit
                                         </a>
-                                        <form asp-action="DeleteBlog"
-                                              asp-route-id="@blog.Id"
-                                              method="post"
-                                              class="delete-form d-inline">
+                                        <form class="delete-form d-inline" asp-action="DeleteBlog" asp-route-id="@blog.Id" method="post" novalidate>
                                             @Html.AntiForgeryToken()
                                             <button type="submit" class="btn btn-danger btn-sm">
                                                 <i class="feather icon-trash-2"></i> Delete
@@ -104,7 +109,7 @@
                     </table>
                 </div>
 
-                @if (!Model?.Any() ?? true)
+                @if (!(Model?.Any() ?? false))
                 {
                     <div class="alert alert-info mt-4">
                         No blog posts found.
@@ -116,8 +121,8 @@
 </div>
 <!-- [ Main Content ] end -->
 <!-- View Blog Modal -->
-<div class="modal fade" id="blogViewModal" tabindex="-1" role="dialog" aria-labelledby="blogViewModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
+<div class="modal fade" id="blogViewModal" tabindex="-1" aria-labelledby="blogViewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="blogViewModalLabel">Blog Details</h5>
@@ -168,8 +173,8 @@
             const trs = table.tBodies[0].getElementsByTagName("tr");
 
             for (let i = 0; i < trs.length; i++) {
-                let title = trs[i].getElementsByTagName("td")[0].textContent.toLowerCase();
-                let category = trs[i].getElementsByTagName("td")[1].textContent.toLowerCase();
+                let title = trs[i].getElementsByTagName("td")[0]?.textContent.toLowerCase() ?? "";
+                let category = trs[i].getElementsByTagName("td")[1]?.textContent.toLowerCase().trim() ?? "";
 
                 const matchesTitle = title.includes(input);
                 const matchesCategory = categoryFilter === "" || category === categoryFilter;
@@ -182,8 +187,8 @@
             fetch(`/NUUS/Blogs/GetBlogDetails/${id}`)
                 .then(res => res.json())
                 .then(data => {
-                    if (!data) {
-                        alert("Blog details not found.");
+                    if (!data || !data.success) {
+                        alert(data?.message || "Blog details not found.");
                         return;
                     }
 
@@ -210,7 +215,8 @@
                     setImage('optionalImage1Container', 'optionalImage1', data.image1);
                     setImage('optionalImage2Container', 'optionalImage2', data.image2);
 
-                    $('#blogViewModal').modal('show');
+                    const blogViewModal = new bootstrap.Modal(document.getElementById('blogViewModal'));
+                    blogViewModal.show();
                 })
                 .catch(() => alert('Error loading blog details.'));
         }
@@ -236,13 +242,18 @@
                         body: formData
                     });
 
+                    if (!response.ok) {
+                        alert("Failed to delete blog.");
+                        return;
+                    }
+
                     const result = await response.json();
 
                     if (result.success) {
                         alert(result.message);
                         form.closest('tr').remove();
                     } else {
-                        alert("Failed to delete blog.");
+                        alert(result.message || "Failed to delete blog.");
                     }
                 });
             });

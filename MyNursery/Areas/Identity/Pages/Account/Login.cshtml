@@ -1,5 +1,7 @@
 ﻿@page
+@namespace MyNursery.Areas.Identity.Pages.Account
 @model LoginModel
+
 
 @{
     ViewData["Title"] = "Log in";
@@ -10,26 +12,30 @@
     <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
         <h2 class="mt-6 text-center text-3xl font-extrabold text-[#004d40] font-brand">Login</h2>
 
-        <div asp-validation-summary="ModelOnly" class="text-red-600 mt-4 mb-2" role="alert"></div>
-
         <form method="post" id="account" class="mt-8 space-y-6">
+            <div asp-validation-summary="ModelOnly" class="text-red-600 mt-2" role="alert"></div>
+
             <div class="-space-y-px">
                 <div class="mb-4">
                     <label asp-for="Input.Email" class="block text-[#004d40] font-medium mb-1"></label>
-                    <input asp-for="Input.Email" class="appearance-none rounded-md w-full px-3 py-2 border border-gray-300 placeholder-gray-400 focus:outline-none focus:ring-[#004d40] focus:border-[#004d40] sm:text-sm" />
+                    <input asp-for="Input.Email"
+                           class="appearance-none rounded-md w-full px-3 py-2 border border-gray-300 placeholder-gray-400 focus:outline-none focus:ring-[#004d40] focus:border-[#004d40] sm:text-sm" />
                     <span asp-validation-for="Input.Email" class="text-red-600 text-sm mt-1 block"></span>
                 </div>
 
-                <div>
+                <div class="mb-4">
                     <label asp-for="Input.Password" class="block text-[#004d40] font-medium mb-1"></label>
-                    <input asp-for="Input.Password" type="password" class="appearance-none rounded-md w-full px-3 py-2 border border-gray-300 placeholder-gray-400 focus:outline-none focus:ring-[#004d40] focus:border-[#004d40] sm:text-sm" />
+                    <input asp-for="Input.Password" type="password"
+                           class="appearance-none rounded-md w-full px-3 py-2 border border-gray-300 placeholder-gray-400 focus:outline-none focus:ring-[#004d40] focus:border-[#004d40] sm:text-sm" />
                     <span asp-validation-for="Input.Password" class="text-red-600 text-sm mt-1 block"></span>
                 </div>
             </div>
 
-            <div class="flex items-center">
-                <input asp-for="Input.RememberMe" id="rememberMeCheck" class="h-4 w-4 text-[#004d40] focus:ring-[#004d40] border-gray-300 rounded" />
-                <label for="rememberMeCheck" class="ml-2 block text-[#004d40]">
+            <div class="flex items-center mb-4">
+                <input asp-for="Input.RememberMe"
+                       id="rememberMeCheck"
+                       class="h-4 w-4 text-[#004d40] focus:ring-[#004d40] border-gray-300 rounded" />
+                <label for="rememberMeCheck" class="ml-2 block text-[#004d40] text-sm">
                     @Html.DisplayNameFor(m => m.Input.RememberMe)
                 </label>
             </div>
@@ -43,15 +49,15 @@
                         class="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-[#004d40] hover:bg-[#00382e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#004d40]">
                     Log in
                 </button>
-               
             </div>
 
-            <div class="text-center mt-4 space-y-2">
+            <div class="text-center mt-6 space-y-2">
                 <a asp-page="./ForgotPassword" class="text-sm font-medium text-[#004d40] hover:text-[#00382e]">
                     Forgot your password?
-                </a><br />
-                <a asp-page="/Account/Register" class="text-sm font-medium text-[#004d40] hover:text-[#00382e]">
-                    Don't have an account? Register
+                </a>
+                <br />
+                <a asp-page="./Register" class="text-sm font-medium text-[#004d40] hover:text-[#00382e]">
+                    Don’t have an account? Register
                 </a>
             </div>
         </form>

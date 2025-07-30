@@ -1,0 +1,97 @@
+﻿@model MyNursery.Areas.NUAD.Models.CurriculumItem
+
+@{
+    bool isEdit = Model != null && Model.Id != 0;
+    ViewData["Title"] = isEdit ? "Edit Curriculum Item" : "Add Curriculum Item";
+}
+
+<div class="page-header">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="page-header-title">
+                    <h5 class="m-b-10">@ViewData["Title"]</h5>
+                </div>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a asp-area="NUAD" asp-controller="Home" asp-action="Dashboard">
+                            <i class="feather icon-home"></i>
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item"><a href="#">Content</a></li>
+                    <li class="breadcrumb-item"><a href="#">Curriculum</a></li>
+                    <li class="breadcrumb-item"><a href="#">@ViewData["Title"]</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">@ViewData["Title"]</h5>
+                <span class="text-muted">
+                    @(isEdit ? "Modify the curriculum information below." : "Use the form below to add a curriculum item.")
+                </span>
+            </div>
+            <div class="card-body">
+                @await Html.PartialAsync("_Notification")
+
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger">
+                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                        {
+                            <p>@error.ErrorMessage</p>
+                        }
+                    </div>
+                }
+
+                <form asp-action="@(isEdit ? "Edit" : "Create")" asp-controller="Curriculum" asp-area="NUAD" method="post">
+                    @Html.AntiForgeryToken()
+
+                    @if (isEdit)
+                    {
+                        <input type="hidden" asp-for="Id" />
+                    }
+
+                    <div class="form-group">
+                        <label asp-for="Title" class="font-weight-bold"></label>
+                        <input asp-for="Title" class="form-control" />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Content" class="font-weight-bold"></label>
+                        <textarea asp-for="Content" class="form-control" rows="6"></textarea>
+                        <span asp-validation-for="Content" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="AgeGroup" class="font-weight-bold"></label>
+                        <input asp-for="AgeGroup" class="form-control" />
+                        <span asp-validation-for="AgeGroup" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input asp-for="IsSpecialProgram" class="form-check-input" />
+                        <label asp-for="IsSpecialProgram" class="form-check-label"></label>
+                    </div>
+
+                    <div class="form-group text-right">
+                        <a asp-action="Manage" asp-controller="Curriculum" asp-area="NUAD" class="btn btn-outline-secondary mr-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            @(isEdit ? "Update Curriculum Item" : "Add Curriculum Item")
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,7 +1,9 @@
-﻿@model MyNursery.Areas.NUAD.Models.User
+﻿@using MyNursery.Models
+@model User
 
 @{
-    ViewData["Title"] = "Create User";
+    var isEdit = Model?.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit User" : "Create User";
 }
 
 @if (!ViewData.ModelState.IsValid)
@@ -14,13 +16,12 @@
     </div>
 }
 
-<!-- [ breadcrumb ] start -->
 <div class="page-header">
     <div class="page-block">
         <div class="row align-items-center">
             <div class="col-md-12">
                 <div class="page-header-title">
-                    <h5 class="m-b-10">Create User</h5>
+                    <h5 class="m-b-10">@ViewData["Title"]</h5>
                 </div>
                 <ul class="breadcrumb">
                     <li class="breadcrumb-item">
@@ -29,72 +30,89 @@
                         </a>
                     </li>
                     <li class="breadcrumb-item"><a href="#">Users</a></li>
-                    <li class="breadcrumb-item"><a href="#">Create User</a></li>
+                    <li class="breadcrumb-item active">@ViewData["Title"]</li>
                 </ul>
             </div>
         </div>
     </div>
 </div>
-<!-- [ breadcrumb ] end -->
-<!-- [ Main Content ] start -->
+
 <div class="row">
-    <div class="col-xl-10 mx-auto">
+    <div class="col-xl-8 mx-auto">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">Add New User</h5>
-                <span class="text-muted">Use this form to add a new staff member to the system.</span>
+                <h5 class="mb-0">@ViewData["Title"]</h5>
+                <span class="text-muted">
+                    @(
+                                        isEdit ? "Modify the user information below." : "Fill in the form below to add a new user."
+                                        )
+                </span>
             </div>
             <div class="card-body">
                 @await Html.PartialAsync("_Notification")
 
-                <form asp-action="CreateUser" asp-controller="Users" asp-area="NUAD" method="post">
+                <form asp-action="Upsert" asp-controller="Users" asp-area="NUAD" method="post">
+                    @Html.AntiForgeryToken()
+                    @if (isEdit)
+                    {
+                        <input type="hidden" asp-for="Id" />
+                    }
+
                     <div class="form-group">
-                        <label asp-for="FirstName" class="font-weight-bold">First Name</label>
+                        <label asp-for="FirstName" class="font-weight-bold"></label>
                         <input asp-for="FirstName" class="form-control" />
                         <span asp-validation-for="FirstName" class="text-danger"></span>
                     </div>
 
                     <div class="form-group">
-                        <label asp-for="LastName" class="font-weight-bold">Last Name</label>
+                        <label asp-for="LastName" class="font-weight-bold"></label>
                         <input asp-for="LastName" class="form-control" />
                         <span asp-validation-for="LastName" class="text-danger"></span>
                     </div>
 
                     <div class="form-group">
-                        <label asp-for="EmailAddress" class="font-weight-bold">Email Address</label>
+                        <label asp-for="EmailAddress" class="font-weight-bold"></label>
                         <input asp-for="EmailAddress" class="form-control" type="email" />
                         <span asp-validation-for="EmailAddress" class="text-danger"></span>
                     </div>
 
                     <div class="form-group">
-                        <label asp-for="Role" class="font-weight-bold">Role</label>
+                        <label asp-for="Role" class="font-weight-bold"></label>
                         <select asp-for="Role" class="form-control">
                             <option value="">-- Select Role --</option>
-                            <option>Teacher</option>
-                            <option>Assistant Teacher</option>
-                            <option>Principal</option>
-                            <option>Head Teacher</option>
-                            <option>Other Staff</option>
+                            @foreach (var role in ViewBag.Roles as List<string>)
+                            {
+                                <option value="@role" selected="@(Model.Role == role)">
+                                    @role
+                                </option>
+                            }
                         </select>
                         <span asp-validation-for="Role" class="text-danger"></span>
                     </div>
 
                     <div class="form-group">
-                        <label asp-for="ContactNumber" class="font-weight-bold">Contact Number</label>
+                        <label asp-for="ContactNumber" class="font-weight-bold"></label>
                         <input asp-for="ContactNumber" class="form-control" type="tel" />
                         <span asp-validation-for="ContactNumber" class="text-danger"></span>
                     </div>
 
-                    <div class="form-group text-right mt-4">
-                        <button type="reset" class="btn btn-outline-secondary mr-2">Reset</button>
-                        <button type="submit" class="btn btn-primary">Add User</button>
+                    <div class="form-check mb-3">
+                        <input asp-for="IsActive" class="form-check-input" />
+                        <label asp-for="IsActive" class="form-check-label"></label>
+                    </div>
+
+                    <div class="form-group text-right">
+                        <a asp-action="ManageUsers" class="btn btn-outline-secondary mr-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            @(isEdit ? "Update User" : "Add User")
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
-<!-- [ Main Content ] end -->
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }

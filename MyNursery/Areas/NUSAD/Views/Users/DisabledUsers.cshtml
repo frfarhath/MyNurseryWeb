@@ -1,0 +1,168 @@
+﻿@model List<MyNursery.Areas.NUSAD.Models.UserDisplayViewModel>
+
+@{
+    ViewData["Title"] = "Disabled Users";
+}
+
+<!-- [ breadcrumb ] start -->
+<div class="page-header">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="page-header-title">
+                    <h5 class="m-b-10">Disabled Users</h5>
+                </div>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a asp-area="NUSAD" asp-controller="Home" asp-action="Dashboard"><i class="feather icon-home"></i></a>
+                    </li>
+                    <li class="breadcrumb-item"><a href="#">Users</a></li>
+                    <li class="breadcrumb-item"><a href="#">Disabled Users</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- [ breadcrumb ] end -->
+<!-- [ Main Content ] start -->
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">All Disabled Users</h5>
+                <span class="text-muted">Search, filter, and enable users.</span>
+            </div>
+            <div class="card-body">
+
+                <div class="row mb-3">
+                    <div class="col-md-4 mb-2">
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search by name, email..." onkeyup="filterTable()" />
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <select id="roleFilter" class="form-control" onchange="filterTable()">
+                            <option value="">-- Filter by Role --</option>
+                            @{
+                                var roles = Model.Select(u => u.Role).Distinct().OrderBy(r => r);
+                                foreach (var role in roles)
+                                {
+                                    <option>@role</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <select id="userTypeFilter" class="form-control" onchange="filterTable()">
+                            <option value="">-- Filter by User Type --</option>
+                            @{
+                                var userTypes = Model.Select(u => u.UserType).Distinct().OrderBy(t => t);
+                                foreach (var type in userTypes)
+                                {
+                                    <option>@type</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <table class="table table-hover" id="usersTable">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Date Created</th>
+                            <th>Last Login</th>
+                            <th>User Type</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model)
+                        {
+                            <tr>
+                                <td>@($"{user.FirstName} {user.LastName}")</td>
+                                <td>@user.Email</td>
+                                <td>@user.Role</td>
+                                <td>@user.DateCreated.ToString("yyyy-MM-dd")</td>
+                                <td>@(user.LastLoginDate?.ToString("yyyy-MM-dd") ?? "-")</td>
+                                <td>@user.UserType</td>
+                                <td>
+                                    <button class="btn btn-success btn-sm enable-user-btn" data-userid="@user.Id">
+                                        <i class="feather icon-user-check"></i> Enable
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                @if (!Model?.Any() ?? true)
+                {
+                    <div class="alert alert-info mt-4">
+                        No disabled users found.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+<!-- [ Main Content ] end -->
+@Html.AntiForgeryToken() <!-- hidden input for token -->
+@section Scripts {
+    <script>
+        function filterTable() {
+            const input = document.getElementById("searchInput").value.toLowerCase();
+            const roleFilter = document.getElementById("roleFilter").value.toLowerCase();
+            const userTypeFilter = document.getElementById("userTypeFilter").value.toLowerCase();
+
+            const table = document.getElementById("usersTable");
+            const trs = table.tBodies[0].getElementsByTagName("tr");
+
+            for (let i = 0; i < trs.length; i++) {
+                let tds = trs[i].getElementsByTagName("td");
+
+                let name = tds[0].textContent.toLowerCase();
+                let email = tds[1].textContent.toLowerCase();
+                let role = tds[2].textContent.toLowerCase();
+                let userType = tds[5].textContent.toLowerCase(); // userType index adjusted
+
+                const matchesSearch = name.includes(input) || email.includes(input);
+                const matchesRole = roleFilter === "" || role === roleFilter;
+                const matchesUserType = userTypeFilter === "" || userType === userTypeFilter;
+
+                trs[i].style.display = (matchesSearch && matchesRole && matchesUserType) ? "" : "none";
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            document.querySelectorAll(".enable-user-btn").forEach(button => {
+                button.addEventListener("click", () => {
+                    const userId = button.getAttribute("data-userid");
+
+                    if (!confirm("Are you sure you want to enable this user?")) return;
+
+                    fetch(`@Url.Action("EnableUser", "Users", new { area = "NUSAD" })/${userId}`, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': token,
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message);
+                            location.reload();
+                        } else {
+                            alert(data.message || "Failed to enable user.");
+                        }
+                    })
+                    .catch(() => alert("An error occurred while enabling the user."));
+                });
+            });
+        });
+    </script>
+}
