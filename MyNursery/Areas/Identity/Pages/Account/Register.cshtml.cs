@@ -1,14 +1,15 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿// REGISTER MODEL
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using MyNursery.Areas.Welcome.Models;
-using Microsoft.AspNetCore.Identity.UI.Services;
-using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Authentication;
 using MyNursery.Utility;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -82,9 +83,7 @@ namespace MyNursery.Areas.Identity.Pages.Account
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
             if (!ModelState.IsValid)
-            {
                 return Page();
-            }
 
             var user = new ApplicationUser
             {
@@ -94,7 +93,7 @@ namespace MyNursery.Areas.Identity.Pages.Account
                 Email = Input.Email,
                 NUUSDashboardId = Guid.NewGuid().ToString(),
                 DateCreated = DateTime.UtcNow,
-                UserType = SD.UserType_Registered // Default user type for registered users
+                UserType = SD.UserType_Registered
             };
 
             var result = await _userManager.CreateAsync(user, Input.Password);
@@ -102,55 +101,37 @@ namespace MyNursery.Areas.Identity.Pages.Account
             {
                 _logger.LogInformation("User created a new account with password.");
 
-                // Role assignment logic
                 if (user.Email.Equals("frfarhath21@gmail.com", StringComparison.OrdinalIgnoreCase))
                 {
-                    await _userManager.AddToRoleAsync(user, SD.Role_Admin); // Optional if you want this admin account
+                    await _userManager.AddToRoleAsync(user, SD.Role_Admin);
                     user.UserType = SD.UserType_AdminAdded;
-                    user.Area = "NUUS"; // ✅ Admin-added user → NUUS
+                    user.Area = "NUUS";
                 }
                 else
                 {
-                    await _userManager.AddToRoleAsync(user, SD.Role_User); // Role_User = NuOUS
+                    await _userManager.AddToRoleAsync(user, SD.Role_User);
                     user.UserType = SD.UserType_Registered;
-                    user.Area = "NUOUS"; // ✅ Registered user → NUOUS
+                    user.Area = "NUOUS";
                 }
-
 
                 await _userManager.UpdateAsync(user);
 
-                // Generate OTP for email verification
                 var otp = new Random().Next(100000, 999999).ToString();
                 user.EmailOTP = otp;
                 user.EmailOTPExpiry = DateTime.UtcNow.AddMinutes(5);
                 await _userManager.UpdateAsync(user);
 
-                // Send OTP email
                 await _emailSender.SendEmailAsync(
                     Input.Email,
                     "Your OTP Code for Little Sprouts Nursery",
-                    $@"<html>
-  <body style='font-family: Arial, sans-serif; color: #333;'>
-    <h2>Welcome to Little Sprouts Nursery!</h2>
-    <p>Thank you for registering. To verify your email, use the OTP below:</p>
-    <p style='font-size: 24px; font-weight: bold; color: #007bff;'>{otp}</p>
-    <p>This OTP is valid for <strong>5 minutes</strong>. Please do not share it with anyone.</p>
-    <hr />
-    <p style='font-size: 12px; color: #999;'>If you didn’t request this, you can safely ignore this email.</p>
-    <p style='font-size: 12px;'>— Little Sprouts Nursery Team</p>
-  </body>
-</html>");
+                    $"<html><body><h2>Welcome to Little Sprouts Nursery!</h2><p>Use this OTP to verify your email:</p><h3 style='color:#007bff;'>{otp}</h3><p>Valid for 5 minutes.</p><hr /><small>Ignore if not requested.</small></body></html>");
 
                 return RedirectToPage("VerifyOTP", new { userId = user.Id });
             }
 
-
             foreach (var error in result.Errors)
-            {
                 ModelState.AddModelError(string.Empty, error.Description);
-            }
 
-            // Something failed, redisplay form
             return Page();
         }
     }
