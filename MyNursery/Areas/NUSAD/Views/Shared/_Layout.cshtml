@@ -1,4 +1,19 @@
 ﻿@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@using Microsoft.AspNetCore.Identity
+@using System.Security.Claims
+@using MyNursery.Areas.Welcome.Models;
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+
+@{
+    string firstName = "Guest";
+
+    if (SignInManager.IsSignedIn(User))
+    {
+        var user = await UserManager.GetUserAsync(User);
+        firstName = user?.FirstName ?? "User";
+    }
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -115,59 +130,25 @@
             </ul>
 
             <ul class="navbar-nav ml-auto">
-                <li>
-                    <!-- Notifications -->
-                    <div class="dropdown">
-                        <a class="dropdown-toggle" href="#" data-toggle="dropdown">
-                            <i class="icon feather icon-bell"></i>
-                            <span class="badge badge-pill badge-danger">5</span>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right notification">
-                            <ul class="noti-body">
-                                <li class="n-title"><p class="m-b-0">NEW</p></li>
-                                <li class="notification">
-                                    <div class="media">
-                                        <img class="img-radius" src="assets/images/user/avatar-1.jpg" alt="Generic placeholder image">
-                                        <div class="media-body">
-                                            <p><strong>John Doe</strong><span class="n-time text-muted"><i class="icon feather icon-clock m-r-10"></i>5 min</span></p>
-                                            <p>New ticket Added</p>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li class="n-title"><p class="m-b-0">EARLIER</p></li>
-                                <li class="notification">
-                                    <div class="media">
-                                        <img class="img-radius" src="assets/images/user/avatar-2.jpg" alt="Generic placeholder image">
-                                        <div class="media-body">
-                                            <p><strong>Joseph William</strong><span class="n-time text-muted"><i class="icon feather icon-clock m-r-10"></i>10 min</span></p>
-                                            <p>Purchased New Theme and made payment</p>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                            <div class="noti-footer"><a href="#!">Show All</a></div>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="feather icon-user"></i> @firstName
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right profile-notification" aria-labelledby="profileDropdown">
+                        <div class="pro-head px-3 py-2 d-flex align-items-center">
+                            <img src="/assets/images/user/avatar-1.jpg" class="img-radius mr-2" alt="User-Profile-Image" style="width:40px; height:40px;" />
+                            <span>@firstName</span>
+                            <form id="logoutForm" method="post" asp-area="Identity" asp-page="/Account/Logout" class="px-3">
+                                <button type="submit" class="btn btn-link dropdown-item p-0 m-0" style="color:inherit; text-align:left;">
+                                    <i class="feather icon-power"></i>
+                                </button>
+                            </form>
                         </div>
-                    </div>
-                </li>
-
-                <li>
-                    <!-- User profile -->
-                    <div class="dropdown drp-user">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                            <i class="feather icon-user"></i>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" asp-area="NUSAD" asp-controller="Account" asp-action="Profile">
+                            <i class="feather icon-user"></i> Profile
                         </a>
-                        <div class="dropdown-menu dropdown-menu-right profile-notification">
-                            <div class="pro-head">
-                                <img src="assets/images/user/avatar-1.jpg" class="img-radius" alt="User-Profile-Image">
-                                <span>John Doe</span>
-                                <a href="auth-signin.html" class="dud-logout" title="Logout"><i class="feather icon-power"></i></a>
-                            </div>
-                            <ul class="pro-body">
-                                <li><a href="user-profile.html" class="dropdown-item"><i class="feather icon-user"></i> Profile</a></li>
-                                <li><a href="email_inbox.html" class="dropdown-item"><i class="feather icon-mail"></i> My Messages</a></li>
-                                <li><a href="auth-signin.html" class="dropdown-item"><i class="feather icon-lock"></i> Lock Screen</a></li>
-                            </ul>
-                        </div>
+                       
                     </div>
                 </li>
             </ul>
@@ -184,12 +165,19 @@
 
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
 
     <script src="~/assets/js/vendor-all.min.js"></script>
     <script src="~/assets/js/plugins/bootstrap.min.js"></script>
     <script src="~/assets/js/pcoded.min.js"></script>
     <script src="~/assets/js/menu-setting.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('.dropdown-toggle').dropdown();
+        });
+    </script>
 
     @RenderSection("Scripts", required: false)
 
