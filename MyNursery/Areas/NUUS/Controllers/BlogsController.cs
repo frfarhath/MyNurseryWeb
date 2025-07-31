@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using MyNursery.Areas.NUSAD.Models;
 using MyNursery.Areas.Welcome.Models;
 using MyNursery.Data;
@@ -23,12 +24,14 @@ namespace MyNursery.Areas.NUUS.Controllers
         private readonly ApplicationDbContext _db;
         private readonly IWebHostEnvironment _env;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IMemoryCache _cache;
 
-        public BlogsController(ApplicationDbContext db, IWebHostEnvironment env, UserManager<ApplicationUser> userManager)
+        public BlogsController(ApplicationDbContext db, IWebHostEnvironment env, UserManager<ApplicationUser> userManager, IMemoryCache cache)
         {
             _db = db;
             _env = env;
             _userManager = userManager;
+            _cache = cache;
         }
 
         // List blogs of the logged-in user
@@ -273,7 +276,6 @@ namespace MyNursery.Areas.NUUS.Controllers
             return Json(new { success = true, message = "Blog deleted successfully." });
         }
 
-        // Helper: Save file to wwwroot/uploads and return relative path
         private async Task<string> SaveFileAsync(IFormFile file)
         {
             var uniqueFileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
@@ -289,10 +291,12 @@ namespace MyNursery.Areas.NUUS.Controllers
             return "/uploads/" + uniqueFileName;
         }
 
-        // Helper: Add image record to DB
         private async Task AddImage(int blogPostId, IFormFile file, string type)
         {
             var path = await SaveFileAsync(file);
+
+            _cache.Set($"BlogImage_{blogPostId}_{type}", path, TimeSpan.FromMinutes(10));
+
             _db.BlogImages.Add(new BlogImage
             {
                 BlogPostId = blogPostId,
@@ -301,11 +305,12 @@ namespace MyNursery.Areas.NUUS.Controllers
             });
         }
 
-        // Helper: Replace existing image or add if missing
         private async Task ReplaceImageAsync(BlogPost blog, string imageType, IFormFile newFile)
         {
             var existingImage = blog.BlogImages?.FirstOrDefault(i => i.Type == imageType);
             var newPath = await SaveFileAsync(newFile);
+
+            _cache.Set($"BlogImage_{blog.Id}_{imageType}", newPath, TimeSpan.FromMinutes(10));
 
             if (existingImage != null)
             {
@@ -324,7 +329,6 @@ namespace MyNursery.Areas.NUUS.Controllers
             }
         }
 
-        // Helper: Delete file from disk given relative path
         private void DeleteFile(string? relativePath)
         {
             if (string.IsNullOrWhiteSpace(relativePath)) return;

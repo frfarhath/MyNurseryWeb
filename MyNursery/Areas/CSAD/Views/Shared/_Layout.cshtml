@@ -121,6 +121,21 @@
         });
     </script>
 
+    <script>
+        setInterval(() => {
+            fetch(window.location.origin + '/CSAD/Home/Index', { method: 'HEAD', credentials: 'include' })
+                .then(response => {
+                    if (response.status === 401 || response.redirected) {
+                        console.log('Session expired or unauthorized. Redirecting to login.');
+                        window.location.href = '/Identity/Account/Login';
+                    }
+                })
+                .catch(err => {
+                    console.error('Session check failed:', err);
+                });
+        }, 30000);
+    </script>
+
 
     @RenderSection("Scripts", required: false)
 </body>

@@ -9,7 +9,7 @@ namespace MyNursery.Areas.Welcome.Controllers
     {
         public IActionResult Index()
         {
-            return View(); // If you want to pass a model, you can use: return View(new ContactMessage());
+            return View(); 
         }
 
         public IActionResult Privacy()

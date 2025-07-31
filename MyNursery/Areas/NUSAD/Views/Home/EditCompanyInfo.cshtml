@@ -1,0 +1,121 @@
+﻿@model MyNursery.Models.CompanyInfo
+
+@{
+    ViewData["Title"] = "Edit Company Info";
+    string pageHeader = "Edit Company Details";
+    string pageSubHeader = "Update your nursery’s contact and social media details.";
+}
+
+<!-- [ breadcrumb ] start -->
+<div class="page-header">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="page-header-title">
+                    <h5 class="m-b-10">@ViewData["Title"]</h5>
+                </div>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a asp-area="NUSAD" asp-controller="Home" asp-action="Index">
+                            <i class="feather icon-home"></i>
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item"><a href="#">Settings</a></li>
+                    <li class="breadcrumb-item active">@ViewData["Title"]</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- [ breadcrumb ] end -->
+<!-- [ Main Content ] start -->
+<div class="row">
+    <div class="col-xl-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">@pageHeader</h5>
+                <span class="text-muted">@pageSubHeader</span>
+            </div>
+
+            <div class="card-body">
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger">
+                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                        {
+                            <p>@error.ErrorMessage</p>
+                        }
+                    </div>
+                }
+
+              
+                <form asp-action="EditCompanyInfo" method="post" novalidate>
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label asp-for="CompanyName" class="form-label"></label>
+                        <input asp-for="CompanyName" class="form-control" />
+                        <span asp-validation-for="CompanyName" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="PhoneNumber" class="form-label"></label>
+                        <input asp-for="PhoneNumber" class="form-control" />
+                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" class="form-control" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="InstagramUrl" class="form-label"></label>
+                        <input asp-for="InstagramUrl" class="form-control" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Address" class="form-label"></label>
+                        <textarea asp-for="Address" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="Address" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="FacebookUrl" class="form-label"></label>
+                        <input asp-for="FacebookUrl" class="form-control" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="TwitterUrl" class="form-label"></label>
+                        <input asp-for="TwitterUrl" class="form-control" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="LinkedInUrl" class="form-label"></label>
+                        <input asp-for="LinkedInUrl" class="form-control" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="YouTubeUrl" class="form-label"></label>
+                        <input asp-for="YouTubeUrl" class="form-control" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="FooterDescription" class="form-label"></label>
+                        <textarea asp-for="FooterDescription" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <div class="form-group text-end">
+                        <button type="reset" class="btn btn-outline-secondary me-2">Reset</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- [ Main Content ] end -->
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

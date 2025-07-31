@@ -38,11 +38,16 @@ builder.Services.AddRazorPages()
 // ✅ Add session state dependencies
 builder.Services.AddDistributedMemoryCache();
 
+builder.Services.AddMemoryCache();
+
+
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(20); // Set desired session timeout
+    options.IdleTimeout = TimeSpan.FromMinutes(15);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
+
+
 });
 
 // Configure EF Core with SQL Server using connection string from appsettings.json
@@ -83,8 +88,9 @@ builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Identity/Account/Login";
     options.AccessDeniedPath = "/Identity/Account/AccessDenied";
-    options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
-    options.SlidingExpiration = true;
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(15);
+    options.SlidingExpiration = false; // ❗Important: Do not extend on activity
+
     options.Cookie.IsEssential = true;
     options.Cookie.HttpOnly = true;
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
@@ -96,6 +102,8 @@ builder.Services.ConfigureApplicationCookie(options =>
         {
             var principal = context.Principal;
             var roleClaim = principal?.FindFirst(ClaimTypes.Role)?.Value;
+
+            context.Properties.IsPersistent = false; 
 
             if (roleClaim == SD.Role_Admin)
                 context.Properties.RedirectUri = "/NUAD";
@@ -118,6 +126,10 @@ builder.Services.ConfigureApplicationCookie(options =>
 // Configure EmailSettings from appsettings.json and register EmailSender service
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddTransient<IEmailSender, EmailSender>();
+
+// ✅ Add support for user context service using HttpContext and Session
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IUserContextService, UserContextService>();
 
 var app = builder.Build();
 
