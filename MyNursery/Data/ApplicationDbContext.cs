@@ -39,6 +39,10 @@ namespace MyNursery.Data
         public DbSet<FAQ> FAQs { get; set; }
         public DbSet<Vacancy> Vacancies { get; set; }
 
+        //Company Info
+        public DbSet<CompanyInfo> CompanyInfo { get; set; }
+
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
