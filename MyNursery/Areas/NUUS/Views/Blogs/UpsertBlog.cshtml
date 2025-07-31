@@ -11,7 +11,6 @@
         ? "Modify the existing blog entry and save your changes."
         : "Use this form to create a new blog entry.";
 
-    // Helper to get image by type (for edit)
     string GetImagePath(string type) =>
         Model.BlogImages?.FirstOrDefault(img => img.Type == type)?.ImagePath ?? string.Empty;
 }
@@ -116,7 +115,7 @@
 
                     <div class="mb-3">
                         <label asp-for="Content" class="form-label"></label>
-                        <textarea asp-for="Content" class="form-control" rows="6" placeholder="Write your blog content here..."></textarea>
+                        <textarea asp-for="Content" class="form-control" id="classic-editor" rows="10" placeholder="Write your blog content here..."></textarea>
                         <span asp-validation-for="Content" class="text-danger"></span>
                     </div>
 
@@ -138,7 +137,19 @@
 <!-- [ Main Content ] end -->
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <!-- CKEditor Script -->
+    <script src="~/assets/js/plugins/ckeditor.js"></script>
+
     <script>
+        // Initialize CKEditor
+        ClassicEditor
+            .create(document.querySelector('#classic-editor'))
+            .catch(error => {
+                console.error(error);
+            });
+
+        // Image file size validation
         const maxSize = 1 * 1024 * 1024; // 1MB
         function validateImageSize(input) {
             if (input.files.length === 0) return;
