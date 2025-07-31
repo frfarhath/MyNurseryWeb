@@ -10,7 +10,7 @@ namespace MyNursery.Areas.NUOUS.Controllers
     {
         public IActionResult Index()
         {
-            // Pass any model if needed, or just return the view
+          
             return View();
         }
     }

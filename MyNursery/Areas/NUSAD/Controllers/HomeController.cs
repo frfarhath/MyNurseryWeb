@@ -10,7 +10,6 @@ namespace MyNursery.Areas.NUSAD.Controllers
     {
         public IActionResult Index()
         {
-            // Pass any model if needed, or just return the view
             return View();
         }
     }

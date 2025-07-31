@@ -1,19 +1,14 @@
-﻿// LOGIN MODEL
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using MyNursery.Areas.Welcome.Models;
+using MyNursery.Services;
 using MyNursery.Utility;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace MyNursery.Areas.Identity.Pages.Account
 {
@@ -23,22 +18,24 @@ namespace MyNursery.Areas.Identity.Pages.Account
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<LoginModel> _logger;
+        private readonly IUserContextService _userContext;
 
         public LoginModel(
             SignInManager<ApplicationUser> signInManager,
             UserManager<ApplicationUser> userManager,
-            ILogger<LoginModel> logger)
+            ILogger<LoginModel> logger,
+            IUserContextService userContext)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _logger = logger;
+            _userContext = userContext;
         }
 
         [BindProperty]
         public InputModel Input { get; set; } = new();
 
         public IList<AuthenticationScheme> ExternalLogins { get; set; } = new List<AuthenticationScheme>();
-
         public string ReturnUrl { get; set; } = string.Empty;
 
         [TempData]
@@ -80,7 +77,7 @@ namespace MyNursery.Areas.Identity.Pages.Account
 
             if (!ModelState.IsValid)
                 return Page();
-            // Check user exists and is active
+
             var user = await _userManager.FindByEmailAsync(Input.Email);
 
             if (user == null || !user.IsActive)
@@ -89,7 +86,6 @@ namespace MyNursery.Areas.Identity.Pages.Account
                 return Page();
             }
 
-            // ✅ Sign in using Identity's method (it handles cookies & claims automatically)
             var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
 
             if (result.Succeeded)
@@ -98,16 +94,15 @@ namespace MyNursery.Areas.Identity.Pages.Account
                 user.LastLoginDate = DateTime.UtcNow;
                 await _userManager.UpdateAsync(user);
 
-                // ✅ You can store session values here
                 var roles = await _userManager.GetRolesAsync(user);
-                HttpContext.Session.SetString("UserFullName", $"{user.FirstName} {user.LastName}");
-                HttpContext.Session.SetString("UserEmail", user.Email);
-                HttpContext.Session.SetString("UserRole", roles.FirstOrDefault() ?? "Unknown");
-                HttpContext.Session.SetString("Area", user.Area ?? "Welcome");
 
-           
+                // ✅ Use service instead of HttpContext.Session
+                _userContext.FullName = $"{user.FirstName} {user.LastName}";
+                _userContext.Email = user.Email;
+                _userContext.Role = roles.FirstOrDefault() ?? "Unknown";
+                _userContext.Area = user.Area ?? "Welcome";
 
-            if (user.MustChangePassword)
+                if (user.MustChangePassword)
                 {
                     TempData["ForceChangePassword"] = "true";
                     return RedirectToAction("Index", "Home", new { area = "NUUS" });
