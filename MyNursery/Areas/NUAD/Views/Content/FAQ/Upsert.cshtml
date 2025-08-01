@@ -39,6 +39,7 @@
                 </span>
             </div>
             <div class="card-body">
+
                 @if (!ViewData.ModelState.IsValid)
                 {
                     <div class="alert alert-danger">
@@ -49,7 +50,9 @@
                     </div>
                 }
 
-                <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+              
+
+                <form asp-action="@(isEdit ? "Edit" : "Create")" method="post" onsubmit="return checkInternetBeforeSubmit()">
                     @Html.AntiForgeryToken()
                     @if (isEdit)
                     {
@@ -80,8 +83,13 @@
                         <span asp-validation-for="OrderDisplay" class="text-danger"></span>
                     </div>
 
-                    <div class="form-group text-right">
-                        <a asp-action="Manage" class="btn btn-outline-secondary mr-2">Cancel</a>
+                    <!-- Offline message placeholder -->
+                    <div id="offline-message" class="alert alert-danger d-none" role="alert">
+                        You are offline. Please check your internet connection before submitting.
+                    </div>
+
+                    <div class="form-group text-end">
+                        <a asp-action="Manage" class="btn btn-outline-secondary me-2">Cancel</a>
                         <button type="submit" class="btn btn-primary">
                             @(isEdit ? "Update FAQ" : "Add FAQ")
                         </button>
@@ -94,4 +102,6 @@
 <!-- [ Main Content ] end -->
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script src="~/js/site.js"></script>
 }

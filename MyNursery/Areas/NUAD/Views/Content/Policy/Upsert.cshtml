@@ -39,6 +39,7 @@
                 </span>
             </div>
             <div class="card-body">
+
                 @if (!ViewData.ModelState.IsValid)
                 {
                     <div class="alert alert-danger">
@@ -49,7 +50,8 @@
                     </div>
                 }
 
-                <form asp-action="@(isEdit ? "Edit" : "Create")" method="post" enctype="multipart/form-data">
+               
+                <form asp-action="@(isEdit ? "Edit" : "Create")" method="post" enctype="multipart/form-data" onsubmit="return checkInternetBeforeSubmit()">
                     @Html.AntiForgeryToken()
                     @if (isEdit)
                     {
@@ -74,6 +76,8 @@
                         <span asp-validation-for="Category" class="text-danger"></span>
                     </div>
 
+
+
                     <div class="form-group">
                         <label for="fileUpload" class="font-weight-bold">
                             @(isEdit ? "Replace Policy File (optional)" : "Upload Policy File")
@@ -81,8 +85,14 @@
                         <input type="file" name="fileUpload" class="form-control-file" />
                     </div>
 
+
+                    <!-- Offline message placeholder -->
+                    <div id="offline-message" class="alert alert-danger d-none" role="alert">
+                        You are offline. Please check your internet connection before submitting.
+                    </div>
+
                     <div class="form-group text-right">
-                        <a asp-action="Manage" class="btn btn-outline-secondary mr-2">Cancel</a>
+                        <a asp-action="Manage" class="btn btn-outline-secondary me-2">Cancel</a>
                         <button type="submit" class="btn btn-primary">
                             @(isEdit ? "Update Policy" : "Add New Policy")
                         </button>
@@ -95,4 +105,8 @@
 <!-- [ Main Content ] end -->
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script src="~/js/site.js"></script>
+
+   
 }

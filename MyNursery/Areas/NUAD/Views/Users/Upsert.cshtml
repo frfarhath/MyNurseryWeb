@@ -43,15 +43,14 @@
             <div class="card-header">
                 <h5 class="mb-0">@ViewData["Title"]</h5>
                 <span class="text-muted">
-                    @(
-                                        isEdit ? "Modify the user information below." : "Fill in the form below to add a new user."
-                                        )
+                    @(isEdit ? "Modify the user information below." : "Fill in the form below to add a new user.")
                 </span>
             </div>
             <div class="card-body">
                 @await Html.PartialAsync("_Notification")
 
-                <form asp-action="Upsert" asp-controller="Users" asp-area="NUAD" method="post">
+
+                <form asp-action="Upsert" asp-controller="Users" asp-area="NUAD" method="post" onsubmit="return checkInternetBeforeSubmit()">
                     @Html.AntiForgeryToken()
                     @if (isEdit)
                     {
@@ -101,8 +100,14 @@
                         <label asp-for="IsActive" class="form-check-label"></label>
                     </div>
 
+
+                    <!-- Offline message placeholder -->
+                    <div id="offline-message" class="alert alert-danger d-none" role="alert">
+                        You are offline. Please check your internet connection before submitting.
+                    </div>
+
                     <div class="form-group text-right">
-                        <a asp-action="ManageUsers" class="btn btn-outline-secondary mr-2">Cancel</a>
+                        <a asp-action="ManageUsers" class="btn btn-outline-secondary me-2">Cancel</a>
                         <button type="submit" class="btn btn-primary">
                             @(isEdit ? "Update User" : "Add User")
                         </button>
@@ -115,4 +120,6 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script src="~/js/site.js"></script>
 }
