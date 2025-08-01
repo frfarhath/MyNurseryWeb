@@ -15,29 +15,6 @@
         Model.BlogImages?.FirstOrDefault(img => img.Type == type)?.ImagePath ?? string.Empty;
 }
 
-<!-- [ breadcrumb ] start -->
-<div class="page-header">
-    <div class="page-block">
-        <div class="row align-items-center">
-            <div class="col-md-12">
-                <div class="page-header-title">
-                    <h5 class="m-b-10">@ViewData["Title"]</h5>
-                </div>
-                <ul class="breadcrumb">
-                    <li class="breadcrumb-item">
-                        <a asp-area="NUUS" asp-controller="Home" asp-action="Dashboard">
-                            <i class="feather icon-home"></i>
-                        </a>
-                    </li>
-                    <li class="breadcrumb-item"><a href="#">Blogs</a></li>
-                    <li class="breadcrumb-item"><a href="#">@ViewData["Title"]</a></li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- [ breadcrumb ] end -->
-<!-- [ Main Content ] start -->
 <div class="row">
     <div class="col-xl-8 mx-auto">
         <div class="card">
@@ -46,7 +23,6 @@
                 <span class="text-muted">@pageSubHeader</span>
             </div>
             <div class="card-body">
-
                 <form asp-action="@formAction" asp-controller="Blogs" asp-area="NUUS"
                       method="post" enctype="multipart/form-data" novalidate
                       onsubmit="return checkInternetBeforeSubmit()">
@@ -56,14 +32,12 @@
                         <input type="hidden" asp-for="Id" />
                     }
 
-                    <!-- Title -->
                     <div class="mb-3">
                         <label asp-for="Title" class="form-label"></label>
                         <input asp-for="Title" class="form-control" />
                         <span asp-validation-for="Title" class="text-danger"></span>
                     </div>
 
-                    <!-- Category -->
                     <div class="mb-3">
                         <label asp-for="CategoryId" class="form-label"></label>
                         <select asp-for="CategoryId" class="form-select" asp-items="@(new SelectList(ViewBag.Categories, "Id", "Name"))">
@@ -75,67 +49,55 @@
                     <!-- Cover Image -->
                     <div class="mb-3">
                         <label class="form-label">Cover Image</label>
-                        @if (isEdit && !string.IsNullOrEmpty(GetImagePath("Cover")))
-                        {
-                            <div class="mb-2">
-                                <img src="@GetImagePath("Cover")" alt="Cover Image" class="img-fluid rounded" style="max-height:150px;" />
-                            </div>
-                        }
-                        <input type="file" name="CoverImage" class="form-control" accept="image/*" onchange="validateImageSize(this)" />
+                        <div id="coverImagePreview" class="mb-2">
+                            @if (isEdit && !string.IsNullOrEmpty(GetImagePath("Cover")))
+                            {
+                                <img src="@GetImagePath("Cover")" class="img-fluid rounded" style="max-height:150px;" />
+                            }
+                        </div>
+                        <input type="file" name="CoverImage" id="coverImageInput" class="form-control" accept="image/*" />
                     </div>
 
-                    <!-- Optional Image 1 -->
-                    <div class="mb-3">
-                        <label class="form-label">Optional Image 1</label>
-                        @if (isEdit && !string.IsNullOrEmpty(GetImagePath("Optional1")))
-                        {
-                            <div class="mb-2">
-                                <img src="@GetImagePath("Optional1")" alt="Optional Image 1" class="img-fluid rounded" style="max-height:150px;" />
-                            </div>
-                        }
-                        <input type="file" name="OptionalImage1" class="form-control" accept="image/*" onchange="validateImageSize(this)" />
-                    </div>
+                    <!-- Optional Images -->
+                    <div class="mb-1">
+                        <label class="form-label">Optional Images (up to 5)</label>
 
-                    <!-- Optional Image 2 -->
-                    <div class="mb-3">
-                        <label class="form-label">Optional Image 2</label>
-                        @if (isEdit && !string.IsNullOrEmpty(GetImagePath("Optional2")))
-                        {
-                            <div class="mb-2">
-                                <img src="@GetImagePath("Optional2")" alt="Optional Image 2" class="img-fluid rounded" style="max-height:150px;" />
-                            </div>
-                        }
-                        <input type="file" name="OptionalImage2" class="form-control" accept="image/*" onchange="validateImageSize(this)" />
+                        <div id="existingOptionalImages" class="mb-3 d-flex flex-wrap gap-3">
+                            @foreach (var image in Model.BlogImages?.Where(i => i.Type.StartsWith("Optional")) ?? Enumerable.Empty<MyNursery.Models.BlogImage>())
+                            {
+                                <div class="position-relative border rounded p-1" style="max-width: 150px;">
+                                    <img src="@image.ImagePath" class="img-fluid rounded" style="max-height:150px;" />
+                                    <input type="hidden" name="ExistingOptionalImageIds" value="@image.Id" />
+                                    <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0" onclick="removeExistingImage(this)">×</button>
+                                </div>
+                            }
+                        </div>
+
+                        <div id="optionalImageInputs" class="mb-2"></div>
+                        <div id="previewContainer" class="d-flex flex-wrap gap-3 mb-2"></div>
+
+                        <button type="button" id="addOptionalImageBtn" class="btn btn-primary" style="background-color: color:white;">
+                            + Add Optional Image
+                        </button>
+
                     </div>
 
                     <!-- Content -->
                     <div class="mb-3">
                         <label asp-for="Content" class="form-label"></label>
-                        <textarea asp-for="Content" class="form-control" id="classic-editor" rows="10" placeholder="Write your blog content here..."></textarea>
+                        <textarea asp-for="Content" class="form-control" id="classic-editor" rows="10"></textarea>
                         <span asp-validation-for="Content" class="text-danger"></span>
                     </div>
 
-                    <!-- Publish Date -->
                     <div class="mb-3">
                         <label asp-for="PublishDate" class="form-label"></label>
                         <input asp-for="PublishDate" type="date" class="form-control" />
                         <span asp-validation-for="PublishDate" class="text-danger"></span>
                     </div>
 
-                    @if (!ViewData.ModelState.IsValid)
-                    {
-                        <div class="alert alert-danger">
-                            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
-                            {
-                                <p>@error.ErrorMessage</p>
-                            }
-                        </div>
-                    }
-
                     @await Html.PartialAsync("_Notification")
 
-                    <!-- Offline validation message placeholder -->
-                    <div id="offline-message" class="alert alert-danger d-none" role="alert" style="margin-bottom: 1rem;">
+                    <div id="offline-message" class="alert alert-danger d-none" role="alert">
                         You are offline. Please check your internet connection before submitting.
                     </div>
 
@@ -144,41 +106,111 @@
                         <button type="submit" class="btn btn-primary">@formButtonText</button>
                     </div>
                 </form>
-
             </div>
         </div>
     </div>
 </div>
-<!-- [ Main Content ] end -->
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 
-    <!-- CKEditor Script -->
     <script src="~/assets/js/plugins/ckeditor.js"></script>
-
     <script>
-        // Initialize CKEditor
         ClassicEditor
             .create(document.querySelector('#classic-editor'))
-            .catch(error => {
-                console.error(error);
+            .catch(error => console.error(error));
+
+        // Cover Image Preview
+        const coverInput = document.getElementById('coverImageInput');
+        const coverPreview = document.getElementById('coverImagePreview');
+
+        coverInput.addEventListener('change', function () {
+            if (coverInput.files && coverInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    coverPreview.innerHTML = ''; // clear existing
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.classList.add('img-fluid', 'rounded');
+                    img.style.maxHeight = '150px';
+                    coverPreview.appendChild(img);
+                };
+                reader.readAsDataURL(coverInput.files[0]);
+            }
+        });
+
+        // Optional Images logic
+        const maxOptional = 5;
+
+        const inputContainer = document.getElementById('optionalImageInputs');
+        const previewContainer = document.getElementById('previewContainer');
+        const addBtn = document.getElementById('addOptionalImageBtn');
+
+        addBtn.addEventListener('click', function () {
+            const currentInputs = inputContainer.querySelectorAll('input[type="file"]');
+            const existingCount = document.querySelectorAll('input[name="ExistingOptionalImageIds"]').length;
+            const total = currentInputs.length + existingCount;
+
+            if (total >= maxOptional) {
+                alert(`You can upload up to ${maxOptional} optional images.`);
+                return;
+            }
+
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.name = 'OptionalImages';
+            input.accept = 'image/*';
+            input.classList.add('form-control', 'my-2');
+
+            input.addEventListener('change', function () {
+                if (input.files.length > 0) {
+                    const file = input.files[0];
+                    const reader = new FileReader();
+
+                    reader.onload = function (e) {
+                        const wrapper = document.createElement('div');
+                        wrapper.classList.add('position-relative');
+                        wrapper.style.maxWidth = '150px';
+
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.classList.add('img-fluid', 'rounded');
+                        img.style.maxHeight = '150px';
+
+                        const removeBtn = document.createElement('button');
+                        removeBtn.type = 'button';
+                        removeBtn.innerText = '×';
+                        removeBtn.classList.add('btn', 'btn-sm', 'btn-danger', 'position-absolute', 'top-0', 'end-0');
+
+                        removeBtn.onclick = function () {
+                            inputContainer.removeChild(input);
+                            previewContainer.removeChild(wrapper);
+                        };
+
+                        wrapper.appendChild(img);
+                        wrapper.appendChild(removeBtn);
+                        previewContainer.appendChild(wrapper);
+                    };
+
+                    reader.readAsDataURL(file);
+                }
             });
 
-        // Image file size validation
-        const maxSize = 1 * 1024 * 1024; // 1MB
-        function validateImageSize(input) {
-            if (input.files.length === 0) return;
-            for (let i = 0; i < input.files.length; i++) {
-                const file = input.files[i];
-                if (file.size > maxSize) {
-                    alert(`File "${file.name}" exceeds the maximum size of 1MB.`);
-                    input.value = '';
-                    break;
-                }
+            inputContainer.appendChild(input);
+            input.click(); // open file dialog immediately
+        });
+
+        function removeExistingImage(button) {
+            const container = button.closest('div');
+            // Mark the hidden input so server knows to remove it
+            const input = container.querySelector('input[type="hidden"]');
+            if (input) {
+                input.name = "RemoveOptionalImageIds";
+                input.value = input.value; // keep id value
             }
+            container.style.display = 'none'; // hide in UI
         }
     </script>
 
-    <!-- Shared connection-check JS -->
     <script src="~/js/site.js"></script>
 }

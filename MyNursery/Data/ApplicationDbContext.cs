@@ -42,6 +42,9 @@ namespace MyNursery.Data
         //Company Info
         public DbSet<CompanyInfo> CompanyInfo { get; set; }
 
+        //Dynamic Content
+
+        public DbSet<Event> Events { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

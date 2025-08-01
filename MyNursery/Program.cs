@@ -28,6 +28,7 @@ builder.Services.Configure<RazorViewEngineOptions>(options =>
 
     options.AreaViewLocationFormats.Add("/Areas/{2}/Views/{1}/{0}.cshtml");          // Default Area views
     options.AreaViewLocationFormats.Add("/Areas/{2}/Views/Content/{1}/{0}.cshtml");  // Custom Content folder inside Areas
+    options.AreaViewLocationFormats.Add("/Areas/{2}/Views/DynamicContent/{1}/{0}.cshtml");  // Custom DynamicContent folder inside Areas
     options.AreaViewLocationFormats.Add("/Areas/{2}/Views/Shared/{0}.cshtml");       // Shared views inside Areas
     options.AreaViewLocationFormats.Add("/Views/Shared/{0}.cshtml");                 // Global shared views
 });
