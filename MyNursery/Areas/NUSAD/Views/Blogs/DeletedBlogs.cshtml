@@ -121,8 +121,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             // Restore Blog AJAX
-            const restoreForms = document.querySelectorAll('.restore-form');
-            restoreForms.forEach(form => {
+            document.querySelectorAll('.restore-form').forEach(form => {
                 form.addEventListener('submit', async e => {
                     e.preventDefault();
                     if (!confirm("Restore this blog?")) return;
@@ -130,28 +129,31 @@
                     const formData = new FormData(form);
                     const token = formData.get("__RequestVerificationToken");
 
-                    const response = await fetch(form.action, {
-                        method: 'POST',
-                        headers: {
-                            'RequestVerificationToken': token,
-                            'Accept': 'application/json'
-                        },
-                        body: formData
-                    });
+                    try {
+                        const response = await fetch(form.action, {
+                            method: 'POST',
+                            headers: {
+                                'RequestVerificationToken': token,
+                                'Accept': 'application/json'
+                            },
+                            body: formData
+                        });
 
-                    const result = await response.json();
-                    if (result.success) {
-                        alert(result.message);
-                        form.closest('tr').remove();
-                    } else {
-                        alert(result.message || "Failed to restore blog.");
+                        const result = await response.json();
+                        if (result.success) {
+                            alert(result.message);
+                            form.closest('tr').remove();
+                        } else {
+                            alert(result.message || "Failed to restore blog.");
+                        }
+                    } catch {
+                        alert("Failed to restore blog due to network or server error.");
                     }
                 });
             });
 
             // Permanently Delete Blog AJAX
-            const deleteForms = document.querySelectorAll('.delete-form');
-            deleteForms.forEach(form => {
+            document.querySelectorAll('.delete-form').forEach(form => {
                 form.addEventListener('submit', async e => {
                     e.preventDefault();
                     if (!confirm("Permanently delete this blog? This action cannot be undone.")) return;
@@ -159,21 +161,25 @@
                     const formData = new FormData(form);
                     const token = formData.get("__RequestVerificationToken");
 
-                    const response = await fetch(form.action, {
-                        method: 'POST',
-                        headers: {
-                            'RequestVerificationToken': token,
-                            'Accept': 'application/json'
-                        },
-                        body: formData
-                    });
+                    try {
+                        const response = await fetch(form.action, {
+                            method: 'POST',
+                            headers: {
+                                'RequestVerificationToken': token,
+                                'Accept': 'application/json'
+                            },
+                            body: formData
+                        });
 
-                    const result = await response.json();
-                    if (result.success) {
-                        alert(result.message);
-                        form.closest('tr').remove();
-                    } else {
-                        alert(result.message || "Failed to delete blog.");
+                        const result = await response.json();
+                        if (result.success) {
+                            alert(result.message);
+                            form.closest('tr').remove();
+                        } else {
+                            alert(result.message || "Failed to delete blog.");
+                        }
+                    } catch {
+                        alert("Failed to delete blog due to network or server error.");
                     }
                 });
             });

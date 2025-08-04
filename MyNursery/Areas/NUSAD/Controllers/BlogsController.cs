@@ -15,7 +15,6 @@ using System.Threading.Tasks;
 namespace MyNursery.Areas.NUSAD.Controllers
 {
     [Area("NUSAD")]
-
     [Authorize(Roles = SD.Role_SuperAdmin)]
     public class BlogsController : Controller
     {
@@ -34,15 +33,14 @@ namespace MyNursery.Areas.NUSAD.Controllers
         [HttpGet]
         public async Task<IActionResult> ManageBlogs()
         {
-            var user = await _userManager.GetUserAsync(User);
+            var user = await _userManager.GetUserAsync(User).ConfigureAwait(false);
             if (user == null)
             {
                 TempData[SD.Error_Msg] = "User not authenticated.";
                 return RedirectToAction("Login", "Account", new { area = "" });
             }
 
-            // If user is super admin, show all blogs, otherwise show own blogs (optional)
-            var isAdmin = await _userManager.IsInRoleAsync(user, SD.Role_SuperAdmin);
+            var isAdmin = await _userManager.IsInRoleAsync(user, SD.Role_SuperAdmin).ConfigureAwait(false);
 
             IQueryable<BlogPost> query = _db.BlogPosts
                 .Include(b => b.BlogImages)
@@ -51,21 +49,20 @@ namespace MyNursery.Areas.NUSAD.Controllers
 
             if (!isAdmin)
             {
-                // For non-admins, filter by their own blogs (optional)
                 query = query.Where(b => b.CreatedByUserId == user.Id);
             }
 
             var blogs = await query
                 .OrderByDescending(b => b.CreatedAt)
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
 
-            ViewBag.Categories = await _db.BlogCategories.OrderBy(c => c.Name).ToListAsync();
+            ViewBag.Categories = await _db.BlogCategories.OrderBy(c => c.Name).ToListAsync().ConfigureAwait(false);
 
             return View(blogs);
         }
 
-
-        // GET: NUAD/Blogs/PublishedBlogs
+        // GET: NUSAD/Blogs/PublishedBlogs
         [HttpGet]
         public async Task<IActionResult> PublishedBlogs()
         {
@@ -74,9 +71,10 @@ namespace MyNursery.Areas.NUSAD.Controllers
                 .Include(b => b.Category)
                 .Where(b => b.Status == SD.Status_Approved && !b.IsDeleted)
                 .OrderByDescending(b => b.PublishDate)
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
 
-            ViewBag.Categories = await _db.BlogCategories.OrderBy(c => c.Name).ToListAsync();
+            ViewBag.Categories = await _db.BlogCategories.OrderBy(c => c.Name).ToListAsync().ConfigureAwait(false);
 
             return View(blogs);
         }
@@ -90,7 +88,8 @@ namespace MyNursery.Areas.NUSAD.Controllers
                 .Include(b => b.Category)
                 .Where(b => b.IsDeleted)
                 .OrderByDescending(b => b.DeletedAt)
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
 
             return View(deletedBlogs);
         }
@@ -100,7 +99,7 @@ namespace MyNursery.Areas.NUSAD.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangeApprovalStatus(int id, string status)
         {
-            var blog = await _db.BlogPosts.FindAsync(id);
+            var blog = await _db.BlogPosts.FindAsync(id).ConfigureAwait(false);
             if (blog == null || blog.IsDeleted)
             {
                 TempData[SD.Error_Msg] = "Blog not found or already deleted.";
@@ -109,7 +108,7 @@ namespace MyNursery.Areas.NUSAD.Controllers
 
             blog.Status = status;
             blog.ModifiedDate = DateTime.UtcNow;
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync().ConfigureAwait(false);
 
             TempData[SD.Success_Msg] = "Blog status updated.";
             return RedirectToAction(nameof(ManageBlogs));
@@ -117,12 +116,14 @@ namespace MyNursery.Areas.NUSAD.Controllers
 
         // GET: NUSAD/Blogs/GetBlogDetails/5
         [HttpGet]
+        [Produces("application/json")]
         public async Task<IActionResult> GetBlogDetails(int id)
         {
             var blog = await _db.BlogPosts
                 .Include(b => b.BlogImages)
                 .Include(b => b.Category)
-                .FirstOrDefaultAsync(b => b.Id == id && !b.IsDeleted);
+                .FirstOrDefaultAsync(b => b.Id == id && !b.IsDeleted)
+                .ConfigureAwait(false);
 
             if (blog == null)
                 return NotFound();
@@ -134,23 +135,28 @@ namespace MyNursery.Areas.NUSAD.Controllers
                 blog.Title,
                 blog.Content,
                 blog.Status,
-                category = blog.Category?.Name ?? "",
+                category = blog.Category?.Name ?? string.Empty,
                 publishDate = blog.PublishDate?.ToString("yyyy-MM-dd"),
                 createdAt = blog.CreatedAt.ToString("yyyy-MM-dd"),
                 coverImage = images?.FirstOrDefault(i => i.Type == "Cover")?.ImagePath,
                 image1 = images?.FirstOrDefault(i => i.Type == "Optional1")?.ImagePath,
-                image2 = images?.FirstOrDefault(i => i.Type == "Optional2")?.ImagePath
+                image2 = images?.FirstOrDefault(i => i.Type == "Optional2")?.ImagePath,
+                image3 = images?.FirstOrDefault(i => i.Type == "Optional3")?.ImagePath,
+                image4 = images?.FirstOrDefault(i => i.Type == "Optional4")?.ImagePath,
+                image5 = images?.FirstOrDefault(i => i.Type == "Optional5")?.ImagePath
             });
         }
 
         // POST: NUSAD/Blogs/DeleteBlog (Soft Delete)
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Produces("application/json")]
         public async Task<IActionResult> DeleteBlog(int id)
         {
             var blog = await _db.BlogPosts
                 .Include(b => b.BlogImages)
-                .FirstOrDefaultAsync(b => b.Id == id);
+                .FirstOrDefaultAsync(b => b.Id == id)
+                .ConfigureAwait(false);
 
             if (blog == null || blog.IsDeleted)
             {
@@ -161,16 +167,17 @@ namespace MyNursery.Areas.NUSAD.Controllers
             blog.DeletedAt = DateTime.UtcNow;
             blog.ModifiedDate = DateTime.UtcNow;
 
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync().ConfigureAwait(false);
             return Json(new { success = true, message = "Blog moved to deleted items." });
         }
 
         // POST: NUSAD/Blogs/RestoreBlog
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Produces("application/json")]
         public async Task<IActionResult> RestoreBlog(int id)
         {
-            var blog = await _db.BlogPosts.FindAsync(id);
+            var blog = await _db.BlogPosts.FindAsync(id).ConfigureAwait(false);
             if (blog == null || !blog.IsDeleted)
             {
                 return Json(new { success = false, message = "Blog not found or not deleted." });
@@ -180,25 +187,26 @@ namespace MyNursery.Areas.NUSAD.Controllers
             blog.DeletedAt = null;
             blog.ModifiedDate = DateTime.UtcNow;
 
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync().ConfigureAwait(false);
             return Json(new { success = true, message = "Blog restored successfully." });
         }
 
         // POST: NUSAD/Blogs/PermanentlyDeleteBlog
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Produces("application/json")]
         public async Task<IActionResult> PermanentlyDeleteBlog(int id)
         {
             var blog = await _db.BlogPosts
                 .Include(b => b.BlogImages)
-                .FirstOrDefaultAsync(b => b.Id == id);
+                .FirstOrDefaultAsync(b => b.Id == id)
+                .ConfigureAwait(false);
 
             if (blog == null || !blog.IsDeleted)
             {
                 return Json(new { success = false, message = "Blog not found or not deleted." });
             }
 
-            // Delete associated image files
             foreach (var img in blog.BlogImages ?? Enumerable.Empty<BlogImage>())
             {
                 DeleteFile(img.ImagePath);
@@ -207,7 +215,7 @@ namespace MyNursery.Areas.NUSAD.Controllers
             _db.BlogImages.RemoveRange(blog.BlogImages ?? Enumerable.Empty<BlogImage>());
             _db.BlogPosts.Remove(blog);
 
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync().ConfigureAwait(false);
             return Json(new { success = true, message = "Blog permanently deleted." });
         }
 
@@ -215,7 +223,11 @@ namespace MyNursery.Areas.NUSAD.Controllers
         {
             if (string.IsNullOrWhiteSpace(relativePath)) return;
 
-            var fullPath = Path.Combine(_env.WebRootPath, relativePath.TrimStart('/').Replace("/", Path.DirectorySeparatorChar.ToString()));
+            var path = relativePath.TrimStart('/', '\\')
+                .Replace("/", Path.DirectorySeparatorChar.ToString())
+                .Replace("\\", Path.DirectorySeparatorChar.ToString());
+
+            var fullPath = Path.Combine(_env.WebRootPath, path);
 
             if (System.IO.File.Exists(fullPath))
             {

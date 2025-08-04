@@ -130,21 +130,27 @@
                     const formData = new FormData(form);
                     const token = formData.get("__RequestVerificationToken");
 
-                    const response = await fetch(form.action, {
-                        method: 'POST',
-                        headers: {
-                            'RequestVerificationToken': token,
-                            'Accept': 'application/json'
-                        },
-                        body: formData
-                    });
+                    try {
+                        const response = await fetch(form.action, {
+                            method: 'POST',
+                            headers: {
+                                'RequestVerificationToken': token,
+                                'Accept': 'application/json'
+                            },
+                            body: formData
+                        });
 
-                    const result = await response.json();
-                    if (result.success) {
-                        alert(result.message);
-                        form.closest('tr').remove();
-                    } else {
-                        alert(result.message || "Failed to restore blog.");
+                        if (!response.ok) throw new Error("Network error");
+
+                        const result = await response.json();
+                        if (result.success) {
+                            alert(result.message);
+                            form.closest('tr').remove();
+                        } else {
+                            alert(result.message || "Failed to restore blog.");
+                        }
+                    } catch {
+                        alert("Failed to restore blog due to network or server error.");
                     }
                 });
             });
@@ -159,21 +165,27 @@
                     const formData = new FormData(form);
                     const token = formData.get("__RequestVerificationToken");
 
-                    const response = await fetch(form.action, {
-                        method: 'POST',
-                        headers: {
-                            'RequestVerificationToken': token,
-                            'Accept': 'application/json'
-                        },
-                        body: formData
-                    });
+                    try {
+                        const response = await fetch(form.action, {
+                            method: 'POST',
+                            headers: {
+                                'RequestVerificationToken': token,
+                                'Accept': 'application/json'
+                            },
+                            body: formData
+                        });
 
-                    const result = await response.json();
-                    if (result.success) {
-                        alert(result.message);
-                        form.closest('tr').remove();
-                    } else {
-                        alert(result.message || "Failed to delete blog.");
+                        if (!response.ok) throw new Error("Network error");
+
+                        const result = await response.json();
+                        if (result.success) {
+                            alert(result.message);
+                            form.closest('tr').remove();
+                        } else {
+                            alert(result.message || "Failed to delete blog.");
+                        }
+                    } catch {
+                        alert("Failed to delete blog due to network or server error.");
                     }
                 });
             });

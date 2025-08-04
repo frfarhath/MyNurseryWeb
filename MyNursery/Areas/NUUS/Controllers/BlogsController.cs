@@ -11,6 +11,7 @@ using MyNursery.Data;
 using MyNursery.Models;
 using MyNursery.Utility;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -25,6 +26,7 @@ namespace MyNursery.Areas.NUUS.Controllers
         private readonly IWebHostEnvironment _env;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IMemoryCache _cache;
+        private const int MaxOptionalImages = 5;
 
         public BlogsController(ApplicationDbContext db, IWebHostEnvironment env, UserManager<ApplicationUser> userManager, IMemoryCache cache)
         {
@@ -73,8 +75,7 @@ namespace MyNursery.Areas.NUUS.Controllers
         public async Task<IActionResult> CreateBlog(
             BlogPost blogPost,
             IFormFile? CoverImage,
-            IFormFile? OptionalImage1,
-            IFormFile? OptionalImage2)
+            List<IFormFile>? OptionalImages)
         {
             if (!ModelState.IsValid)
             {
@@ -99,11 +100,15 @@ namespace MyNursery.Areas.NUUS.Controllers
             if (CoverImage != null)
                 await AddImage(blogPost.Id, CoverImage, "Cover");
 
-            if (OptionalImage1 != null)
-                await AddImage(blogPost.Id, OptionalImage1, "Optional1");
-
-            if (OptionalImage2 != null)
-                await AddImage(blogPost.Id, OptionalImage2, "Optional2");
+            if (OptionalImages != null && OptionalImages.Any())
+            {
+                int count = 1;
+                foreach (var optImg in OptionalImages.Take(MaxOptionalImages))
+                {
+                    await AddImage(blogPost.Id, optImg, $"Optional{count}");
+                    count++;
+                }
+            }
 
             await _db.SaveChangesAsync();
 
@@ -144,10 +149,12 @@ namespace MyNursery.Areas.NUUS.Controllers
             int id,
             BlogPost updatedBlog,
             IFormFile? CoverImage,
-            IFormFile? OptionalImage1,
-            IFormFile? OptionalImage2)
+            List<IFormFile>? OptionalImages,
+            List<int>? RemoveOptionalImageIds)  // IDs of optional images to remove from DB
         {
-            var blog = await _db.BlogPosts.Include(b => b.BlogImages).FirstOrDefaultAsync(b => b.Id == id);
+            var blog = await _db.BlogPosts
+                .Include(b => b.BlogImages)
+                .FirstOrDefaultAsync(b => b.Id == id);
             if (blog == null)
             {
                 TempData[SD.Error_Msg] = "Blog not found.";
@@ -174,14 +181,37 @@ namespace MyNursery.Areas.NUUS.Controllers
             blog.Status = updatedBlog.Status;
             blog.ModifiedDate = DateTime.UtcNow;
 
+            // Remove optional images marked for deletion
+            if (RemoveOptionalImageIds != null && RemoveOptionalImageIds.Any())
+            {
+                var imagesToRemove = blog.BlogImages.Where(i => RemoveOptionalImageIds.Contains(i.Id)).ToList();
+                foreach (var img in imagesToRemove)
+                {
+                    DeleteFile(img.ImagePath);
+                    _db.BlogImages.Remove(img);
+                }
+            }
+
+            // Replace Cover Image if new one uploaded
             if (CoverImage != null)
                 await ReplaceImageAsync(blog, "Cover", CoverImage);
 
-            if (OptionalImage1 != null)
-                await ReplaceImageAsync(blog, "Optional1", OptionalImage1);
+            // Count current optional images after removal
+            var currentOptionalImages = blog.BlogImages.Where(i => i.Type.StartsWith("Optional")).ToList();
+            int currentCount = currentOptionalImages.Count;
 
-            if (OptionalImage2 != null)
-                await ReplaceImageAsync(blog, "Optional2", OptionalImage2);
+            // Add new optional images, but ensure max 5 total
+            if (OptionalImages != null && OptionalImages.Any())
+            {
+                int count = currentCount + 1;
+                foreach (var optImg in OptionalImages)
+                {
+                    if (count > MaxOptionalImages)
+                        break;
+                    await AddImage(blog.Id, optImg, $"Optional{count}");
+                    count++;
+                }
+            }
 
             _db.Update(blog);
             await _db.SaveChangesAsync();
@@ -248,7 +278,10 @@ namespace MyNursery.Areas.NUUS.Controllers
                 createdAt = blog.CreatedAt.ToString("yyyy-MM-dd"),
                 coverImage = images?.FirstOrDefault(i => i.Type == "Cover")?.ImagePath,
                 image1 = images?.FirstOrDefault(i => i.Type == "Optional1")?.ImagePath,
-                image2 = images?.FirstOrDefault(i => i.Type == "Optional2")?.ImagePath
+                image2 = images?.FirstOrDefault(i => i.Type == "Optional2")?.ImagePath,
+                image3 = images?.FirstOrDefault(i => i.Type == "Optional3")?.ImagePath,
+                image4 = images?.FirstOrDefault(i => i.Type == "Optional4")?.ImagePath,
+                image5 = images?.FirstOrDefault(i => i.Type == "Optional5")?.ImagePath
             });
         }
 

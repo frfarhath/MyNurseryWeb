@@ -2,7 +2,7 @@
 @using MyNursery.Utility
 @using MyNursery.Areas.NUSAD.Models
 @{
-    ViewData["Title"] = "Published Blogs";
+    ViewData["Title"] = "NUSAD Published Blogs";
 }
 
 <!-- [ breadcrumb ] start -->
@@ -107,7 +107,9 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="blogViewModalLabel">Blog Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
             <div class="modal-body">
                 <h4 id="blogTitle"></h4>
@@ -115,28 +117,21 @@
                 <p><strong>Status:</strong> <span id="blogStatus"></span></p>
                 <p><strong>Created on:</strong> <span id="blogCreatedAt"></span></p>
                 <p><strong>Published on:</strong> <span id="blogDate"></span></p>
-
                 <hr />
-
                 <div id="blogContent"></div>
-
                 <hr />
-
                 <div id="blogImages" class="mt-3">
                     <div id="coverImageContainer" class="mb-3">
                         <p><strong>Cover Image:</strong></p>
-                        <img id="coverImage" src="" alt="Cover Image" class="img-fluid" style="max-height:200px;" />
+                        <img id="coverImage" class="img-fluid" style="max-height:200px;" />
                     </div>
-
-                    <div id="optionalImage1Container" class="mb-2">
-                        <p><strong>Optional Image 1:</strong></p>
-                        <img id="optionalImage1" src="" alt="Optional Image 1" class="img-fluid" style="max-height:150px;" />
-                    </div>
-
-                    <div id="optionalImage2Container" class="mb-2">
-                        <p><strong>Optional Image 2:</strong></p>
-                        <img id="optionalImage2" src="" alt="Optional Image 2" class="img-fluid" style="max-height:150px;" />
-                    </div>
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        <div id="optionalImage@(i)Container" class="mb-2">
+                            <p><strong>Optional Image @(i):</strong></p>
+                            <img id="optionalImage@(i)" class="img-fluid" style="max-height:150px;" />
+                        </div>
+                    }
                 </div>
             </div>
         </div>
@@ -163,32 +158,36 @@
         }
 
         function viewBlog(id) {
-            $.get('/NUSAD/Blogs/GetBlogDetails/' + id, function (data) {
-                $('#blogTitle').text(data.title);
-                $('#blogCategory').text(data.category);
-                $('#blogStatus').text(data.status);
-                $('#blogCreatedAt').text(data.createdAt);
-                $('#blogDate').text(data.publishDate);
-                $('#blogContent').html(data.content);
+            fetch(`/NUSAD/Blogs/GetBlogDetails/${id}`)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById("blogTitle").textContent = data.title || '';
+                    document.getElementById("blogCategory").textContent = data.category || '';
+                    document.getElementById("blogStatus").textContent = data.status || '';
+                    document.getElementById("blogCreatedAt").textContent = data.createdAt || '';
+                    document.getElementById("blogDate").textContent = data.publishDate || '';
+                    document.getElementById("blogContent").innerHTML = data.content || '';
 
-                function setImage(containerId, imgId, url) {
-                    if (url) {
-                        $('#' + containerId).show();
-                        $('#' + imgId).attr('src', url);
-                    } else {
-                        $('#' + containerId).hide();
-                        $('#' + imgId).attr('src', '');
+                    const setImage = (containerId, imageId, url) => {
+                        const container = document.getElementById(containerId);
+                        const img = document.getElementById(imageId);
+                        if (url) {
+                            container.style.display = 'block';
+                            img.src = url;
+                        } else {
+                            container.style.display = 'none';
+                            img.src = '';
+                        }
+                    };
+
+                    setImage("coverImageContainer", "coverImage", data.coverImage);
+
+                    for (let i = 1; i <= 5; i++) {
+                        setImage(`optionalImage${i}Container`, `optionalImage${i}`, data[`image${i}`]);
                     }
-                }
 
-                setImage('coverImageContainer', 'coverImage', data.coverImage);
-                setImage('optionalImage1Container', 'optionalImage1', data.image1);
-                setImage('optionalImage2Container', 'optionalImage2', data.image2);
-
-                $('#blogViewModal').modal('show');
-            }).fail(function () {
-                alert('Failed to load blog details.');
-            });
+                    $('#blogViewModal').modal('show');
+                });
         }
 
         $(document).ready(function () {
@@ -222,4 +221,5 @@
             });
         });
     </script>
+
 }

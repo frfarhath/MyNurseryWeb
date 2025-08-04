@@ -31,7 +31,6 @@ namespace MyNursery.Areas.NUSAD.Controllers
             return View(companyInfo ?? new CompanyInfo());
         }
 
-        // POST: /NUSAD/Home/EditCompanyInfo
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult EditCompanyInfo(CompanyInfo model)
@@ -41,7 +40,8 @@ namespace MyNursery.Areas.NUSAD.Controllers
                 return View(model);
             }
 
-            var existing = _context.CompanyInfo.FirstOrDefault();
+            var existing = _context.CompanyInfo.FirstOrDefault(c => c.Id == model.Id);
+
             if (existing == null)
             {
                 _context.CompanyInfo.Add(model);
@@ -58,11 +58,14 @@ namespace MyNursery.Areas.NUSAD.Controllers
                 existing.LinkedInUrl = model.LinkedInUrl;
                 existing.YouTubeUrl = model.YouTubeUrl;
                 existing.FooterDescription = model.FooterDescription;
+
+                _context.CompanyInfo.Update(existing);
             }
 
             _context.SaveChanges();
             TempData["success"] = "Company info updated successfully!";
             return RedirectToAction(nameof(EditCompanyInfo));
         }
+
     }
 }

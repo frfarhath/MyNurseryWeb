@@ -2,7 +2,7 @@
 @using MyNursery.Utility
 @using MyNursery.Areas.NUSAD.Models
 @{
-    ViewData["Title"] = "Manage Blogs";
+    ViewData["Title"] = "NUUS Manage Blogs";
 }
 
 <!-- [ breadcrumb ] start -->
@@ -126,7 +126,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="blogViewModalLabel">Blog Details</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
@@ -157,6 +157,21 @@
                     <div id="optionalImage2Container" class="mb-2">
                         <p><strong>Optional Image 2:</strong></p>
                         <img id="optionalImage2" src="" alt="Optional Image 2" class="img-fluid" style="max-height:150px;" />
+                    </div>
+
+                    <div id="optionalImage3Container" class="mb-2" style="display:none;">
+                        <p><strong>Optional Image 3:</strong></p>
+                        <img id="optionalImage3" src="" alt="Optional Image 3" class="img-fluid" style="max-height:150px;" />
+                    </div>
+
+                    <div id="optionalImage4Container" class="mb-2" style="display:none;">
+                        <p><strong>Optional Image 4:</strong></p>
+                        <img id="optionalImage4" src="" alt="Optional Image 4" class="img-fluid" style="max-height:150px;" />
+                    </div>
+
+                    <div id="optionalImage5Container" class="mb-2" style="display:none;">
+                        <p><strong>Optional Image 5:</strong></p>
+                        <img id="optionalImage5" src="" alt="Optional Image 5" class="img-fluid" style="max-height:150px;" />
                     </div>
                 </div>
             </div>
@@ -214,6 +229,9 @@
                     setImage('coverImageContainer', 'coverImage', data.coverImage);
                     setImage('optionalImage1Container', 'optionalImage1', data.image1);
                     setImage('optionalImage2Container', 'optionalImage2', data.image2);
+                    setImage('optionalImage3Container', 'optionalImage3', data.image3);
+                    setImage('optionalImage4Container', 'optionalImage4', data.image4);
+                    setImage('optionalImage5Container', 'optionalImage5', data.image5);
 
                     const blogViewModal = new bootstrap.Modal(document.getElementById('blogViewModal'));
                     blogViewModal.show();

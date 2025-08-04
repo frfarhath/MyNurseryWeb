@@ -48,9 +48,11 @@
                     </div>
                 }
 
-              
                 <form asp-action="EditCompanyInfo" method="post" novalidate>
                     @Html.AntiForgeryToken()
+
+                    <!-- ✅ Hidden ID Field (required for update to work) -->
+                    <input type="hidden" asp-for="Id" />
 
                     <div class="mb-3">
                         <label asp-for="CompanyName" class="form-label"></label>
@@ -73,6 +75,7 @@
                     <div class="mb-3">
                         <label asp-for="InstagramUrl" class="form-label"></label>
                         <input asp-for="InstagramUrl" class="form-control" />
+                        <span asp-validation-for="InstagramUrl" class="text-danger"></span>
                     </div>
 
                     <div class="mb-3">
@@ -84,26 +87,31 @@
                     <div class="mb-3">
                         <label asp-for="FacebookUrl" class="form-label"></label>
                         <input asp-for="FacebookUrl" class="form-control" />
+                        <span asp-validation-for="FacebookUrl" class="text-danger"></span>
                     </div>
 
                     <div class="mb-3">
                         <label asp-for="TwitterUrl" class="form-label"></label>
                         <input asp-for="TwitterUrl" class="form-control" />
+                        <span asp-validation-for="TwitterUrl" class="text-danger"></span>
                     </div>
 
                     <div class="mb-3">
                         <label asp-for="LinkedInUrl" class="form-label"></label>
                         <input asp-for="LinkedInUrl" class="form-control" />
+                        <span asp-validation-for="LinkedInUrl" class="text-danger"></span>
                     </div>
 
                     <div class="mb-3">
                         <label asp-for="YouTubeUrl" class="form-label"></label>
                         <input asp-for="YouTubeUrl" class="form-control" />
+                        <span asp-validation-for="YouTubeUrl" class="text-danger"></span>
                     </div>
 
                     <div class="mb-3">
                         <label asp-for="FooterDescription" class="form-label"></label>
                         <textarea asp-for="FooterDescription" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="FooterDescription" class="text-danger"></span>
                     </div>
 
                     <div class="form-group text-end">
